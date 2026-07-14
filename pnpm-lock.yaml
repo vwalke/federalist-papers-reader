@@ -17,6 +17,9 @@ importers:
       astro:
         specifier: 7.0.7
         version: 7.0.7(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(yaml@2.9.0)
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
     devDependencies:
       '@astrojs/check':
         specifier: 0.9.9
