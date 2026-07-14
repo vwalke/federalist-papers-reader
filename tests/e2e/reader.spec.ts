@@ -1,8 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem('publius:test-initialized')) {
+      localStorage.clear();
+      sessionStorage.setItem('publius:test-initialized', 'true');
+    }
+  });
   await page.goto('/papers/1/');
 });
 
@@ -101,4 +105,47 @@ test('matches the compact newspaper composition on a wide screen', async ({ page
   expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
   expect(metrics.modeX).toBeLessThan(metrics.progressX);
   expect(metrics.titleText).toContain('THE FEDERALIST. No. X.');
+});
+
+test('keeps the reading companion balanced on desktop and stacked on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/papers/2/');
+
+  const desktop = await page.locator('.commentary__details').evaluate((details) => {
+    const sections = [...details.querySelectorAll(':scope > section')];
+    const rects = sections.map((section) => section.getBoundingClientRect());
+    return {
+      count: sections.length,
+      widths: rects.map(({ width }) => width),
+      yPositions: rects.map(({ y }) => y),
+      overflow: document.documentElement.scrollWidth - window.innerWidth
+    };
+  });
+
+  expect(desktop.count).toBe(3);
+  expect(Math.min(...desktop.widths)).toBeGreaterThan(220);
+  expect(Math.max(...desktop.widths) / Math.min(...desktop.widths)).toBeLessThan(1.5);
+  expect(Math.max(...desktop.yPositions) - Math.min(...desktop.yPositions)).toBeLessThan(2);
+  expect(desktop.overflow).toBeLessThanOrEqual(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/papers/2/');
+
+  const mobile = await page.locator('.commentary__details').evaluate((details) => {
+    const rects = [...details.querySelectorAll(':scope > section')].map((section) =>
+      section.getBoundingClientRect()
+    );
+    return {
+      xPositions: rects.map(({ x }) => x),
+      yPositions: rects.map(({ y }) => y),
+      widths: rects.map(({ width }) => width),
+      overflow: document.documentElement.scrollWidth - window.innerWidth
+    };
+  });
+
+  expect(Math.max(...mobile.xPositions) - Math.min(...mobile.xPositions)).toBeLessThan(2);
+  expect(mobile.yPositions[0]).toBeLessThan(mobile.yPositions[1]);
+  expect(mobile.yPositions[1]).toBeLessThan(mobile.yPositions[2]);
+  expect(Math.min(...mobile.widths)).toBeGreaterThan(300);
+  expect(mobile.overflow).toBeLessThanOrEqual(0);
 });
