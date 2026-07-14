@@ -11,8 +11,7 @@ const { number } = Astro.props;
 <nav class="reading-toolbar" aria-label={`Reading tools for Federalist No. ${number}`}>
   <a class="reading-toolbar__index" href="/#all-papers"><span aria-hidden="true">←</span> Index</a>
   <ProgressControl number={number} />
-  <div class="reading-toolbar__modes" aria-label="Reading view">
-    <span>View</span>
+  <div class="reading-toolbar__modes" role="group" aria-label="Reading style">
     <button type="button" data-mode="gazette" aria-pressed="true">Gazette</button>
     <button type="button" data-mode="reader" aria-pressed="false">Reader</button>
   </div>

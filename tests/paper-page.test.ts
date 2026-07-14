@@ -17,6 +17,9 @@ describe('paper pages', () => {
     expect(html).toContain('AFTER an unequivocal experience');
     expect(html).toContain('In a nutshell');
     expect(html).toContain('Talk it over');
+    expect(html).toContain('role="group"');
+    expect(html).toContain('aria-label="Reading style"');
+    expect(html).not.toContain('>View</span>');
     expect(html).toContain('data-paper-wear="1"');
     expect(html).toContain('href="/papers/2/"');
   });
