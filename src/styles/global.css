@@ -281,6 +281,41 @@ a:hover {
   margin-block-start: var(--space-md);
 }
 
+.about-copy__lede {
+  margin-block-start: var(--space-lg);
+  font-size: clamp(1.15rem, 2vw, 1.35rem) !important;
+  line-height: 1.55 !important;
+}
+
+.about-callout {
+  position: relative;
+  margin-block-start: var(--space-xl);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid var(--color-rule);
+  background: color-mix(in oklab, var(--color-paper) 62%, transparent);
+  box-shadow: inset 0.28rem 0 0 var(--color-verdigris);
+}
+
+.about-callout h2 {
+  max-inline-size: 22ch;
+  margin-block-start: var(--space-xs);
+}
+
+.about-callout__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-block-end: 0.18rem;
+  color: var(--color-verdigris);
+  font-weight: 700;
+  text-decoration-thickness: 0.1em;
+}
+
+.about-callout__disclosure {
+  color: var(--color-muted-ink);
+  font: 500 0.78rem/1.5 var(--font-utility) !important;
+}
+
 @media (min-width: 46rem) {
   :root {
     --page-gutter: max(1.5rem, env(safe-area-inset-left));
