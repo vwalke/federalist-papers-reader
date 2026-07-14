@@ -26,6 +26,7 @@
     "@astrojs/check": "0.9.9",
     "@axe-core/playwright": "4.12.1",
     "@playwright/test": "1.61.1",
+    "@types/node": "22.19.15",
     "jsdom": "29.1.1",
     "typescript": "5.9.3",
     "vitest": "4.1.10"

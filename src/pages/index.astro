@@ -1,0 +1,39 @@
+---
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Publius — Read the Federalist Papers"
+  description="Read all 85 Federalist Papers in an inviting period newspaper setting, with a clear modern reader and brief companion notes."
+  pageClass="home-page"
+>
+  <article class="paper-sheet">
+    <GazetteMasthead />
+
+    <section class="home-intro" aria-labelledby="welcome-title">
+      <div>
+        <p class="home-intro__kicker">A reading edition for today</p>
+        <h1 id="welcome-title">Read the debate in the form it first entered public life.</h1>
+      </div>
+      <p class="home-intro__copy">
+        In 1787 and 1788, the essays of “Publius” arrived one by one in New York newspapers.
+        This edition brings all eighty-five together with their original words, an optional clean
+        reading view, and a little friendly context for the conversation afterward.
+      </p>
+      <p class="home-intro__action">
+        <a class="button-link" href="/papers/1/">Begin with Paper No. 1 <span aria-hidden="true">→</span></a>
+      </p>
+    </section>
+
+    <section class="home-note" aria-labelledby="reading-together-title">
+      <p class="section-kicker">One paper at a time</p>
+      <h2 id="reading-together-title">Made for reading together</h2>
+      <p>
+        The essays can feel imposing as a single volume. They are much more companionable at the
+        pace their first readers knew: one argument, one cup of coffee, one conversation at a time.
+        Your reading progress stays privately in this browser—there is no account to create.
+      </p>
+    </section>
+  </article>
+</BaseLayout>
