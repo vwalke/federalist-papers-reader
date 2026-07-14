@@ -92,6 +92,12 @@ One restrained entrance may reveal the masthead and rules as if a press sheet ha
 - At 200% zoom, the layout follows the same content-driven collapse rather than clipping.
 - Print removes controls and background material, uses one black-on-white column, and includes commentary.
 
+## Paper Material and Wear
+
+Every paper in Gazette mode receives a stable, unique material fingerprint derived from its paper number. The fingerprint varies the edge silhouette, two or three shallow crease paths, tiny nicks, corner softness, and the opacity and position of surface wear. No two papers may share the same combined pattern, but revisiting a paper must reproduce its original fingerprint.
+
+Generate the variation as build-time CSS custom properties and lightweight inline SVG/CSS overlays, never as 85 large raster backgrounds. Keep all distress outside the live text area. Wear is more restrained on narrow screens and absent from Reader mode, print, high-contrast/forced-colors mode, and reduced-transparency fallbacks. The page should appear carefully preserved, not dirty: no stains, foxing, burns, missing chunks, tape, or deep folds.
+
 ## Accessibility
 
 The skip link is the first focusable element. All stateful buttons expose `aria-pressed`; result counts use a polite live region. Focus rings use a high-contrast verdigris/ink combination and are never removed. The original essay is always present in server-rendered HTML.
