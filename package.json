@@ -15,7 +15,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "validate:content": "node scripts/validate-content.mjs",
-    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && pnpm test && pnpm build"
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && pnpm build && pnpm test"
   },
   "dependencies": {
     "@fontsource/im-fell-english": "5.2.6",
