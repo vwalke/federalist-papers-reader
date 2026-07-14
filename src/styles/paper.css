@@ -233,14 +233,6 @@
   font: 400 4.25em/0.72 var(--font-display);
 }
 
-.essay-signature {
-  margin-block: var(--space-xl) var(--space-2xl);
-  font: 400 1.35rem/1 var(--font-display);
-  letter-spacing: 0.16em;
-  text-align: end;
-  text-transform: uppercase;
-}
-
 .commentary {
   position: relative;
   z-index: 1;
@@ -335,7 +327,6 @@
 }
 
 [data-reading-mode='reader'] .essay-body,
-[data-reading-mode='reader'] .essay-signature,
 [data-reading-mode='reader'] .commentary,
 [data-reading-mode='reader'] .essay-navigation,
 [data-reading-mode='reader'] .essay-heading {
