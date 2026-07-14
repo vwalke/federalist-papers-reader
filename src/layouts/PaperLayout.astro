@@ -6,7 +6,6 @@ import EssayNavigation from '../components/EssayNavigation.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
-import { getPaperWear } from '../lib/paper-wear';
 import { formatIssueDateline, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
 
@@ -22,11 +21,6 @@ interface Props {
 
 const { paper, previous, next } = Astro.props;
 const { data } = paper;
-const wear = getPaperWear(data.number);
-const paperStyle = [
-  `--wear-edge-a: ${wear.edgeDepth}%`,
-  `--wear-edge-b: ${wear.edgeDepthAlt}%`
-].join('; ');
 ---
 
 <BaseLayout
@@ -35,7 +29,7 @@ const paperStyle = [
   pageClass="essay-page"
   readingMode
 >
-  <article class="paper-sheet paper-page" data-paper-number={data.number} style={paperStyle}>
+  <article class="paper-sheet paper-page" data-paper-number={data.number}>
     <PaperWear number={data.number} />
     <GazetteMasthead
       compact
