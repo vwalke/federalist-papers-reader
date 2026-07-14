@@ -1,12 +1,14 @@
 ---
 interface Props {
   eyebrow?: string;
+  publicationName?: string;
   dateLine?: string;
   compact?: boolean;
 }
 
 const {
   eyebrow = 'Or, The General Advertiser',
+  publicationName = 'The Independent Journal',
   dateLine = 'New-York · The essays of Publius · 1787–1788',
   compact = false
 } = Astro.props;
@@ -14,7 +16,7 @@ const {
 
 <header class:list={['gazette-masthead', { 'gazette-masthead--compact': compact }] }>
   <p class="gazette-masthead__eyebrow">{eyebrow}</p>
-  <p class="gazette-masthead__name">The Independent Journal</p>
+  <p class="gazette-masthead__name">{publicationName}</p>
   <div class="gazette-masthead__rules" aria-hidden="true"><span>✦</span></div>
   <p class="gazette-masthead__dateline">{dateLine}</p>
 </header>
