@@ -37,15 +37,45 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
   const layout = await page.locator('.essay-body').evaluate((element) => ({
     columns: getComputedStyle(element).columnCount,
     documentWidth: document.documentElement.scrollWidth,
-    viewportWidth: window.innerWidth
+    viewportWidth: window.innerWidth,
+    mastheadWidth: document.querySelector('.gazette-masthead__art')?.getBoundingClientRect().width ?? 0,
+    sheetWidth: document.querySelector('.paper-sheet')?.getBoundingClientRect().width ?? 0,
+    controlHeights: [...document.querySelectorAll('.reading-toolbar button')].map(
+      (control) => control.getBoundingClientRect().height
+    )
   }));
 
   expect(['auto', '1']).toContain(layout.columns);
   expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
+  expect(layout.mastheadWidth).toBeLessThanOrEqual(layout.sheetWidth);
+  expect(layout.controlHeights.every((height) => height >= 44)).toBe(true);
 });
 
-test('uses newspaper columns on a wide screen', async ({ page }) => {
+test('matches the compact newspaper composition on a wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/papers/10/');
-  await expect.poll(() => page.locator('.essay-body').evaluate((element) => getComputedStyle(element).columnCount)).toBe('3');
+
+  const metrics = await page.locator('.essay-body').evaluate((element) => {
+    const bodyStyle = getComputedStyle(element);
+    const title = document.querySelector('.essay-heading__title');
+    const masthead = document.querySelector('.gazette-masthead__art');
+
+    return {
+      columnCount: bodyStyle.columnCount,
+      bodyFontSize: Number.parseFloat(bodyStyle.fontSize),
+      bodyLineHeight: Number.parseFloat(bodyStyle.lineHeight),
+      titleFontFamily: title ? getComputedStyle(title).fontFamily : '',
+      headingHeight: document.querySelector('.essay-heading')?.getBoundingClientRect().height ?? Infinity,
+      mastheadVisible: masthead ? getComputedStyle(masthead).display !== 'none' : false,
+      mastheadWidth: masthead?.getBoundingClientRect().width ?? Infinity,
+      sheetWidth: document.querySelector('.paper-sheet')?.getBoundingClientRect().width ?? 0
+    };
+  });
+
+  expect(metrics.columnCount).toBe('3');
+  expect(metrics.titleFontFamily).toContain('Libre Caslon Display');
+  expect(metrics.bodyLineHeight / metrics.bodyFontSize).toBeLessThanOrEqual(1.45);
+  expect(metrics.headingHeight).toBeLessThan(240);
+  expect(metrics.mastheadVisible).toBe(true);
+  expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
 });
