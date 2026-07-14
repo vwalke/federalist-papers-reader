@@ -1,0 +1,34 @@
+---
+import { getPaperWear } from '../lib/paper-wear';
+
+interface Props {
+  number: number;
+}
+
+const { number } = Astro.props;
+const wear = getPaperWear(number);
+const style = [
+  `--wear-edge-a: ${wear.edgeDepth}%`,
+  `--wear-edge-b: ${wear.edgeDepthAlt}%`,
+  `--wear-crease-one-x: ${wear.creaseOnePosition}%`,
+  `--wear-crease-two-x: ${wear.creaseTwoPosition}%`,
+  `--wear-crease-one-start: ${wear.creaseOneStart}%`,
+  `--wear-crease-two-start: ${wear.creaseTwoStart}%`,
+  `--wear-crease-one-angle: ${wear.creaseOneAngle}deg`,
+  `--wear-crease-two-angle: ${wear.creaseTwoAngle}deg`,
+  `--wear-bottom-y: ${wear.bottomCreasePosition}%`,
+  `--wear-nick-one: ${wear.nickOnePosition}%`,
+  `--wear-nick-two: ${wear.nickTwoPosition}%`,
+  `--wear-opacity: ${wear.opacity}`
+].join('; ');
+---
+
+<div class="paper-wear" data-paper-wear={number} data-wear-id={wear.id} style={style} aria-hidden="true">
+  <span class="paper-wear__crease paper-wear__crease--one"></span>
+  <span class="paper-wear__crease paper-wear__crease--two"></span>
+  <span class="paper-wear__crease paper-wear__crease--bottom"></span>
+  <span class="paper-wear__nick paper-wear__nick--one"></span>
+  <span class="paper-wear__nick paper-wear__nick--two"></span>
+  <span class="paper-wear__corner paper-wear__corner--top"></span>
+  <span class="paper-wear__corner paper-wear__corner--bottom"></span>
+</div>
