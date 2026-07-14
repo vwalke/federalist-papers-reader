@@ -334,15 +334,22 @@
 .commentary {
   position: relative;
   z-index: 1;
-  display: grid;
-  gap: var(--space-lg);
   margin-block-start: var(--space-sm);
   padding-block: var(--space-md);
   border-block: 1px solid var(--color-rule);
 }
 
-.commentary__heading {
-  text-align: left;
+.commentary__intro,
+.commentary__details {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.commentary__details {
+  align-items: start;
+  margin-block-start: var(--space-lg);
+  padding-block-start: var(--space-lg);
+  border-block-start: 1px solid color-mix(in oklab, var(--color-rule) 48%, transparent);
 }
 
 .commentary__heading > span {
@@ -469,16 +476,17 @@
     column-rule: 1px solid color-mix(in oklab, var(--color-rule) 62%, transparent);
   }
 
-  .commentary {
-    grid-template-columns: minmax(8rem, 0.28fr) repeat(2, minmax(0, 1fr));
+  .commentary__intro {
+    grid-template-columns: minmax(10rem, 0.34fr) minmax(0, 1.66fr);
+    align-items: start;
   }
 
-  .commentary__heading {
-    grid-column: 1;
+  .commentary__details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .commentary__lead {
-    grid-column: 2 / -1;
+  .commentary__question {
+    grid-column: 1 / -1;
   }
 
   .essay-navigation {
@@ -489,6 +497,14 @@
 @media (min-width: 68rem) {
   [data-reading-mode='gazette'] .essay-body {
     columns: 3 18rem;
+  }
+
+  .commentary__details {
+    grid-template-columns: minmax(0, 1.15fr) repeat(2, minmax(0, 1fr));
+  }
+
+  .commentary__question {
+    grid-column: auto;
   }
 }
 
@@ -549,12 +565,13 @@
     line-height: 1.68;
   }
 
-  .commentary {
+  .commentary__intro,
+  .commentary__details {
     gap: var(--space-md);
   }
 
   .commentary__heading {
-    text-align: center;
+    text-align: left;
   }
 }
 
