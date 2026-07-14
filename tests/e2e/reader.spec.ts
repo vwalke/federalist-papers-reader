@@ -1,12 +1,16 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/papers/1/');
+  await page.goto('/');
   await page.evaluate(() => localStorage.clear());
-  await page.reload();
+  await page.goto('/papers/1/');
 });
 
 test('switches reading modes and remembers the preference', async ({ page }) => {
+  const styleControl = page.getByRole('group', { name: 'Reading style' });
+  await expect(styleControl.getByRole('button')).toHaveCount(2);
+  await expect(styleControl.getByRole('button', { name: 'Gazette' })).toHaveAttribute('aria-pressed', 'true');
+
   await page.getByRole('button', { name: 'Reader' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'reader');
   await page.reload();
