@@ -23,6 +23,7 @@ The site must remain nonpartisan in tone. It explains what each author argues an
 3. Treat `first publication` as the index's date field. Papers 78–85, which first appeared in the bound second volume before later newspaper publication, must be labeled accordingly.
 4. Represent disputed authorship honestly in metadata and explanatory notes rather than forcing a single attribution.
 5. Use a historically grounded visual vocabulary—mastheads, datelines, column rules, restrained ornament, letterpress-like type, and broadsheet proportions—without simulating torn paper, stains, low contrast, long-s typography, or other effects that obstruct reading.
+6. Give each paper a stable, unique pattern of subtle edge wear and shallow creases in Gazette mode. The pattern must never intrude on the text, repeat across papers, appear in Reader or print mode, or reduce mobile legibility.
 
 ### Primary References
 
