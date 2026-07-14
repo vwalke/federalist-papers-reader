@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getAdjacentPapers, getOrderedPapers, getPaperByNumber, validatePaperSet } from '../src/lib/papers';
+import { validateContentDirectory } from '../scripts/validate-content.mjs';
 
 describe('Federalist collection contract', () => {
   it('accepts every number from 1 through 85 exactly once', () => {
@@ -40,5 +41,20 @@ describe('paper lookup helpers', () => {
   it('returns null at either edge of adjacent navigation', () => {
     expect(getAdjacentPapers(papers, 1)).toEqual({ previous: null, next: { number: 2 } });
     expect(getAdjacentPapers(papers, 3)).toEqual({ previous: { number: 2 }, next: null });
+  });
+});
+
+describe('committed content', () => {
+  it('contains 85 complete, uniquely numbered papers', async () => {
+    const report = await validateContentDirectory(new URL('../src/content/papers/', import.meta.url));
+
+    expect(report.count).toBe(85);
+    expect(report.missingNumbers).toEqual([]);
+    expect(report.duplicateNumbers).toEqual([]);
+    expect(report.missingFields).toEqual([]);
+    expect(report.emptyBodies).toEqual([]);
+    expect(report.shortSummariesOver18Words).toEqual([]);
+    expect(report.unquotedDates).toEqual([]);
+    expect(report.commentaryOutsideTarget).toEqual([]);
   });
 });

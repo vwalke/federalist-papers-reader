@@ -89,7 +89,7 @@ The reader's mode preference is stored locally in the browser.
 
 ## Reading Companion
 
-Every paper includes a companion note following the original essay. Its target length is 180–300 words, excluding citations. It contains:
+Every paper includes a companion note following the original essay. Its target length is 70–130 words, excluding citations and labels, so it remains a quick companion rather than a second essay. It contains:
 
 - **In a nutshell:** two or three sentences summarizing the paper
 - **Key arguments:** three to five concise points

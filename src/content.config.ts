@@ -18,6 +18,7 @@ const papers = defineCollection({
     publicationVenue: z.string().min(1),
     publicationDate: z.string().regex(/^178[78]-\d{2}-\d{2}$/),
     publicationDateLabel: z.string().min(1),
+    recipient: z.string().min(1),
     indexSummary: z.string().min(1),
     nutshell: z.string().min(1),
     keyArguments: z.array(z.string().min(1)).min(3).max(5),
