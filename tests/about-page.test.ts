@@ -11,10 +11,27 @@ describe('About this edition', () => {
     expect(html).toContain('LetterJoy’s Federalist Papers series');
     expect(html).toContain('sixth-great-uncle');
     expect(html).toContain('my mom’s fifth-great-uncle');
+    expect(html).toContain('At ten years old, he arrived in America with no parents and no money.');
     expect(html).toContain('the only Secretary of the Continental Congress');
-    expect(html).toContain('first printed Declaration of Independence');
-    expect(html).toContain('attesting it as Secretary');
-    expect(html).toContain('href="https://www.archives.gov/milestone-documents/declaration-of-independence"');
+    expect(html).toContain('the two names printed on the Dunlap broadside');
+    expect(html).toContain('first carried independence into American public life');
+    expect(html).toContain('helped bring the Great Seal of the United States to its final design');
+    expect(html).toContain('personally carried word of George Washington’s unanimous election');
+    expect(html).toContain('translating the Septuagint Bible from Greek into English');
+    expect(html).toContain('The penniless ten-year-old orphan grew into a man');
+    expect(html).not.toContain('his was the quieter role');
+    expect(html).toContain('href="https://www.carpentershall.org/pages/my-zeal-for-liberty"');
+    expect(html).toContain(
+      'href="https://www.loc.gov/collections/continental-congress-and-constitutional-convention-from-1774-to-1789/articles-and-essays/to-form-a-more-perfect-union/charles-thomson/"',
+    );
+    expect(html).toContain('href="https://www.archives.gov/founding-docs/declaration-history"');
+    expect(html).toContain('href="https://diplomacy.state.gov/the-great-seal/"');
+    expect(html).toContain(
+      'href="https://founders.archives.gov/documents/Washington/05-02-02-0056"',
+    );
+    expect(html).toContain(
+      'href="https://collections.museumofthebible.org/artifacts/45021-thomson-bible?theme=a-history-of-translation"',
+    );
     expect(html).toContain('class="about-portrait"');
     expect(html).toContain('src="/images/mom-and-me-sail4th-2026.jpg"');
     expect(html).toContain('alt="Mom and me together at Sail4th 250 in New York Harbor"');
