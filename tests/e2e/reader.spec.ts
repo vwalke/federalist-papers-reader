@@ -19,8 +19,10 @@ test('switches reading modes and remembers the preference', async ({ page }) => 
 test('marks a paper read and keeps that state in this browser', async ({ page }) => {
   const control = page.locator('[data-progress-control]');
   await expect(control).toHaveAttribute('aria-pressed', 'false');
+  await expect(control).toHaveAttribute('aria-label', 'Mark as read');
   await control.click();
   await expect(control).toHaveAttribute('aria-pressed', 'true');
+  await expect(control).toHaveAttribute('aria-label', 'Marked as read');
   await expect(control).toContainText('Marked as read');
 
   await page.reload();
@@ -42,13 +44,25 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
     sheetWidth: document.querySelector('.paper-sheet')?.getBoundingClientRect().width ?? 0,
     controlHeights: [...document.querySelectorAll('.reading-toolbar button')].map(
       (control) => control.getBoundingClientRect().height
-    )
+    ),
+    progressWidth: document.querySelector('.progress-control')?.getBoundingClientRect().width ?? Infinity,
+    bookmarkBefore: getComputedStyle(
+      document.querySelector('.progress-control__mark') as Element,
+      '::before'
+    ).content,
+    bookmarkAfter: getComputedStyle(
+      document.querySelector('.progress-control__mark') as Element,
+      '::after'
+    ).content
   }));
 
   expect(['auto', '1']).toContain(layout.columns);
   expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
   expect(layout.mastheadWidth).toBeLessThanOrEqual(layout.sheetWidth);
   expect(layout.controlHeights.every((height) => height >= 44)).toBe(true);
+  expect(layout.progressWidth).toBeLessThanOrEqual(60);
+  expect(layout.bookmarkBefore).not.toBe('none');
+  expect(layout.bookmarkAfter).not.toBe('none');
 });
 
 test('matches the compact newspaper composition on a wide screen', async ({ page }) => {
@@ -68,7 +82,10 @@ test('matches the compact newspaper composition on a wide screen', async ({ page
       headingHeight: document.querySelector('.essay-heading')?.getBoundingClientRect().height ?? Infinity,
       mastheadVisible: masthead ? getComputedStyle(masthead).display !== 'none' : false,
       mastheadWidth: masthead?.getBoundingClientRect().width ?? Infinity,
-      sheetWidth: document.querySelector('.paper-sheet')?.getBoundingClientRect().width ?? 0
+      sheetWidth: document.querySelector('.paper-sheet')?.getBoundingClientRect().width ?? 0,
+      modeX: document.querySelector('.reading-toolbar__modes')?.getBoundingClientRect().x ?? Infinity,
+      progressX: document.querySelector('.progress-control')?.getBoundingClientRect().x ?? 0,
+      titleText: title?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
     };
   });
 
@@ -78,4 +95,6 @@ test('matches the compact newspaper composition on a wide screen', async ({ page
   expect(metrics.headingHeight).toBeLessThan(240);
   expect(metrics.mastheadVisible).toBe(true);
   expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
+  expect(metrics.modeX).toBeLessThan(metrics.progressX);
+  expect(metrics.titleText).toContain('THE FEDERALIST. No. X.');
 });

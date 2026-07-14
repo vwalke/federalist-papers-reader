@@ -14,32 +14,41 @@ function measureRun(font, text, size, spacing) {
 }
 
 function outlineRun(font, text, y, size, spacing) {
-  let x = (WIDTH - measureRun(font, text, size, spacing)) / 2;
+  const width = measureRun(font, text, size, spacing);
+  const left = (WIDTH - width) / 2;
+  let x = left;
   let data = '';
 
-  for (const character of text) {
+  for (const [index, character] of [...text].entries()) {
     const glyph = font.charToGlyph(character);
     data += glyph.getPath(x, y, size).toPathData(2);
-    x += ((glyph.advanceWidth ?? font.unitsPerEm / 2) / font.unitsPerEm) * size + spacing;
+    x += ((glyph.advanceWidth ?? font.unitsPerEm / 2) / font.unitsPerEm) * size;
+    if (index < text.length - 1) x += spacing;
   }
 
-  return data;
+  return { data, left, right: left + width };
 }
 
 export function buildMastheadSvg(font) {
   const title = outlineRun(font, 'THE INDEPENDENT JOURNAL', 103, 76, 6.5);
   const subtitle = outlineRun(font, 'OR, THE GENERAL ADVERTISER', 159, 24, 7);
+  const gap = 24;
+  const leftAccentEnd = subtitle.left - gap;
+  const rightAccentStart = subtitle.right + gap;
+  const leftDiamond = leftAccentEnd - 22;
+  const rightDiamond = rightAccentStart + 22;
 
   return [
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" data-masthead-art="independent-journal">',
-    `<g fill="#28241f"><path d="${title}"/><path d="${subtitle}"/></g>`,
-    '<g fill="#28241f" stroke="#28241f" stroke-width="1.5">',
-    '<line x1="112" y1="151" x2="340" y2="151"/>',
-    '<path d="M356 151l8-3v6zM372 151l-8-3v6z"/>',
-    '<line x1="388" y1="151" x2="421" y2="151"/>',
-    '<line x1="779" y1="151" x2="812" y2="151"/>',
-    '<path d="M828 151l8-3v6zM844 151l-8-3v6z"/>',
-    '<line x1="860" y1="151" x2="1088" y2="151"/>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 35 1200 145" data-masthead-art="independent-journal">',
+    `<g fill="#28241f" stroke="#28241f" stroke-width="0.22"><path d="${title.data}"/></g>`,
+    `<g fill="#28241f"><path d="${subtitle.data}"/></g>`,
+    `<g fill="#28241f" stroke="#28241f" stroke-width="1.5" data-subtitle-left="${subtitle.left.toFixed(2)}" data-subtitle-right="${subtitle.right.toFixed(2)}" data-left-accent-end="${leftAccentEnd.toFixed(2)}" data-right-accent-start="${rightAccentStart.toFixed(2)}">`,
+    `<line x1="112" y1="151" x2="${(leftDiamond - 10).toFixed(2)}" y2="151"/>`,
+    `<path d="M${leftDiamond.toFixed(2)} 151l7-3v6zM${(leftDiamond + 14).toFixed(2)} 151l-7-3v6z"/>`,
+    `<line x1="${(leftDiamond + 24).toFixed(2)}" y1="151" x2="${leftAccentEnd.toFixed(2)}" y2="151"/>`,
+    `<line x1="${rightAccentStart.toFixed(2)}" y1="151" x2="${(rightDiamond - 24).toFixed(2)}" y2="151"/>`,
+    `<path d="M${(rightDiamond - 14).toFixed(2)} 151l7-3v6zM${rightDiamond.toFixed(2)} 151l-7-3v6z"/>`,
+    `<line x1="${(rightDiamond + 10).toFixed(2)}" y1="151" x2="1088" y2="151"/>`,
     '</g></svg>\n'
   ].join('');
 }

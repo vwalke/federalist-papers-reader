@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@fontsource/im-fell-english':
-        specifier: 5.2.6
-        version: 5.2.6
       '@fontsource/libre-caslon-display':
         specifier: 5.2.7
         version: 5.2.7
@@ -492,9 +489,6 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
-
-  '@fontsource/im-fell-english@5.2.6':
-    resolution: {integrity: sha512-mVEuyEgLDyaChb0GvQRs5Pyg7SmB0RcPZqR8ub2OnskeiViIieBESRrS4Uovn1hxJ/Dh6xNRaLlmMtPeO8lWRQ==}
 
   '@fontsource/libre-caslon-display@5.2.7':
     resolution: {integrity: sha512-mN1axL4p3Wzqm/+3qbf3p/lM3Wn64Nk0cfOqE/Pbz01/ytCqgn/D/cCIDpjbKLPekMNwcVaNhpRBm04M+VZKjw==}
@@ -2428,8 +2422,6 @@ snapshots:
     optional: true
 
   '@exodus/bytes@1.15.1': {}
-
-  '@fontsource/im-fell-english@5.2.6': {}
 
   '@fontsource/libre-caslon-display@5.2.7': {}
 
