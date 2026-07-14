@@ -1,0 +1,52 @@
+---
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Page not found — Publius"
+  description="This page could not be found. Return to the complete Federalist Papers index."
+>
+  <article class="paper-sheet missing-page">
+    <GazetteMasthead compact dateLine="A notice to the reader" />
+    <div class="missing-page__copy">
+      <p class="section-kicker">Printer’s notice · Error 404</p>
+      <h1>This page has gone missing.</h1>
+      <p>
+        A sheet may have slipped from the bundle, or the address may have changed. Happily, the
+        complete collection is still at hand.
+      </p>
+      <p><a class="button-link" href="/#all-papers">Return to all papers <span aria-hidden="true">→</span></a></p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .missing-page {
+    min-block-size: min(46rem, calc(100vh - 8rem));
+  }
+
+  .missing-page__copy {
+    display: grid;
+    place-items: center;
+    max-inline-size: 46rem;
+    margin: var(--space-3xl) auto 0;
+    text-align: center;
+  }
+
+  .missing-page__copy h1 {
+    margin-block: var(--space-sm) var(--space-lg);
+    font: 400 clamp(2.4rem, 7vw, 5.5rem)/0.95 var(--font-display);
+    text-wrap: balance;
+  }
+
+  .missing-page__copy > p:not(.section-kicker) {
+    max-inline-size: 48ch;
+    font-size: 1.15rem;
+    line-height: 1.6;
+  }
+
+  .missing-page__copy .button-link {
+    margin-block-start: var(--space-xl);
+  }
+</style>

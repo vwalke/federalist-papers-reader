@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#e7deca"/>
+  <path d="M10 11h44v42H10z" fill="none" stroke="#2a2722" stroke-width="3"/>
+  <path d="M16 19h32M16 45h32" stroke="#2a2722" stroke-width="2"/>
+  <text x="32" y="40" fill="#672b28" font-family="Georgia,serif" font-size="29" text-anchor="middle">P</text>
+</svg>
