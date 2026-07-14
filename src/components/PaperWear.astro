@@ -7,28 +7,102 @@ interface Props {
 
 const { number } = Astro.props;
 const wear = getPaperWear(number);
-const style = [
-  `--wear-edge-a: ${wear.edgeDepth}%`,
-  `--wear-edge-b: ${wear.edgeDepthAlt}%`,
-  `--wear-crease-one-x: ${wear.creaseOnePosition}%`,
-  `--wear-crease-two-x: ${wear.creaseTwoPosition}%`,
-  `--wear-crease-one-start: ${wear.creaseOneStart}%`,
-  `--wear-crease-two-start: ${wear.creaseTwoStart}%`,
-  `--wear-crease-one-angle: ${wear.creaseOneAngle}deg`,
-  `--wear-crease-two-angle: ${wear.creaseTwoAngle}deg`,
-  `--wear-bottom-y: ${wear.bottomCreasePosition}%`,
-  `--wear-nick-one: ${wear.nickOnePosition}%`,
-  `--wear-nick-two: ${wear.nickTwoPosition}%`,
-  `--wear-opacity: ${wear.opacity}`
-].join('; ');
+const grainId = `grain-${wear.id}`;
+const edgeId = `edge-${wear.id}`;
+const cornerId = `corner-${wear.id}`;
+const style = `--wear-opacity: ${wear.opacity}; --wear-edge-opacity: ${wear.edgeOpacity}`;
 ---
 
-<div class="paper-wear" data-paper-wear={number} data-wear-id={wear.id} style={style} aria-hidden="true">
-  <span class="paper-wear__crease paper-wear__crease--one"></span>
-  <span class="paper-wear__crease paper-wear__crease--two"></span>
-  <span class="paper-wear__crease paper-wear__crease--bottom"></span>
-  <span class="paper-wear__nick paper-wear__nick--one"></span>
-  <span class="paper-wear__nick paper-wear__nick--two"></span>
-  <span class="paper-wear__corner paper-wear__corner--top"></span>
-  <span class="paper-wear__corner paper-wear__corner--bottom"></span>
-</div>
+<svg
+  class="paper-wear"
+  data-paper-wear={number}
+  data-wear-id={wear.id}
+  data-fold-signature={wear.foldSignature}
+  style={style}
+  viewBox="0 0 100 100"
+  preserveAspectRatio="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  <defs>
+    <filter id={grainId} x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency={wear.grainFrequency}
+        numOctaves="3"
+        seed={wear.grainSeed}
+        stitchTiles="stitch"
+      />
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.12" />
+      </feComponentTransfer>
+    </filter>
+    <radialGradient id={edgeId} cx="50%" cy="50%" r="72%">
+      <stop offset="61%" stop-color="var(--color-muted-ink)" stop-opacity="0" />
+      <stop offset="87%" stop-color="var(--color-muted-ink)" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="var(--color-ink)" stop-opacity="0.5" />
+    </radialGradient>
+    <linearGradient id={cornerId} x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="var(--color-paper)" stop-opacity="0.72" />
+      <stop offset="0.55" stop-color="var(--color-muted-ink)" stop-opacity="0.2" />
+      <stop offset="1" stop-color="var(--color-paper)" stop-opacity="0.05" />
+    </linearGradient>
+  </defs>
+
+  <rect class="paper-wear__grain" x="0" y="0" width="100" height="100" filter={`url(#${grainId})`} />
+  <rect class="paper-wear__edge-tone" x="0" y="0" width="100" height="100" fill={`url(#${edgeId})`} />
+
+  <g class="paper-wear__stains">
+    {wear.stains.map((stain) => (
+      <ellipse
+        cx={stain.x}
+        cy={stain.y}
+        rx={stain.radiusX}
+        ry={stain.radiusY}
+        transform={`rotate(${stain.rotation} ${stain.x} ${stain.y})`}
+        style={`--stain-opacity: ${stain.opacity}`}
+      />
+    ))}
+  </g>
+
+  <g class="paper-wear__folds">
+    {wear.folds.map((fold, index) => (
+      <g
+        data-fold={index + 1}
+        style={`--fold-opacity: ${fold.opacity}; --fold-haze-width: ${fold.hazeWidth}; --fold-line-width: ${fold.lineWidth}`}
+      >
+        <path class="paper-wear__fold-haze" d={fold.path} vector-effect="non-scaling-stroke" />
+        <path class="paper-wear__fold-shadow" d={fold.path} vector-effect="non-scaling-stroke" />
+        <path
+          class="paper-wear__fold-highlight"
+          d={fold.path}
+          transform={`translate(${fold.highlightOffsetX} ${fold.highlightOffsetY})`}
+          vector-effect="non-scaling-stroke"
+        />
+      </g>
+    ))}
+  </g>
+
+  <g class={`paper-wear__corner paper-wear__corner--${wear.cornerFold.location}`}>
+    <path
+      class="paper-wear__corner-area"
+      d={wear.cornerFold.areaPath}
+      fill={`url(#${cornerId})`}
+      style={`--corner-opacity: ${wear.cornerFold.opacity}`}
+    />
+    <path class="paper-wear__corner-crease" d={wear.cornerFold.creasePath} vector-effect="non-scaling-stroke" />
+  </g>
+
+  <g class="paper-wear__abrasions">
+    {wear.abrasions.map((abrasion) => (
+      <ellipse
+        cx={abrasion.x}
+        cy={abrasion.y}
+        rx={abrasion.radiusX}
+        ry={abrasion.radiusY}
+        transform={`rotate(${abrasion.rotation} ${abrasion.x} ${abrasion.y})`}
+        style={`--abrasion-opacity: ${abrasion.opacity}`}
+      />
+    ))}
+  </g>
+</svg>

@@ -149,3 +149,29 @@ test('keeps the reading companion balanced on desktop and stacked on mobile', as
   expect(Math.min(...mobile.widths)).toBeGreaterThan(300);
   expect(mobile.overflow).toBeLessThanOrEqual(0);
 });
+
+test('renders varied archival wear without clipping the sheet', async ({ page }) => {
+  await page.goto('/papers/1/');
+
+  const paperOne = await page.locator('.paper-wear').evaluate((wear) => ({
+    tagName: wear.tagName.toLowerCase(),
+    display: getComputedStyle(wear).display,
+    foldSignature: wear.getAttribute('data-fold-signature'),
+    foldCount: wear.querySelectorAll('[data-fold]').length,
+    clipPath: getComputedStyle(document.querySelector('.paper-page') as Element).clipPath,
+    hasLegacyNicks: Boolean(document.querySelector('.paper-wear__nick'))
+  }));
+
+  expect(paperOne.tagName).toBe('svg');
+  expect(paperOne.display).not.toBe('none');
+  expect(paperOne.foldCount).toBe(3);
+  expect(paperOne.clipPath).toBe('none');
+  expect(paperOne.hasLegacyNicks).toBe(false);
+
+  await page.goto('/papers/2/');
+  const paperTwoSignature = await page.locator('.paper-wear').getAttribute('data-fold-signature');
+  expect(paperTwoSignature).not.toBe(paperOne.foldSignature);
+
+  await page.getByRole('button', { name: 'Reader' }).click();
+  await expect(page.locator('.paper-wear')).toBeHidden();
+});
