@@ -287,6 +287,43 @@ a:hover {
   line-height: 1.55 !important;
 }
 
+.about-portrait {
+  inline-size: min(100%, 34rem);
+  margin: var(--space-xl) auto 0;
+}
+
+.about-portrait__mat {
+  padding: clamp(0.55rem, 2vw, 0.9rem);
+  border: 1px solid var(--color-ink);
+  background: color-mix(in oklab, var(--color-paper) 82%, var(--color-newsprint));
+  box-shadow: 0.45rem 0.55rem 0 color-mix(in oklab, var(--color-ink) 18%, transparent);
+}
+
+.about-portrait__image {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border: 1px solid var(--color-oxblood);
+}
+
+.about-portrait__caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem var(--space-md);
+  padding: var(--space-sm) 0 0;
+  color: var(--color-muted-ink);
+  font: 600 0.72rem/1.4 var(--font-utility);
+  letter-spacing: 0.04em;
+}
+
+.about-portrait__caption strong {
+  color: var(--color-oxblood);
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .about-callout {
   position: relative;
   margin-block-start: var(--space-xl);
@@ -359,6 +396,14 @@ a:hover {
   .gazette-masthead__dateline {
     font-size: 0.64rem;
     letter-spacing: 0.08em;
+  }
+
+  .about-portrait {
+    inline-size: calc(100% - 0.5rem);
+  }
+
+  .about-portrait__caption {
+    display: grid;
   }
 }
 
