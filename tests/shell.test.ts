@@ -8,7 +8,7 @@ describe('static site shell', () => {
 
     expect(html).toContain('href="#main-content"');
     expect(html).toContain('<main id="main-content"');
-    expect(html).toContain('The Independent Journal');
+    expect(html).toContain('src="/masthead-independent-journal.svg"');
     expect(html).toContain('viewport-fit=cover');
   });
 });

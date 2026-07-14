@@ -7,6 +7,7 @@ import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
 import { getPaperWear } from '../lib/paper-wear';
+import { formatIssueDateline, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
 
 import '../styles/paper.css';
@@ -36,19 +37,23 @@ const paperStyle = [
 >
   <article class="paper-sheet paper-page" data-paper-number={data.number} style={paperStyle}>
     <PaperWear number={data.number} />
-    <ReadingToolbar number={data.number} />
     <GazetteMasthead
       compact
-      eyebrow="The essays of Publius"
-      publicationName={data.publicationVenue}
-      dateLine={data.publicationDateLabel}
+      dateLine={formatIssueDateline(data.publicationDate, data.publicationKind)}
     />
+    <ReadingToolbar number={data.number} />
 
     <header class="essay-heading">
-      <p class="essay-heading__number">Federalist No. {data.number}</p>
-      <h1>{data.title}</h1>
+      <h1 class="essay-heading__title">
+        <span>THE FEDERALIST.</span>
+        <span class="essay-heading__number">No. {toRomanNumeral(data.number)}.</span>
+      </h1>
+      <p class="essay-heading__topic">{data.title}</p>
       <p class="essay-heading__recipient">{data.recipient}</p>
-      <p class="essay-heading__byline">By {data.author}</p>
+      <span class="essay-heading__ornament" aria-hidden="true"></span>
+      <p class="essay-heading__byline">PUBLIUS</p>
+      <p class="essay-heading__author">{data.author}</p>
+      <p class="essay-heading__publication">{data.publicationDateLabel}</p>
       {data.authorCertainty === 'disputed' && (
         <p class="essay-heading__note">Authorship attribution is disputed.</p>
       )}
