@@ -1,6 +1,16 @@
 ---
+import { getCollection } from 'astro:content';
+
 import GazetteMasthead from '../components/GazetteMasthead.astro';
+import IndexLedger from '../components/IndexLedger.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getOrderedPapers } from '../lib/papers';
+
+import '../styles/index.css';
+
+const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
+  entries.map((entry) => ({ ...entry, number: entry.data.number }))
+));
 ---
 
 <BaseLayout
@@ -22,7 +32,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         reading view, and a little friendly context for the conversation afterward.
       </p>
       <p class="home-intro__action">
-        <a class="button-link" href="/papers/1/">Begin with Paper No. 1 <span aria-hidden="true">→</span></a>
+        <a class="button-link" href="/papers/1/" data-continue-link>
+          <span data-continue-label>Begin with Paper No. 1</span> <span aria-hidden="true">→</span>
+        </a>
       </p>
     </section>
 
@@ -35,5 +47,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         Your reading progress stays privately in this browser—there is no account to create.
       </p>
     </section>
+
+    <IndexLedger papers={papers} />
   </article>
 </BaseLayout>
