@@ -107,6 +107,34 @@
   text-transform: uppercase;
 }
 
+.progress-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-sm);
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--color-ink);
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.progress-control[hidden] {
+  display: none;
+}
+
+.progress-control[aria-pressed='true'] {
+  color: var(--color-verdigris);
+}
+
+.progress-control__mark {
+  margin-inline-end: var(--space-xs);
+}
+
 .reading-toolbar__index {
   display: inline-flex;
   align-items: center;
@@ -353,6 +381,16 @@
 
   .reading-toolbar__modes > span {
     display: none;
+  }
+
+  .reading-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .progress-control {
+    order: 3;
+    inline-size: 100%;
+    border-block-start: 1px solid color-mix(in oklab, var(--color-rule) 45%, transparent);
   }
 
   .essay-heading {

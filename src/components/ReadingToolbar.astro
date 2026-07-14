@@ -1,4 +1,6 @@
 ---
+import ProgressControl from './ProgressControl.astro';
+
 interface Props {
   number: number;
 }
@@ -8,6 +10,7 @@ const { number } = Astro.props;
 
 <nav class="reading-toolbar" aria-label={`Reading tools for Federalist No. ${number}`}>
   <a class="reading-toolbar__index" href="/#all-papers"><span aria-hidden="true">←</span> Index</a>
+  <ProgressControl number={number} />
   <div class="reading-toolbar__modes" aria-label="Reading view">
     <span>View</span>
     <button type="button" data-mode="gazette" aria-pressed="true">Gazette</button>
@@ -16,20 +19,24 @@ const { number } = Astro.props;
 </nav>
 
 <script>
-  const storageKey = 'publius:reading-mode';
+  import { createPreferences } from '../lib/preferences';
+
   const root = document.documentElement;
   const modeButtons = document.querySelectorAll<HTMLButtonElement>('[data-mode]');
+  let storage: Storage | null = null;
+  try {
+    storage = window.localStorage;
+  } catch {
+    // Reader mode still works for this page when storage is blocked.
+  }
+  const preferences = createPreferences(storage);
 
   function applyMode(mode: 'gazette' | 'reader') {
     root.dataset.readingMode = mode;
     for (const button of modeButtons) {
       button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
     }
-    try {
-      localStorage.setItem(storageKey, mode);
-    } catch {
-      // The mode still works for this page if browser storage is unavailable.
-    }
+    preferences.setReadingMode(mode);
   }
 
   const initialMode = root.dataset.readingMode === 'reader' ? 'reader' : 'gazette';

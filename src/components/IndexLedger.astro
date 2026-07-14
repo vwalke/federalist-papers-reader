@@ -1,0 +1,174 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  papers: CollectionEntry<'papers'>[];
+}
+
+const { papers } = Astro.props;
+
+function formatDate(value: string): string {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC'
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+---
+
+<section class="index-ledger" id="all-papers" aria-labelledby="index-heading">
+  <header class="index-ledger__heading">
+    <div>
+      <p class="section-kicker">The complete collection</p>
+      <h2 id="index-heading">All eighty-five papers</h2>
+    </div>
+    <p class="index-ledger__progress" data-progress-summary>0 of 85 read in this browser</p>
+  </header>
+
+  <form class="index-tools" data-index-tools hidden>
+    <label class="index-tools__search">
+      <span>Search all papers</span>
+      <input type="search" name="query" autocomplete="off" placeholder="A phrase, author, or number…" />
+    </label>
+    <label>
+      <span>Sort by</span>
+      <select name="sort">
+        <option value="number">Paper number</option>
+        <option value="author">Author</option>
+        <option value="date">Publication date</option>
+      </select>
+    </label>
+    <label>
+      <span>Show</span>
+      <select name="status">
+        <option value="all">All papers</option>
+        <option value="unread">Unread papers</option>
+        <option value="read">Read papers</option>
+      </select>
+    </label>
+  </form>
+
+  <p class="index-ledger__count" data-index-count aria-live="polite">Showing all 85 papers</p>
+
+  <div class="index-ledger__labels" aria-hidden="true">
+    <span>No.</span>
+    <span>Paper and message</span>
+    <span>Author</span>
+    <span>Published</span>
+    <span>Status</span>
+  </div>
+
+  <ol class="index-ledger__list" data-index-list>
+    {papers.map(({ data }) => (
+      <li
+        class="index-entry"
+        data-index-paper={String(data.number)}
+        data-title={data.title}
+        data-author={data.author}
+        data-date={data.publicationDate}
+        data-summary={data.indexSummary}
+      >
+        <p class="index-entry__number"><span class="visually-hidden">Federalist number </span>{data.number}</p>
+        <div class="index-entry__message">
+          <h3><a href={`/papers/${data.number}/`}>{data.title}</a></h3>
+          <p>{data.indexSummary}</p>
+        </div>
+        <p class="index-entry__author">{data.author}</p>
+        <p class="index-entry__date"><time datetime={data.publicationDate}>{formatDate(data.publicationDate)}</time></p>
+        <p class="index-entry__status" data-index-status>
+          <span class="index-entry__printer-mark" aria-hidden="true">○</span>
+          <span data-index-status-label>Unread</span>
+        </p>
+      </li>
+    ))}
+  </ol>
+
+  <p class="index-ledger__empty" data-index-empty hidden>
+    No papers match that search. Try fewer words or show the complete collection again.
+  </p>
+</section>
+
+<script>
+  import { selectIndexPapers, type IndexPaper, type IndexSort, type IndexStatus } from '../lib/index-state';
+  import { createPreferences, getNextUnread } from '../lib/preferences';
+
+  const tools = document.querySelector<HTMLFormElement>('[data-index-tools]');
+  const list = document.querySelector<HTMLOListElement>('[data-index-list]');
+  const count = document.querySelector<HTMLElement>('[data-index-count]');
+  const empty = document.querySelector<HTMLElement>('[data-index-empty]');
+  const progressSummary = document.querySelector<HTMLElement>('[data-progress-summary]');
+
+  if (tools && list && count && empty) {
+    const form = tools;
+    const paperList = list;
+    const resultCount = count;
+    const emptyMessage = empty;
+    let storage: Storage | null = null;
+    try {
+      storage = window.localStorage;
+    } catch {
+      // Search and sort still work when storage is blocked.
+    }
+    const preferences = createPreferences(storage);
+    const elements = new Map<number, HTMLElement>();
+    const papers: IndexPaper[] = [];
+
+    for (const element of paperList.querySelectorAll<HTMLElement>('[data-index-paper]')) {
+      const number = Number(element.dataset.indexPaper);
+      elements.set(number, element);
+      papers.push({
+        number,
+        title: element.dataset.title ?? '',
+        author: element.dataset.author ?? '',
+        publicationDate: element.dataset.date ?? '',
+        indexSummary: element.dataset.summary ?? ''
+      });
+    }
+
+    function render() {
+      const formData = new FormData(form);
+      const query = String(formData.get('query') ?? '');
+      const sort = String(formData.get('sort') ?? 'number') as IndexSort;
+      const status = String(formData.get('status') ?? 'all') as IndexStatus;
+      const readNumbers = preferences.getReadPapers();
+      const visible = selectIndexPapers(papers, { query, sort, status, readNumbers });
+      const visibleNumbers = new Set(visible.map(({ number }) => number));
+      const ordered = selectIndexPapers(papers, { sort });
+
+      for (const paper of ordered) {
+        const element = elements.get(paper.number);
+        if (!element) continue;
+        element.hidden = !visibleNumbers.has(paper.number);
+        element.dataset.read = String(readNumbers.has(paper.number));
+        const statusLabel = element.querySelector<HTMLElement>('[data-index-status-label]');
+        const mark = element.querySelector<HTMLElement>('.index-entry__printer-mark');
+        if (statusLabel) statusLabel.textContent = readNumbers.has(paper.number) ? 'Read' : 'Unread';
+        if (mark) mark.textContent = readNumbers.has(paper.number) ? '✓' : '○';
+        paperList.append(element);
+      }
+
+      resultCount.textContent = visible.length === 85 ? 'Showing all 85 papers' : `Showing ${visible.length} of 85 papers`;
+      emptyMessage.hidden = visible.length !== 0;
+      if (progressSummary) progressSummary.textContent = `${readNumbers.size} of 85 read in this browser`;
+
+      const nextUnread = getNextUnread(papers.map(({ number }) => number).sort((a, b) => a - b), readNumbers);
+      for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-continue-link]')) {
+        if (nextUnread) {
+          link.href = `/papers/${nextUnread}/`;
+          link.querySelector('[data-continue-label]')!.textContent = `Continue with Paper No. ${nextUnread}`;
+        } else {
+          link.href = '/papers/1/';
+          link.querySelector('[data-continue-label]')!.textContent = 'Revisit Paper No. 1';
+        }
+      }
+    }
+
+    form.hidden = false;
+    form.addEventListener('input', render);
+    form.addEventListener('change', render);
+    form.addEventListener('submit', (event) => event.preventDefault());
+    render();
+  }
+</script>
