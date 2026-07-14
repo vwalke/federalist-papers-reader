@@ -1,0 +1,49 @@
+---
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About this edition — Publius"
+  description="How this warm, accessible reading edition of the Federalist Papers handles original text, historical atmosphere, and companion commentary."
+>
+  <article class="paper-sheet">
+    <GazetteMasthead compact dateLine="A note to the reader" />
+    <div class="about-copy flow">
+      <p class="section-kicker">About this edition</p>
+      <h1>History you can settle in with.</h1>
+      <p>
+        The Federalist Papers were not born as a forbidding monument. They were a public argument,
+        printed in newspapers and read amid the ordinary business of the day. This edition tries to
+        recover some of that immediacy without asking you to decipher a facsimile.
+      </p>
+
+      <section aria-labelledby="words-heading">
+        <h2 id="words-heading">Their words, clearly set</h2>
+        <p>
+          The essays retain their original wording. Modern type, comfortable spacing, and a clean
+          Reader option make them easier on contemporary eyes. The newspaper view is atmosphere,
+          not a claim that every rule and column exactly reproduces one historic printing.
+        </p>
+      </section>
+
+      <section aria-labelledby="notes-heading">
+        <h2 id="notes-heading">A companion, not a lecture</h2>
+        <p>
+          Each paper has a short plain-language note: the argument in a nutshell, its key moves,
+          why it mattered, and a question worth discussing. Historical details appear when they add
+          color or make the stakes clearer—not simply because they are available.
+        </p>
+      </section>
+
+      <section aria-labelledby="privacy-heading">
+        <h2 id="privacy-heading">No account, no tracking your reading</h2>
+        <p>
+          Marking a paper read saves that fact only in this browser. It will not follow you to a new
+          device, and clearing browser storage clears the record. The essays and navigation remain
+          available if storage or JavaScript is disabled.
+        </p>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
