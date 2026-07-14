@@ -1,0 +1,41 @@
+---
+interface Props {
+  number: number;
+}
+
+const { number } = Astro.props;
+---
+
+<nav class="reading-toolbar" aria-label={`Reading tools for Federalist No. ${number}`}>
+  <a class="reading-toolbar__index" href="/#all-papers"><span aria-hidden="true">←</span> Index</a>
+  <div class="reading-toolbar__modes" aria-label="Reading view">
+    <span>View</span>
+    <button type="button" data-mode="gazette" aria-pressed="true">Gazette</button>
+    <button type="button" data-mode="reader" aria-pressed="false">Reader</button>
+  </div>
+</nav>
+
+<script>
+  const storageKey = 'publius:reading-mode';
+  const root = document.documentElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>('[data-mode]');
+
+  function applyMode(mode: 'gazette' | 'reader') {
+    root.dataset.readingMode = mode;
+    for (const button of modeButtons) {
+      button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+    }
+    try {
+      localStorage.setItem(storageKey, mode);
+    } catch {
+      // The mode still works for this page if browser storage is unavailable.
+    }
+  }
+
+  const initialMode = root.dataset.readingMode === 'reader' ? 'reader' : 'gazette';
+  applyMode(initialMode);
+
+  for (const button of modeButtons) {
+    button.addEventListener('click', () => applyMode(button.dataset.mode === 'reader' ? 'reader' : 'gazette'));
+  }
+</script>

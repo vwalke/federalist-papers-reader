@@ -1,0 +1,38 @@
+---
+interface PaperLink {
+  number: number;
+  title: string;
+}
+
+interface Props {
+  previous: PaperLink | null;
+  next: PaperLink | null;
+}
+
+const { previous, next } = Astro.props;
+---
+
+<nav class="essay-navigation" aria-label="Federalist Paper navigation">
+  {previous ? (
+    <a class="essay-navigation__previous" href={`/papers/${previous.number}/`}>
+      <span class="essay-navigation__label">← Previous</span>
+      <span>No. {previous.number}: {previous.title}</span>
+    </a>
+  ) : (
+    <a class="essay-navigation__previous" href="/#all-papers">
+      <span class="essay-navigation__label">← Return</span>
+      <span>Browse all papers</span>
+    </a>
+  )}
+  {next ? (
+    <a class="essay-navigation__next" href={`/papers/${next.number}/`}>
+      <span class="essay-navigation__label">Next →</span>
+      <span>No. {next.number}: {next.title}</span>
+    </a>
+  ) : (
+    <a class="essay-navigation__next" href="/#all-papers">
+      <span class="essay-navigation__label">The full collection →</span>
+      <span>Return to the index</span>
+    </a>
+  )}
+</nav>

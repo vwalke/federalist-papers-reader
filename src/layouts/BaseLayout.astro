@@ -12,14 +12,15 @@ interface Props {
   title: string;
   description: string;
   pageClass?: string;
+  readingMode?: boolean;
 }
 
-const { title, description, pageClass = '' } = Astro.props;
+const { title, description, pageClass = '', readingMode = false } = Astro.props;
 const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-reading-mode={readingMode ? 'gazette' : undefined}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -33,6 +34,14 @@ const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : unde
     {canonicalURL && <link rel="canonical" href={canonicalURL} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
+    {readingMode && (
+      <script is:inline>
+        try {
+          const savedMode = localStorage.getItem('publius:reading-mode');
+          if (savedMode === 'reader') document.documentElement.dataset.readingMode = 'reader';
+        } catch {}
+      </script>
+    )}
   </head>
   <body class={pageClass}>
     <a class="skip-link" href="#main-content">Skip to the paper</a>

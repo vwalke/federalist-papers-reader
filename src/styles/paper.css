@@ -1,0 +1,388 @@
+.paper-page {
+  --paper-content-gutter: clamp(0.75rem, 3.5vw, 3rem);
+  clip-path: polygon(
+    var(--wear-edge-a, 0.25%) 0,
+    calc(100% - var(--wear-edge-b, 0.35%)) 0,
+    100% var(--wear-edge-a, 0.25%),
+    calc(100% - var(--wear-edge-a, 0.25%)) 100%,
+    var(--wear-edge-b, 0.35%) 100%,
+    0 calc(100% - var(--wear-edge-a, 0.25%)),
+    0 var(--wear-edge-b, 0.35%)
+  );
+}
+
+.paper-wear {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--wear-opacity);
+}
+
+.paper-wear__crease,
+.paper-wear__corner,
+.paper-wear__nick {
+  position: absolute;
+  display: block;
+}
+
+.paper-wear__crease {
+  inline-size: 1px;
+  block-size: clamp(7rem, 22vw, 17rem);
+  background: color-mix(in oklab, var(--color-muted-ink) 32%, transparent);
+  box-shadow: 1px 0 0 color-mix(in oklab, var(--color-paper) 48%, transparent);
+  transform-origin: top;
+}
+
+.paper-wear__crease--one {
+  inset-block-start: var(--wear-crease-one-start);
+  inset-inline-start: var(--wear-crease-one-x);
+  transform: rotate(var(--wear-crease-one-angle));
+}
+
+.paper-wear__crease--two {
+  inset-block-start: var(--wear-crease-two-start);
+  inset-inline-start: var(--wear-crease-two-x);
+  transform: rotate(var(--wear-crease-two-angle));
+}
+
+.paper-wear__crease--bottom {
+  inset-block-start: var(--wear-bottom-y);
+  inset-inline-start: 2%;
+  inline-size: clamp(6rem, 18vw, 14rem);
+  block-size: 1px;
+  transform: rotate(calc(var(--wear-crease-one-angle) * 0.4));
+}
+
+.paper-wear__nick {
+  inline-size: clamp(0.2rem, 0.5vw, 0.42rem);
+  block-size: clamp(0.5rem, 1vw, 0.85rem);
+  background: var(--color-room);
+  clip-path: polygon(0 0, 100% 42%, 0 100%);
+}
+
+.paper-wear__nick--one {
+  inset-block-start: var(--wear-nick-one);
+  inset-inline-start: 0;
+}
+
+.paper-wear__nick--two {
+  inset-block-start: var(--wear-nick-two);
+  inset-inline-end: 0;
+  transform: rotate(180deg);
+}
+
+.paper-wear__corner {
+  inline-size: clamp(2rem, 5vw, 4rem);
+  block-size: 1px;
+  background: color-mix(in oklab, var(--color-muted-ink) 26%, transparent);
+}
+
+.paper-wear__corner--top {
+  inset-block-start: 1.2rem;
+  inset-inline-end: -0.45rem;
+  transform: rotate(-34deg);
+}
+
+.paper-wear__corner--bottom {
+  inset-block-end: 1.4rem;
+  inset-inline-start: -0.55rem;
+  transform: rotate(-28deg);
+}
+
+.reading-toolbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: 2.75rem;
+  margin-block-end: var(--space-lg);
+  padding-block-end: var(--space-sm);
+  border-block-end: 1px solid var(--color-rule);
+  gap: var(--space-sm);
+  font: 700 0.72rem/1.2 var(--font-utility);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.reading-toolbar__index {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+}
+
+.reading-toolbar__modes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.reading-toolbar__modes > span {
+  margin-inline-end: var(--space-xs);
+  color: var(--color-muted-ink);
+}
+
+.reading-toolbar button {
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-sm);
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--color-ink);
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.reading-toolbar button[aria-pressed='true'] {
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+  background: var(--color-ink);
+}
+
+.essay-heading {
+  max-inline-size: 54rem;
+  margin: var(--space-2xl) auto var(--space-xl);
+  padding-block-end: var(--space-xl);
+  border-block-end: 1px solid var(--color-rule);
+  text-align: center;
+}
+
+.essay-heading__number,
+.essay-heading__byline,
+.essay-heading__note {
+  font: 700 0.72rem/1.35 var(--font-utility);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.essay-heading__number {
+  color: var(--color-oxblood);
+}
+
+.essay-heading h1 {
+  margin-block: var(--space-sm) var(--space-md);
+  font: 400 clamp(2rem, 5vw, 4rem)/1 var(--font-display);
+  text-wrap: balance;
+}
+
+.essay-heading__recipient {
+  font-style: italic;
+}
+
+.essay-heading__byline {
+  margin-block-start: var(--space-md);
+}
+
+.essay-heading__note {
+  margin-block-start: var(--space-xs);
+  color: var(--color-muted-ink);
+  font-size: 0.64rem;
+}
+
+.essay-body {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.0625rem, 1.7vw, 1.16rem);
+  font-variant-numeric: oldstyle-nums;
+  line-height: 1.58;
+  text-align: left;
+}
+
+.essay-body p {
+  margin: 0 0 1em;
+  orphans: 3;
+  widows: 3;
+}
+
+.essay-body > p:first-child::first-letter {
+  float: left;
+  margin: 0.03em 0.08em 0 0;
+  color: var(--color-oxblood);
+  font: 400 4.25em/0.72 var(--font-display);
+}
+
+.essay-signature {
+  margin-block: var(--space-xl) var(--space-2xl);
+  font: 400 1.35rem/1 var(--font-display);
+  letter-spacing: 0.16em;
+  text-align: end;
+  text-transform: uppercase;
+}
+
+.commentary {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-xl);
+  padding-block: var(--space-xl);
+  border-block: 5px double var(--color-rule);
+}
+
+.commentary__heading {
+  text-align: center;
+}
+
+.commentary__heading > span {
+  color: var(--color-oxblood);
+}
+
+.commentary__heading > p,
+.commentary h3 {
+  margin-block: var(--space-xs);
+  font: 700 0.7rem/1.3 var(--font-utility);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.commentary h2 {
+  font: 400 clamp(1.9rem, 4vw, 3rem)/1 var(--font-display);
+}
+
+.commentary p,
+.commentary li {
+  font-size: 1.0625rem;
+  line-height: 1.58;
+}
+
+.commentary ol {
+  padding-inline-start: 1.35rem;
+}
+
+.commentary li + li {
+  margin-block-start: var(--space-sm);
+}
+
+.commentary__question {
+  padding-inline-start: var(--space-md);
+  border-inline-start: 3px solid var(--color-oxblood);
+}
+
+.essay-navigation {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1px;
+  margin-block-start: var(--space-2xl);
+  background: var(--color-rule);
+  border: 1px solid var(--color-rule);
+}
+
+.essay-navigation a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-block-size: 5.5rem;
+  padding: var(--space-md);
+  background: var(--color-newsprint);
+  text-decoration: none;
+}
+
+.essay-navigation a:hover {
+  background: var(--color-paper);
+}
+
+.essay-navigation__next {
+  text-align: end;
+}
+
+.essay-navigation__label {
+  margin-block-end: var(--space-xs);
+  color: var(--color-oxblood);
+  font: 700 0.68rem/1.2 var(--font-utility);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-reading-mode='reader'] .paper-page {
+  clip-path: none;
+  background-color: var(--color-paper);
+}
+
+[data-reading-mode='reader'] .paper-wear {
+  display: none;
+}
+
+[data-reading-mode='reader'] .essay-body,
+[data-reading-mode='reader'] .essay-signature,
+[data-reading-mode='reader'] .commentary,
+[data-reading-mode='reader'] .essay-navigation,
+[data-reading-mode='reader'] .essay-heading {
+  max-inline-size: 68ch;
+  margin-inline: auto;
+}
+
+@media (min-width: 46rem) {
+  [data-reading-mode='gazette'] .essay-body {
+    columns: 2 19rem;
+    column-gap: clamp(2rem, 4vw, 3.5rem);
+    column-rule: 1px solid color-mix(in oklab, var(--color-rule) 55%, transparent);
+  }
+
+  .commentary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .commentary__heading,
+  .commentary__lead {
+    grid-column: 1 / -1;
+  }
+
+  .essay-navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 68rem) {
+  [data-reading-mode='gazette'] .essay-body {
+    columns: 3 18rem;
+  }
+}
+
+@media (max-width: 45.999rem) {
+  .paper-page {
+    clip-path: polygon(0.15% 0, 99.8% 0, 100% 99.85%, 0.15% 100%, 0 0.2%);
+  }
+
+  .paper-wear {
+    opacity: calc(var(--wear-opacity) * 0.52);
+  }
+
+  .reading-toolbar__modes > span {
+    display: none;
+  }
+
+  .essay-heading {
+    margin-block-start: var(--space-xl);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  .paper-wear {
+    display: none;
+  }
+
+  .paper-page {
+    clip-path: none;
+  }
+}
+
+@media print {
+  .reading-toolbar,
+  .paper-wear {
+    display: none;
+  }
+
+  .paper-page {
+    clip-path: none;
+  }
+
+  .essay-body {
+    columns: auto !important;
+    max-inline-size: none;
+    font-size: 11pt;
+  }
+}

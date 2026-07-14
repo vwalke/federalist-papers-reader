@@ -1,0 +1,32 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+
+import PaperLayout from '../../layouts/PaperLayout.astro';
+import { getAdjacentPapers, getOrderedPapers } from '../../lib/papers';
+
+export async function getStaticPaths() {
+  const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
+    entries.map((entry) => ({ ...entry, number: entry.data.number }))
+  ));
+
+  return papers.map((paper) => ({
+    params: { number: String(paper.data.number) },
+    props: { paper }
+  }));
+}
+
+interface Props {
+  paper: CollectionEntry<'papers'>;
+}
+
+const { paper } = Astro.props;
+const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
+  entries.map((entry) => ({ ...entry, number: entry.data.number }))
+));
+const adjacent = getAdjacentPapers(papers, paper.data.number);
+const { Content } = await render(paper);
+---
+
+<PaperLayout paper={paper} previous={adjacent.previous} next={adjacent.next}>
+  <Content />
+</PaperLayout>
