@@ -8,7 +8,7 @@
     "node": ">=22.20.0"
   },
   "scripts": {
-    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "dev": "ASTRO_DEV_BACKGROUND=0 ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "generate:masthead": "node scripts/generate-masthead.mjs",
     "build": "pnpm validate:content && ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
 
 import { getAdjacentPapers, getOrderedPapers, getPaperByNumber, validatePaperSet } from '../src/lib/papers';
 import { validateContentDirectory } from '../scripts/validate-content.mjs';
@@ -56,5 +57,13 @@ describe('committed content', () => {
     expect(report.shortSummariesOver18Words).toEqual([]);
     expect(report.unquotedDates).toEqual([]);
     expect(report.commentaryOutsideTarget).toEqual([]);
+  });
+
+  it('records Federalist No. 26 in its 1787 publication chronology', async () => {
+    const source = await readFile(new URL('../src/content/papers/026.md', import.meta.url), 'utf8');
+
+    expect(source).toContain('publicationDate: "1787-12-22"');
+    expect(source).toContain('Saturday, December 22, 1787');
+    expect(source).not.toContain('December 22, 1788');
   });
 });

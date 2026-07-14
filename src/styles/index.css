@@ -53,6 +53,14 @@
   text-transform: none;
 }
 
+.index-tools__note {
+  max-inline-size: 74ch;
+  color: var(--color-muted-ink);
+  font: 400 0.8rem/1.45 var(--font-utility);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .index-ledger__count {
   margin-block: var(--space-md);
   color: var(--color-muted-ink);
@@ -133,6 +141,10 @@
   .index-tools {
     grid-template-columns: minmax(15rem, 1fr) repeat(2, minmax(9rem, 0.34fr));
     align-items: end;
+  }
+
+  .index-tools__note {
+    grid-column: 1 / -1;
   }
 }
 
