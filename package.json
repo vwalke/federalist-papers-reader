@@ -19,7 +19,6 @@
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && pnpm build && pnpm test"
   },
   "dependencies": {
-    "@fontsource/im-fell-english": "5.2.6",
     "@fontsource/libre-caslon-display": "5.2.7",
     "@fontsource/libre-caslon-text": "5.2.7",
     "astro": "7.0.7",

@@ -112,7 +112,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-block-size: 2.75rem;
+  min-block-size: 2.8125rem;
   padding-inline: var(--space-md);
   border: 1px solid var(--color-oxblood);
   border-radius: 0;
@@ -134,19 +134,47 @@
 }
 
 .progress-control__mark {
+  position: relative;
+  display: inline-block;
+  inline-size: 0.72rem;
+  block-size: 0.95rem;
   margin-inline-end: var(--space-xs);
+  border: 1.5px solid currentColor;
+  border-block-end: 0;
+}
+
+.progress-control__mark::before,
+.progress-control__mark::after {
+  content: '';
+  position: absolute;
+  inset-block-end: 0;
+  inline-size: 0.43rem;
+  border-block-start: 1.5px solid currentColor;
+}
+
+.progress-control__mark::before {
+  inset-inline-start: 0;
+  transform: rotate(-32deg);
+  transform-origin: left bottom;
+}
+
+.progress-control__mark::after {
+  inset-inline-end: 0;
+  transform: rotate(32deg);
+  transform-origin: right bottom;
 }
 
 .reading-toolbar__index {
-  display: inline-flex;
+  display: none;
   align-items: center;
-  min-block-size: 2.75rem;
+  min-block-size: 2.8125rem;
   color: var(--color-muted-ink);
   text-decoration: none;
 }
 
 .reading-toolbar__modes {
   display: flex;
+  order: 1;
   align-items: center;
   gap: var(--space-2xs);
   padding: 1px;
@@ -159,7 +187,7 @@
 }
 
 .reading-toolbar button {
-  min-block-size: 2.75rem;
+  min-block-size: 2.8125rem;
   padding-inline: var(--space-md);
   border: 1px solid transparent;
   border-radius: 0;
@@ -179,6 +207,8 @@
 }
 
 .reading-toolbar .progress-control {
+  order: 2;
+  margin-inline-start: auto;
   border-color: var(--color-oxblood);
   color: var(--color-oxblood);
 }
@@ -490,8 +520,16 @@
   }
 
   .progress-control {
-    inline-size: auto;
-    padding-inline: var(--space-sm);
+    inline-size: 2.8125rem;
+    padding-inline: 0;
+  }
+
+  .progress-control__mark {
+    margin-inline-end: 0;
+  }
+
+  .progress-control [data-progress-label] {
+    display: none;
   }
 
   .essay-heading {

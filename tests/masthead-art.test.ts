@@ -15,10 +15,18 @@ describe('Independent Journal masthead artwork', () => {
     const font = await opentype.load(fileURLToPath(fontPath));
     const svg = buildMastheadSvg(font);
 
-    expect(svg).toContain('viewBox="0 0 1200 190"');
+    expect(svg).toContain('viewBox="0 35 1200 145"');
     expect(svg).toContain('<path');
     expect(svg).toContain('<line');
     expect(svg).not.toContain('<text');
+
+    const subtitleLeft = Number(svg.match(/data-subtitle-left="([\d.]+)"/)?.[1]);
+    const subtitleRight = Number(svg.match(/data-subtitle-right="([\d.]+)"/)?.[1]);
+    const leftAccentEnd = Number(svg.match(/data-left-accent-end="([\d.]+)"/)?.[1]);
+    const rightAccentStart = Number(svg.match(/data-right-accent-start="([\d.]+)"/)?.[1]);
+
+    expect(leftAccentEnd).toBeLessThan(subtitleLeft);
+    expect(rightAccentStart).toBeGreaterThan(subtitleRight);
   });
 
   it('commits the generated asset used by the site', async () => {

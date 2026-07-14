@@ -11,9 +11,10 @@ const { number } = Astro.props;
   type="button"
   data-progress-control={number}
   aria-pressed="false"
+  aria-label="Mark as read"
   hidden
 >
-  <span class="progress-control__mark" aria-hidden="true">✓</span>
+  <span class="progress-control__mark" aria-hidden="true"></span>
   <span data-progress-label>Mark as read</span>
 </button>
 
@@ -34,7 +35,9 @@ const { number } = Astro.props;
 
     function render(read: boolean) {
       button.setAttribute('aria-pressed', String(read));
-      if (label) label.textContent = read ? 'Marked as read' : 'Mark as read';
+      const text = read ? 'Marked as read' : 'Mark as read';
+      button.setAttribute('aria-label', text);
+      if (label) label.textContent = text;
     }
 
     render(preferences.isPaperRead(number));
