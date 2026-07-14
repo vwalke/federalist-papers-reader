@@ -1,0 +1,37 @@
+---
+interface Props {
+  nutshell: string;
+  keyArguments: string[];
+  whyItMattered: string;
+  talkItOver: string;
+}
+
+const { nutshell, keyArguments, whyItMattered, talkItOver } = Astro.props;
+---
+
+<aside class="commentary" aria-labelledby="companion-heading">
+  <div class="commentary__heading">
+    <span aria-hidden="true">✦</span>
+    <p>Reading companion</p>
+    <h2 id="companion-heading">In a nutshell</h2>
+  </div>
+  <div class="commentary__lead">
+    <p>{nutshell}</p>
+  </div>
+  <section aria-labelledby="arguments-heading">
+    <h3 id="arguments-heading">The key moves</h3>
+    <ol>
+      {keyArguments.map((argument) => <li>{argument}</li>)}
+    </ol>
+  </section>
+  {whyItMattered && (
+    <section aria-labelledby="mattered-heading">
+      <h3 id="mattered-heading">Why it mattered</h3>
+      <p>{whyItMattered}</p>
+    </section>
+  )}
+  <section class="commentary__question" aria-labelledby="question-heading">
+    <h3 id="question-heading">Talk it over</h3>
+    <p>{talkItOver}</p>
+  </section>
+</aside>

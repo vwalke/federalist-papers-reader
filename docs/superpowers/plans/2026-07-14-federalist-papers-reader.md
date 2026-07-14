@@ -358,11 +358,14 @@ git commit -m "feat: establish the Publius newspaper visual system"
 - Create: `src/pages/papers/[number].astro`
 - Create: `src/styles/paper.css`
 - Create: `src/scripts/enhance-reader.ts`
+- Create: `src/lib/paper-wear.ts`
 - Create: `tests/e2e/reader.spec.ts`
+- Create: `tests/paper-wear.test.ts`
 
 **Interfaces:**
 - Consumes: ordered `PaperData` entries, `getAdjacentPapers()`, and preference functions from Task 5.
 - Produces: 85 routes `/papers/1/` through `/papers/85/`; DOM hooks `[data-reading-mode]`, `[data-paper-number]`, `[data-mark-read]`, and `[data-next-unread]`.
+- Produces: `getPaperWear(number)` returning stable, unique, bounded CSS custom properties for each Gazette sheet.
 
 - [ ] **Step 1: Write failing reader-route tests**
 
@@ -393,6 +396,8 @@ Expected: FAIL because `/papers/1/` does not exist.
 - [ ] **Step 3: Implement static paths and semantic essay composition**
 
 `getStaticPaths()` must sort the collection numerically and return each number as a route parameter. Keep all essay text in the initial HTML. Put commentary after `</article>` in a labeled complementary section. Previous/next anchors remain normal links even when JavaScript is disabled.
+
+Before implementing the material layer, add `tests/paper-wear.test.ts` asserting that Papers 1–85 produce 85 unique serialized fingerprints, repeated calls for one number are equal, every position remains within the outer 8% of an edge, and invalid paper numbers throw. Implement `getPaperWear(number)` as a deterministic integer hash plus a bounded pseudo-random sequence; expose only numeric custom properties and render creases/nicks in a presentation-only `aria-hidden="true"` overlay. Reader mode, print, forced-colors, and narrow-screen rules must remove or reduce the overlay.
 
 - [ ] **Step 4: Implement the responsive Gazette and Reader CSS**
 

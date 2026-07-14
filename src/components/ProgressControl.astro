@@ -1,0 +1,48 @@
+---
+interface Props {
+  number: number;
+}
+
+const { number } = Astro.props;
+---
+
+<button
+  class="progress-control"
+  type="button"
+  data-progress-control={number}
+  aria-pressed="false"
+  hidden
+>
+  <span class="progress-control__mark" aria-hidden="true">✓</span>
+  <span data-progress-label>Mark as read</span>
+</button>
+
+<script>
+  import { createPreferences } from '../lib/preferences';
+
+  let storage: Storage | null = null;
+  try {
+    storage = window.localStorage;
+  } catch {
+    // Keep progress available for this page even if storage access is blocked.
+  }
+  const preferences = createPreferences(storage);
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-progress-control]')) {
+    const number = Number(button.dataset.progressControl);
+    const label = button.querySelector<HTMLElement>('[data-progress-label]');
+
+    function render(read: boolean) {
+      button.setAttribute('aria-pressed', String(read));
+      if (label) label.textContent = read ? 'Marked as read' : 'Mark as read';
+    }
+
+    render(preferences.isPaperRead(number));
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      const read = button.getAttribute('aria-pressed') !== 'true';
+      preferences.setPaperRead(number, read);
+      render(read);
+    });
+  }
+</script>

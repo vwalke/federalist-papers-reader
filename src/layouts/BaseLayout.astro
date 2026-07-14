@@ -1,0 +1,66 @@
+---
+import '@fontsource/im-fell-english/latin-400.css';
+import '@fontsource/im-fell-english/latin-400-italic.css';
+import '@fontsource/libre-caslon-text/latin-400.css';
+import '@fontsource/libre-caslon-text/latin-400-italic.css';
+import '@fontsource/libre-caslon-text/latin-700.css';
+
+import '../styles/global.css';
+import '../styles/utilities.css';
+
+interface Props {
+  title: string;
+  description: string;
+  pageClass?: string;
+  readingMode?: boolean;
+}
+
+const { title, description, pageClass = '', readingMode = false } = Astro.props;
+const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
+---
+
+<!doctype html>
+<html lang="en" data-reading-mode={readingMode ? 'gazette' : undefined}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#26231f" />
+    <meta name="color-scheme" content="light" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/social-card.svg" />
+    {canonicalURL && <link rel="canonical" href={canonicalURL} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{title}</title>
+    {readingMode && (
+      <script is:inline>
+        try {
+          const savedMode = localStorage.getItem('publius:reading-mode');
+          if (savedMode === 'reader') document.documentElement.dataset.readingMode = 'reader';
+        } catch {}
+      </script>
+    )}
+  </head>
+  <body class={pageClass}>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-utility" aria-label="Site header">
+      <a class="site-utility__home" href="/">Publius</a>
+      <nav aria-label="Primary navigation">
+        <a href="/#all-papers">All papers</a>
+        <a href="/about/">About this edition</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>All eighty-five essays, made for reading together.</p>
+      <nav aria-label="Footer navigation">
+        <a href="/">The papers</a>
+        <a href="/about/">About</a>
+      </nav>
+    </footer>
+  </body>
+</html>
