@@ -35,9 +35,9 @@ function formatDate(value: string): string {
     <label>
       <span>Sort by</span>
       <select name="sort">
-        <option value="number">Paper number</option>
+        <option value="number">Paper order</option>
         <option value="author">Author</option>
-        <option value="date">Publication date</option>
+        <option value="date">First publication</option>
       </select>
     </label>
     <label>
@@ -48,6 +48,10 @@ function formatDate(value: string): string {
         <option value="read">Read papers</option>
       </select>
     </label>
+    <p class="index-tools__note" data-sort-note>
+      Paper order is almost chronological, but No. 29 appeared after Nos. 30–36; Nos. 78–85
+      first appeared together in the bound edition.
+    </p>
   </form>
 
   <p class="index-ledger__count" data-index-count aria-live="polite">Showing all 85 papers</p>

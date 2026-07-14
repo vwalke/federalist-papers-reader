@@ -18,7 +18,15 @@ test('offers all papers and filters them by message, author, or number', async (
 
 test('sorts the ledger and announces the result count', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByLabel('Sort by').locator('option')).toHaveText([
+    'Paper order',
+    'Author',
+    'First publication'
+  ]);
+  await expect(page.locator('[data-sort-note]')).toContainText('No. 29 appeared after Nos. 30–36');
   await page.getByLabel('Sort by').selectOption('date');
   await expect(page.locator('[data-index-paper]:visible').first()).toHaveAttribute('data-index-paper', '1');
+  await expect(page.locator('[data-index-paper]:visible').nth(28)).toHaveAttribute('data-index-paper', '30');
+  await expect(page.locator('[data-index-paper]:visible').nth(35)).toHaveAttribute('data-index-paper', '29');
   await expect(page.locator('[data-index-count]')).toHaveAttribute('aria-live', 'polite');
 });
