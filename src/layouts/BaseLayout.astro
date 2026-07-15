@@ -9,6 +9,8 @@ import '@fontsource/libre-caslon-text/latin-700.css';
 import '../styles/global.css';
 import '../styles/utilities.css';
 
+import Analytics from '../components/Analytics.astro';
+
 interface Props {
   title: string;
   description: string;
@@ -63,5 +65,6 @@ const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : unde
         <a href="/about/">About</a>
       </nav>
     </footer>
+    <Analytics />
   </body>
 </html>
