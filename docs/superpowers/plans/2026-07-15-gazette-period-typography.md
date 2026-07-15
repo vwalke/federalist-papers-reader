@@ -4,9 +4,9 @@
 
 **Goal:** Give Gazette paper pages a slightly roomier, one-line IM FELL English title and restrained period spelling while keeping Reader mode normalized and readable.
 
-**Architecture:** A small local rehype plugin converts exact `federal` text nodes in rendered paper prose into annotated period-spelling spans without changing canonical Markdown. The existing reading-mode controller switches those spans between Gazette and modern text. Dedicated CSS and font tokens apply IM FELL English only to Gazette title furniture, preserving the existing Caslon system elsewhere.
+**Architecture:** A small local HAST plugin registered through Astro's native Sätteri processor converts exact `federal` text nodes in rendered paper prose into annotated period-spelling spans without changing canonical Markdown. The existing reading-mode controller switches those spans between Gazette and modern text. Dedicated CSS and font tokens apply IM FELL English only to Gazette title furniture, preserving the existing Caslon system elsewhere.
 
-**Tech Stack:** Astro 7 static output, TypeScript/Vitest, Playwright, rehype/HAST nodes supplied by Astro, Fontsource self-hosted fonts, CSS multi-column layout.
+**Tech Stack:** Astro 7 static output, Astro's Sätteri HAST plugins, TypeScript/Vitest, Playwright, Fontsource self-hosted fonts, CSS multi-column layout.
 
 ## Global Constraints
 
@@ -20,13 +20,15 @@
 - Preserve keyboard, screen-reader, JavaScript-disabled, print, 200% zoom, and mobile behavior.
 - Preserve the user-owned untracked `_to_delete/` and `docs/about-two-column-roadmap.md` paths.
 
+**Execution correction:** Astro 7 no longer enables legacy `rehypePlugins` without an optional processor. Task 1 therefore uses the already-bundled native `@astrojs/markdown-satteri` bridge, `src/lib/period-spelling-plugin.mjs`, and a Sätteri `hastPlugins` registration. This correction supersedes the legacy rehype-specific names and code in Task 1 below; the behavioral contract and RED/GREEN assertions are unchanged.
+
 ---
 
 ## File Map
 
-- Create `src/lib/rehype-period-spelling.mjs`: focused build-time HAST transformer for exact `federal` words.
+- Create `src/lib/period-spelling-plugin.mjs`: focused native Sätteri HAST transformer for exact `federal` words.
 - Create `tests/period-spelling.test.ts`: direct unit coverage for case preservation, exclusions, and accessible annotations.
-- Modify `astro.config.mjs`: register the local rehype plugin for rendered paper Markdown.
+- Modify `astro.config.mjs`: register the local plugin with Astro's Sätteri Markdown processor.
 - Modify `src/components/ReadingToolbar.astro`: synchronize annotated spellings whenever reading mode is applied.
 - Modify `tests/paper-page.test.ts`: verify the build-time transform reaches static Gazette HTML with historical text and normalized metadata.
 - Modify `tests/e2e/reader.spec.ts`: verify live mode switching, one-line title fit, font selection, spacing, and overflow.
