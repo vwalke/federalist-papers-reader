@@ -44,7 +44,7 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/papers/10/');
 
-  const layout = await page.locator('.essay-body').evaluate((element) => ({
+  const layout = await page.locator('.essay-flow').evaluate((element) => ({
     columns: getComputedStyle(element).columnCount,
     documentWidth: document.documentElement.scrollWidth,
     viewportWidth: window.innerWidth,
@@ -73,80 +73,128 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
   expect(layout.bookmarkAfter).not.toBe('none');
 });
 
-test('matches the compact newspaper composition on a wide screen', async ({ page }) => {
+test('places anonymous top matter in the Gazette first column', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/papers/10/');
 
-  const metrics = await page.locator('.essay-body').evaluate((element) => {
-    const bodyStyle = getComputedStyle(element);
-    const title = document.querySelector('.essay-heading__title');
+  const metrics = await page.locator('.essay-flow').evaluate((flow) => {
+    const flowStyle = getComputedStyle(flow);
+    const heading = flow.querySelector('.essay-heading') as Element;
+    const title = flow.querySelector('.essay-heading__title') as Element;
+    const paragraphs = [...flow.querySelectorAll('.essay-body > p')];
+    const headingRect = heading.getBoundingClientRect();
+    const paragraphRects = paragraphs.map((paragraph) => paragraph.getBoundingClientRect());
+    const rightColumnTop = Math.min(
+      ...paragraphRects
+        .filter(({ x }) => x > headingRect.right + 10)
+        .map(({ y }) => y)
+    );
     const masthead = document.querySelector('.gazette-masthead__art');
 
     return {
-      columnCount: bodyStyle.columnCount,
-      bodyFontSize: Number.parseFloat(bodyStyle.fontSize),
-      bodyLineHeight: Number.parseFloat(bodyStyle.lineHeight),
-      titleFontFamily: title ? getComputedStyle(title).fontFamily : '',
-      headingHeight: document.querySelector('.essay-heading')?.getBoundingClientRect().height ?? Infinity,
+      columnCount: flowStyle.columnCount,
+      headingX: headingRect.x,
+      headingY: headingRect.y,
+      headingWidth: headingRect.width,
+      flowWidth: flow.getBoundingClientRect().width,
+      rightColumnTop,
+      titleFontFamily: getComputedStyle(title).fontFamily,
+      titleText: title.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+      topAuthorVisible: Boolean(flow.querySelector('.essay-heading__author')),
+      publicationVisible: Boolean(flow.querySelector('.essay-heading__publication')),
       mastheadVisible: masthead ? getComputedStyle(masthead).display !== 'none' : false,
       mastheadWidth: masthead?.getBoundingClientRect().width ?? Infinity,
       sheetWidth: document.querySelector('.paper-sheet')?.getBoundingClientRect().width ?? 0,
-      modeX: document.querySelector('.reading-toolbar__modes')?.getBoundingClientRect().x ?? Infinity,
-      progressX: document.querySelector('.progress-control')?.getBoundingClientRect().x ?? 0,
-      titleText: title?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
-    };
-  });
-
-  expect(metrics.columnCount).toBe('3');
-  expect(metrics.titleFontFamily).toContain('Libre Caslon Display');
-  expect(metrics.bodyLineHeight / metrics.bodyFontSize).toBeLessThanOrEqual(1.45);
-  expect(metrics.headingHeight).toBeLessThan(240);
-  expect(metrics.mastheadVisible).toBe(true);
-  expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
-  expect(metrics.modeX).toBeLessThan(metrics.progressX);
-  expect(metrics.titleText).toContain('THE FEDERALIST. No. X.');
-});
-
-test('keeps the reading companion balanced on desktop and stacked on mobile', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/papers/2/');
-
-  const desktop = await page.locator('.commentary__details').evaluate((details) => {
-    const sections = [...details.querySelectorAll(':scope > section')];
-    const rects = sections.map((section) => section.getBoundingClientRect());
-    return {
-      count: sections.length,
-      widths: rects.map(({ width }) => width),
-      yPositions: rects.map(({ y }) => y),
       overflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
 
-  expect(desktop.count).toBe(3);
-  expect(Math.min(...desktop.widths)).toBeGreaterThan(220);
-  expect(Math.max(...desktop.widths) / Math.min(...desktop.widths)).toBeLessThan(1.5);
-  expect(Math.max(...desktop.yPositions) - Math.min(...desktop.yPositions)).toBeLessThan(2);
+  expect(metrics.columnCount).toBe('3');
+  expect(metrics.headingWidth).toBeLessThan(metrics.flowWidth / 2);
+  expect(Math.abs(metrics.rightColumnTop - metrics.headingY)).toBeLessThan(40);
+  expect(metrics.titleFontFamily).toContain('Libre Caslon Display');
+  expect(metrics.titleText).toContain('THE FEDERALIST. No. X.');
+  expect(metrics.topAuthorVisible).toBe(false);
+  expect(metrics.publicationVisible).toBe(false);
+  expect(metrics.mastheadVisible).toBe(true);
+  expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
+  expect(metrics.overflow).toBeLessThanOrEqual(0);
+});
+
+test('keeps the companion introduction coherent and its details responsive', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/papers/2/');
+
+  const desktop = await page.locator('.commentary').evaluate((commentary) => {
+    const heading = commentary.querySelector('.commentary__heading') as Element;
+    const ornament = heading.querySelector('[aria-hidden="true"]') as Element;
+    const lead = commentary.querySelector('.commentary__lead') as Element;
+    const details = commentary.querySelector('.commentary__details') as Element;
+    const attribution = commentary.querySelector('.commentary__attribution') as Element;
+    const sectionRects = [...details.querySelectorAll(':scope > section')].map((section) =>
+      section.getBoundingClientRect()
+    );
+    const headingRect = heading.getBoundingClientRect();
+    const ornamentRect = ornament.getBoundingClientRect();
+    const leadRect = lead.getBoundingClientRect();
+    const attributionRect = attribution.getBoundingClientRect();
+
+    return {
+      ornamentText: ornament.textContent?.trim() ?? '',
+      headingLabel: heading.querySelector('span:last-child')?.textContent?.trim() ?? '',
+      headingY: headingRect.y,
+      ornamentY: ornamentRect.y,
+      leadY: leadRect.y,
+      leadX: leadRect.x,
+      companionX: commentary.getBoundingClientRect().x,
+      sectionWidths: sectionRects.map(({ width }) => width),
+      sectionYPositions: sectionRects.map(({ y }) => y),
+      attributionY: attributionRect.y,
+      detailsBottom: Math.max(...sectionRects.map(({ bottom }) => bottom)),
+      overflow: document.documentElement.scrollWidth - window.innerWidth
+    };
+  });
+
+  expect(desktop.ornamentText).toBe('✦');
+  expect(desktop.headingLabel).toBe('Reading companion');
+  expect(Math.abs(desktop.ornamentY - desktop.headingY)).toBeLessThan(6);
+  expect(desktop.leadY).toBeGreaterThan(desktop.headingY);
+  expect(Math.abs(desktop.leadX - desktop.companionX)).toBeLessThan(2);
+  expect(Math.min(...desktop.sectionWidths)).toBeGreaterThan(220);
+  expect(Math.max(...desktop.sectionWidths) / Math.min(...desktop.sectionWidths)).toBeLessThan(1.5);
+  expect(Math.max(...desktop.sectionYPositions) - Math.min(...desktop.sectionYPositions)).toBeLessThan(2);
+  expect(desktop.attributionY).toBeGreaterThan(desktop.detailsBottom);
   expect(desktop.overflow).toBeLessThanOrEqual(0);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/papers/2/');
 
-  const mobile = await page.locator('.commentary__details').evaluate((details) => {
-    const rects = [...details.querySelectorAll(':scope > section')].map((section) =>
-      section.getBoundingClientRect()
+  const mobile = await page.locator('.commentary').evaluate((commentary) => {
+    const detailRects = [...commentary.querySelectorAll('.commentary__details > section')].map(
+      (section) => section.getBoundingClientRect()
     );
+    const heading = commentary.querySelector('.commentary__heading') as Element;
+    const lead = commentary.querySelector('.commentary__lead') as Element;
+    const attribution = commentary.querySelector('.commentary__attribution') as Element;
+
     return {
-      xPositions: rects.map(({ x }) => x),
-      yPositions: rects.map(({ y }) => y),
-      widths: rects.map(({ width }) => width),
+      headingY: heading.getBoundingClientRect().y,
+      leadY: lead.getBoundingClientRect().y,
+      detailXPositions: detailRects.map(({ x }) => x),
+      detailYPositions: detailRects.map(({ y }) => y),
+      detailWidths: detailRects.map(({ width }) => width),
+      attributionY: attribution.getBoundingClientRect().y,
+      detailsBottom: Math.max(...detailRects.map(({ bottom }) => bottom)),
       overflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
 
-  expect(Math.max(...mobile.xPositions) - Math.min(...mobile.xPositions)).toBeLessThan(2);
-  expect(mobile.yPositions[0]).toBeLessThan(mobile.yPositions[1]);
-  expect(mobile.yPositions[1]).toBeLessThan(mobile.yPositions[2]);
-  expect(Math.min(...mobile.widths)).toBeGreaterThan(300);
+  expect(mobile.headingY).toBeLessThan(mobile.leadY);
+  expect(Math.max(...mobile.detailXPositions) - Math.min(...mobile.detailXPositions)).toBeLessThan(2);
+  expect(mobile.detailYPositions[0]).toBeLessThan(mobile.detailYPositions[1]);
+  expect(mobile.detailYPositions[1]).toBeLessThan(mobile.detailYPositions[2]);
+  expect(Math.min(...mobile.detailWidths)).toBeGreaterThan(300);
+  expect(mobile.attributionY).toBeGreaterThan(mobile.detailsBottom);
   expect(mobile.overflow).toBeLessThanOrEqual(0);
 });
 
