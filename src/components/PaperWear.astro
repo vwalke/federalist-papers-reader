@@ -1,4 +1,5 @@
 ---
+import type { PaperCornerChip, PaperCrease, PaperEdge, PaperNick } from '../lib/paper-wear';
 import { getPaperWear } from '../lib/paper-wear';
 
 interface Props {
@@ -7,102 +8,128 @@ interface Props {
 
 const { number } = Astro.props;
 const wear = getPaperWear(number);
-const grainId = `grain-${wear.id}`;
-const edgeId = `edge-${wear.id}`;
-const cornerId = `corner-${wear.id}`;
-const style = `--wear-opacity: ${wear.opacity}; --wear-edge-opacity: ${wear.edgeOpacity}`;
+
+function maskUri(viewWidth: number, viewHeight: number, path: string): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${viewWidth} ${viewHeight}'><path d='${path}' fill='#fff'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+function edgeStyle(edge: PaperEdge): string {
+  const horizontal = edge.side === 'top' || edge.side === 'bottom';
+  const width = horizontal ? edge.tileLength : edge.depth;
+  const height = horizontal ? edge.depth : edge.tileLength;
+  return [
+    `--edge-mask: ${maskUri(width, height, edge.path)}`,
+    `--edge-size: ${width}px ${height}px`,
+    `--edge-depth: ${edge.depth}px`
+  ].join('; ');
+}
+
+function nickStyle(nick: PaperNick): string {
+  const horizontal = nick.side === 'top' || nick.side === 'bottom';
+  const width = horizontal ? nick.width : nick.depth;
+  const height = horizontal ? nick.depth : nick.width;
+  const across = `calc(${nick.offset}% - ${(nick.width / 2).toFixed(1)}px)`;
+  const place =
+    nick.side === 'top'
+      ? `inset-block-start: 0; inset-inline-start: ${across}`
+      : nick.side === 'bottom'
+        ? `inset-block-end: 0; inset-inline-start: ${across}`
+        : nick.side === 'left'
+          ? `inset-inline-start: 0; inset-block-start: ${across}`
+          : `inset-inline-end: 0; inset-block-start: ${across}`;
+  return [
+    place,
+    `inline-size: ${width}px`,
+    `block-size: ${height}px`,
+    `--bite-mask: ${maskUri(width, height, nick.path)}`
+  ].join('; ');
+}
+
+function chipStyle(chip: PaperCornerChip): string {
+  const [block, inline] = chip.corner.split('-');
+  return [
+    `inset-block-${block === 'top' ? 'start' : 'end'}: 0`,
+    `inset-inline-${inline === 'left' ? 'start' : 'end'}: 0`,
+    `inline-size: ${chip.size}px`,
+    `block-size: ${chip.size}px`,
+    `--bite-mask: ${maskUri(chip.size, chip.size, chip.path)}`
+  ].join('; ');
+}
+
+const ink = (alpha: number) =>
+  `color-mix(in oklab, var(--color-ink) ${(alpha * 100).toFixed(1)}%, transparent)`;
+const light = (alpha: number) => `rgb(255 255 255 / ${(alpha * 100).toFixed(1)}%)`;
+
+function creaseLayer(crease: PaperCrease): string {
+  const angle =
+    crease.orientation === 'vertical'
+      ? (crease.anchor === 'left' ? 90 : 270) + crease.skew
+      : (crease.anchor === 'top' ? 180 : 0) + crease.skew;
+  const at = (delta: number) => `calc(${crease.offset}px + ${delta.toFixed(1)}px)`;
+  return [
+    `linear-gradient(${angle.toFixed(2)}deg`,
+    `transparent ${at(-crease.reach)}`,
+    `${light(crease.lightAlpha)} ${at(-1.4)}`,
+    `${ink(crease.shadowAlpha * 1.9)} ${at(0)}`,
+    `${ink(crease.shadowAlpha)} ${at(crease.reach * 0.45)}`,
+    `transparent ${at(crease.reach)})`
+  ].join(', ');
+}
+
+const foldAngle = {
+  'top-left': 135,
+  'top-right': 225,
+  'bottom-right': 315,
+  'bottom-left': 45
+}[wear.cornerFold.corner];
+
+/**
+ * The fold block is rendered 1.4x larger than the visible fold so the
+ * trailing cast shadow fades out before it can clip against the block
+ * boundary and leave a seam. Stops are px distances along the gradient
+ * axis; the crease line sits at size / sqrt(2) from the corner tip.
+ */
+const foldBlock = Math.ceil(wear.cornerFold.size * 1.4);
+const creaseAt = wear.cornerFold.size * 0.7071;
+const foldStop = (px: number) => `${px.toFixed(1)}px`;
+const foldStyle = [
+  `inset-block-${wear.cornerFold.corner.startsWith('top') ? 'start' : 'end'}: 0`,
+  `inset-inline-${wear.cornerFold.corner.endsWith('left') ? 'start' : 'end'}: 0`,
+  `inline-size: ${foldBlock}px`,
+  `block-size: ${foldBlock}px`,
+  `background-image: linear-gradient(${foldAngle}deg, ` +
+    [
+      `${light(wear.cornerFold.liftAlpha)} 0`,
+      `${light(wear.cornerFold.liftAlpha * 0.55)} ${foldStop(creaseAt * 0.62)}`,
+      `transparent ${foldStop(creaseAt * 0.94)}`,
+      `${ink(wear.cornerFold.contactAlpha * 1.6)} ${foldStop(creaseAt - 1.2)}`,
+      `${ink(wear.cornerFold.contactAlpha * 1.9)} ${foldStop(creaseAt)}`,
+      `${light(wear.cornerFold.rimAlpha)} ${foldStop(creaseAt + 1.1)}`,
+      `${ink(wear.cornerFold.contactAlpha)} ${foldStop(creaseAt + 4.5)}`,
+      `transparent ${foldStop(creaseAt * 1.24)}`
+    ].join(', ') +
+    ')'
+].join('; ');
+
+const creaseStyle = `background-image: ${wear.creases.map(creaseLayer).join(', ')}`;
 ---
 
-<svg
+<div
   class="paper-wear"
   data-paper-wear={number}
-  data-wear-id={wear.id}
-  data-fold-signature={wear.foldSignature}
-  style={style}
-  viewBox="0 0 100 100"
-  preserveAspectRatio="none"
+  data-wear-signature={wear.signature}
   aria-hidden="true"
-  focusable="false"
 >
-  <defs>
-    <filter id={grainId} x="-10%" y="-10%" width="120%" height="120%">
-      <feTurbulence
-        type="fractalNoise"
-        baseFrequency={wear.grainFrequency}
-        numOctaves="3"
-        seed={wear.grainSeed}
-        stitchTiles="stitch"
-      />
-      <feComponentTransfer>
-        <feFuncA type="table" tableValues="0 0.12" />
-      </feComponentTransfer>
-    </filter>
-    <radialGradient id={edgeId} cx="50%" cy="50%" r="72%">
-      <stop offset="61%" stop-color="var(--color-muted-ink)" stop-opacity="0" />
-      <stop offset="87%" stop-color="var(--color-muted-ink)" stop-opacity="0.2" />
-      <stop offset="100%" stop-color="var(--color-ink)" stop-opacity="0.5" />
-    </radialGradient>
-    <linearGradient id={cornerId} x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="var(--color-paper)" stop-opacity="0.72" />
-      <stop offset="0.55" stop-color="var(--color-muted-ink)" stop-opacity="0.2" />
-      <stop offset="1" stop-color="var(--color-paper)" stop-opacity="0.05" />
-    </linearGradient>
-  </defs>
-
-  <rect class="paper-wear__grain" x="0" y="0" width="100" height="100" filter={`url(#${grainId})`} />
-  <rect class="paper-wear__edge-tone" x="0" y="0" width="100" height="100" fill={`url(#${edgeId})`} />
-
-  <g class="paper-wear__stains">
-    {wear.stains.map((stain) => (
-      <ellipse
-        cx={stain.x}
-        cy={stain.y}
-        rx={stain.radiusX}
-        ry={stain.radiusY}
-        transform={`rotate(${stain.rotation} ${stain.x} ${stain.y})`}
-        style={`--stain-opacity: ${stain.opacity}`}
-      />
-    ))}
-  </g>
-
-  <g class="paper-wear__folds">
-    {wear.folds.map((fold, index) => (
-      <g
-        data-fold={index + 1}
-        style={`--fold-opacity: ${fold.opacity}; --fold-haze-width: ${fold.hazeWidth}; --fold-line-width: ${fold.lineWidth}`}
-      >
-        <path class="paper-wear__fold-haze" d={fold.path} vector-effect="non-scaling-stroke" />
-        <path class="paper-wear__fold-shadow" d={fold.path} vector-effect="non-scaling-stroke" />
-        <path
-          class="paper-wear__fold-highlight"
-          d={fold.path}
-          transform={`translate(${fold.highlightOffsetX} ${fold.highlightOffsetY})`}
-          vector-effect="non-scaling-stroke"
-        />
-      </g>
-    ))}
-  </g>
-
-  <g class={`paper-wear__corner paper-wear__corner--${wear.cornerFold.location}`}>
-    <path
-      class="paper-wear__corner-area"
-      d={wear.cornerFold.areaPath}
-      fill={`url(#${cornerId})`}
-      style={`--corner-opacity: ${wear.cornerFold.opacity}`}
-    />
-    <path class="paper-wear__corner-crease" d={wear.cornerFold.creasePath} vector-effect="non-scaling-stroke" />
-  </g>
-
-  <g class="paper-wear__abrasions">
-    {wear.abrasions.map((abrasion) => (
-      <ellipse
-        cx={abrasion.x}
-        cy={abrasion.y}
-        rx={abrasion.radiusX}
-        ry={abrasion.radiusY}
-        transform={`rotate(${abrasion.rotation} ${abrasion.x} ${abrasion.y})`}
-        style={`--abrasion-opacity: ${abrasion.opacity}`}
-      />
-    ))}
-  </g>
-</svg>
+  <div class="paper-wear__creases" style={creaseStyle}></div>
+  <div class="paper-wear__fold" style={foldStyle}></div>
+  {wear.edges.map((edge) => (
+    <div class={`paper-wear__edge paper-wear__edge--${edge.side}`} style={edgeStyle(edge)}></div>
+  ))}
+  {wear.nicks.map((nick) => (
+    <div class="paper-wear__bite" style={nickStyle(nick)}></div>
+  ))}
+  {wear.cornerSofteners.map((chip) => (
+    <div class="paper-wear__bite" style={chipStyle(chip)}></div>
+  ))}
+</div>

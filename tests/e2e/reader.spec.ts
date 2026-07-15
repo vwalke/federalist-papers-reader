@@ -262,23 +262,28 @@ test('renders varied archival wear without clipping the sheet', async ({ page })
   await page.goto('/papers/1/');
 
   const paperOne = await page.locator('.paper-wear').evaluate((wear) => ({
-    tagName: wear.tagName.toLowerCase(),
     display: getComputedStyle(wear).display,
-    foldSignature: wear.getAttribute('data-fold-signature'),
-    foldCount: wear.querySelectorAll('[data-fold]').length,
+    signature: wear.getAttribute('data-wear-signature'),
+    edgeCount: wear.querySelectorAll('.paper-wear__edge').length,
+    edgeMask: getComputedStyle(wear.querySelector('.paper-wear__edge--top') as Element)
+      .maskImage,
+    biteCount: wear.querySelectorAll('.paper-wear__bite').length,
     clipPath: getComputedStyle(document.querySelector('.paper-page') as Element).clipPath,
-    hasLegacyNicks: Boolean(document.querySelector('.paper-wear__nick'))
+    hasLegacyGrime: Boolean(
+      document.querySelector('.paper-wear__stains, .paper-wear__abrasions, [data-fold]')
+    )
   }));
 
-  expect(paperOne.tagName).toBe('svg');
   expect(paperOne.display).not.toBe('none');
-  expect(paperOne.foldCount).toBe(3);
+  expect(paperOne.edgeCount).toBe(4);
+  expect(paperOne.edgeMask).toContain('data:image/svg+xml');
+  expect(paperOne.biteCount).toBeGreaterThanOrEqual(4);
   expect(paperOne.clipPath).toBe('none');
-  expect(paperOne.hasLegacyNicks).toBe(false);
+  expect(paperOne.hasLegacyGrime).toBe(false);
 
   await page.goto('/papers/2/');
-  const paperTwoSignature = await page.locator('.paper-wear').getAttribute('data-fold-signature');
-  expect(paperTwoSignature).not.toBe(paperOne.foldSignature);
+  const paperTwoSignature = await page.locator('.paper-wear').getAttribute('data-wear-signature');
+  expect(paperTwoSignature).not.toBe(paperOne.signature);
 
   await page.getByRole('button', { name: 'Reader' }).click();
   await expect(page.locator('.paper-wear')).toBeHidden();

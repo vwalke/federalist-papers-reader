@@ -6,83 +6,84 @@
   position: absolute;
   z-index: 2;
   inset: 0;
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
   pointer-events: none;
-  opacity: var(--wear-opacity);
+  box-shadow:
+    inset 0 0 38px color-mix(in oklab, var(--color-ink) 5%, transparent),
+    inset 0 0 5px color-mix(in oklab, var(--color-ink) 4%, transparent);
 }
 
-.paper-wear__grain {
-  opacity: 0.18;
-  mix-blend-mode: multiply;
+.paper-wear__creases,
+.paper-wear__fold {
+  position: absolute;
+  background-repeat: no-repeat;
 }
 
-.paper-wear__edge-tone {
-  opacity: var(--wear-edge-opacity);
-  mix-blend-mode: multiply;
+.paper-wear__creases {
+  inset: 0;
+
+  /* A crease pressed at the edges relaxes toward the middle of the sheet. */
+  -webkit-mask-image: radial-gradient(
+    ellipse 70% 58% at 50% 46%,
+    rgb(0 0 0 / 45%),
+    rgb(0 0 0 / 100%) 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 70% 58% at 50% 46%,
+    rgb(0 0 0 / 45%),
+    rgb(0 0 0 / 100%) 78%
+  );
 }
 
-.paper-wear__stains ellipse {
-  fill: var(--color-oxblood);
-  opacity: var(--stain-opacity);
-  filter: blur(12px);
-  mix-blend-mode: multiply;
+.paper-wear__edge,
+.paper-wear__bite {
+  position: absolute;
+  background-color: var(--color-room);
 }
 
-.paper-wear__fold-haze,
-.paper-wear__fold-shadow,
-.paper-wear__fold-highlight,
-.paper-wear__corner-crease {
-  fill: none;
-  stroke-linecap: round;
+.paper-wear__edge {
+  -webkit-mask-image: var(--edge-mask);
+  mask-image: var(--edge-mask);
+  -webkit-mask-size: var(--edge-size);
+  mask-size: var(--edge-size);
 }
 
-.paper-wear__fold-haze {
-  stroke: color-mix(in oklab, var(--color-muted-ink) 64%, transparent);
-  stroke-width: calc(var(--fold-haze-width) * 1px);
-  opacity: calc(var(--fold-opacity) * 0.92);
-  filter: blur(6px);
-  mix-blend-mode: multiply;
+.paper-wear__edge--top,
+.paper-wear__edge--bottom {
+  inset-inline: 0;
+  block-size: var(--edge-depth);
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
 }
 
-.paper-wear__fold-shadow {
-  stroke: color-mix(in oklab, var(--color-ink) 72%, transparent);
-  stroke-width: calc(var(--fold-line-width) * 1px);
-  opacity: calc(var(--fold-opacity) * 1.95);
-  filter: blur(0.35px);
-  mix-blend-mode: multiply;
+.paper-wear__edge--top {
+  inset-block-start: 0;
 }
 
-.paper-wear__fold-highlight {
-  stroke: color-mix(in oklab, var(--color-paper) 86%, white);
-  stroke-width: 1px;
-  opacity: calc(var(--fold-opacity) * 1.7);
-  filter: blur(0.35px);
-  mix-blend-mode: screen;
+.paper-wear__edge--bottom {
+  inset-block-end: 0;
 }
 
-.paper-wear__corner-area {
-  fill: color-mix(in oklab, var(--color-newsprint) 80%, var(--color-ink));
-  opacity: var(--corner-opacity);
-  filter: drop-shadow(1px 1px 1.4px color-mix(in oklab, var(--color-ink) 28%, transparent));
-  mix-blend-mode: multiply;
+.paper-wear__edge--left,
+.paper-wear__edge--right {
+  inset-block: 0;
+  inline-size: var(--edge-depth);
+  -webkit-mask-repeat: repeat-y;
+  mask-repeat: repeat-y;
 }
 
-.paper-wear__corner-crease {
-  stroke: color-mix(in oklab, var(--color-muted-ink) 68%, transparent);
-  stroke-width: 0.85px;
-  opacity: 0.72;
-  filter: blur(0.25px);
+.paper-wear__edge--left {
+  inset-inline-start: 0;
 }
 
-.paper-wear__abrasions ellipse {
-  fill: color-mix(in oklab, var(--color-paper) 88%, white);
-  stroke: color-mix(in oklab, var(--color-muted-ink) 16%, transparent);
-  stroke-width: 0.45px;
-  opacity: var(--abrasion-opacity);
-  filter: blur(0.3px);
-  mix-blend-mode: screen;
+.paper-wear__edge--right {
+  inset-inline-end: 0;
+}
+
+.paper-wear__bite {
+  -webkit-mask-image: var(--bite-mask);
+  mask-image: var(--bite-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
 
 .reading-toolbar {
@@ -518,13 +519,14 @@
 }
 
 @media (max-width: 45.999rem) {
-  .paper-wear {
-    opacity: calc(var(--wear-opacity) * 0.58);
+  .paper-wear__edge,
+  .paper-wear__bite,
+  .paper-wear__creases {
+    display: none;
   }
 
-  .paper-wear__grain,
-  .paper-wear__stains {
-    opacity: 0.5;
+  .paper-wear__fold {
+    opacity: 0.6;
   }
 
   .gazette-masthead__art {
