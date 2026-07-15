@@ -40,11 +40,11 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
   expect(Math.abs(layout.copy.x - layout.callout.x)).toBeLessThan(2);
   expect(layout.callout.y).toBeGreaterThan(layout.copy.y);
   expect(layout.familyHeading.x).toBeLessThan(layout.familyCopy.x);
-  expect(layout.noteBoxes).toHaveLength(3);
+  expect(layout.noteBoxes).toHaveLength(2);
   expect(Math.abs(layout.noteBoxes[0].y - layout.noteBoxes[1].y)).toBeLessThan(2);
-  expect(layout.noteBoxes[2].y).toBeGreaterThan(layout.noteBoxes[0].y);
-  expect(layout.noteBoxes[2].width).toBeGreaterThan(layout.noteBoxes[0].width * 1.75);
-  expect(layout.colophon.y).toBeGreaterThan(layout.noteBoxes[2].y + layout.noteBoxes[2].height);
+  expect(layout.colophon.y).toBeGreaterThan(
+    Math.max(...layout.noteBoxes.map(({ y, height }) => y + height)),
+  );
   expect(layout.colophonTextAlign).toBe('center');
   expect(layout.overflow).toBeLessThanOrEqual(0);
 });
@@ -88,8 +88,8 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
   expect(layout.boxes[2].y).toBeLessThan(layout.boxes[3].y);
   expect(layout.boxes[3].y).toBeLessThan(layout.boxes[4].y);
   expect(layout.boxes[4].y).toBeLessThan(layout.boxes[5].y);
+  expect(layout.noteYPositions).toHaveLength(2);
   expect(layout.noteYPositions[0]).toBeLessThan(layout.noteYPositions[1]);
-  expect(layout.noteYPositions[1]).toBeLessThan(layout.noteYPositions[2]);
   expect(layout.overflow).toBeLessThanOrEqual(0);
 });
 

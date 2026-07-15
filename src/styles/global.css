@@ -603,12 +603,6 @@ a:hover {
     border-inline-start: 1px solid color-mix(in oklab, var(--color-rule) 62%, transparent);
   }
 
-  .about-notes > .about-notes__privacy {
-    grid-column: 1 / -1;
-    margin-block-start: var(--space-xl);
-    padding-block-start: var(--space-xl);
-    border-block-start: 1px solid var(--color-rule);
-  }
 }
 
 @media (min-width: 46rem) {
@@ -736,8 +730,7 @@ a:hover {
 
   .about-notes > section,
   .about-notes > section:first-child,
-  .about-notes > section:nth-child(2),
-  .about-notes > .about-notes__privacy {
+  .about-notes > section:nth-child(2) {
     margin-block-start: var(--space-lg);
     padding: var(--space-lg) 0 0;
     border: 0;

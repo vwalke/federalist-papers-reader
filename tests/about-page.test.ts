@@ -16,7 +16,8 @@ describe('About this edition', () => {
     expect(html).toContain('class="about-family"');
     expect(html).toContain('class="about-family__copy"');
     expect(html).toContain('class="about-notes"');
-    expect(html).toContain('class="about-notes__privacy"');
+    expect(html).not.toContain('class="about-notes__privacy"');
+    expect(html).not.toContain('No account, no tracking your reading');
     expect(html).toContain('class="about-colophon"');
     expect(html).toContain('This is a production of');
     expect(html).toContain('<a href="https://walkeforward.com">WalkeForward, LLC.</a>');
