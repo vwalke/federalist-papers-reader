@@ -24,7 +24,7 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
       copy: box('.about-origin__copy'),
       portrait: box('.about-portrait'),
       callout: box('.about-callout'),
-      familyHeading: box('.about-family > h2'),
+      familyHeading: box('.about-family__head'),
       familyCopy: box('.about-family__copy'),
       noteBoxes,
       overflow: document.documentElement.scrollWidth - window.innerWidth
