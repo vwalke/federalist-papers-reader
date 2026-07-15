@@ -59,6 +59,19 @@ describe('committed content', () => {
     expect(report.commentaryOutsideTarget).toEqual([]);
   });
 
+  it('signs every essay with one standalone PUBLIUS line', async () => {
+    const { readdir } = await import('node:fs/promises');
+    const directory = new URL('../src/content/papers/', import.meta.url);
+    const filenames = (await readdir(directory)).filter((name) => name.endsWith('.md')).sort();
+
+    expect(filenames).toHaveLength(85);
+    for (const filename of filenames) {
+      const source = await readFile(new URL(filename, directory), 'utf8');
+      const signatures = source.split('\n').filter((line) => line.trim() === 'PUBLIUS');
+      expect({ filename, count: signatures.length }).toEqual({ filename, count: 1 });
+    }
+  });
+
   it('records Federalist No. 26 in its 1787 publication chronology', async () => {
     const source = await readFile(new URL('../src/content/papers/026.md', import.meta.url), 'utf8');
 
