@@ -216,6 +216,7 @@
 .essay-flow {
   position: relative;
   z-index: 1;
+  padding-block-start: var(--space-sm);
 }
 
 .essay-heading {
@@ -227,9 +228,10 @@
 
 .essay-heading__title {
   margin: 0;
-  font: 400 clamp(1.85rem, 3vw, 2.45rem)/1.02 var(--font-display);
-  letter-spacing: 0.015em;
-  text-wrap: balance;
+  font: 400 clamp(1.15rem, 5.8vw, 2rem)/1 var(--font-period-display);
+  font-variant-ligatures: common-ligatures discretionary-ligatures historical-ligatures contextual;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .essay-heading__number {
@@ -249,6 +251,7 @@
 
 .essay-heading__recipient {
   margin-block-start: 0.2rem;
+  font-family: var(--font-period-display);
   font-size: clamp(1rem, 1.7vw, 1.25rem);
   font-style: italic;
   line-height: 1.25;
@@ -288,6 +291,7 @@
 
 .essay-body {
   font-size: clamp(1.02rem, 1.35vw, 1.1rem);
+  font-variant-ligatures: common-ligatures discretionary-ligatures historical-ligatures contextual;
   font-variant-numeric: oldstyle-nums;
   hyphens: auto;
   line-height: 1.38;
@@ -449,6 +453,17 @@
   font-style: italic;
 }
 
+[data-reading-mode='reader'] .essay-heading__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 4vw, 2.45rem);
+  font-variant-ligatures: common-ligatures;
+  letter-spacing: 0.015em;
+}
+
+[data-reading-mode='reader'] .essay-heading__recipient {
+  font-family: var(--font-reading);
+}
+
 [data-reading-mode='reader'] .essay-body {
   line-height: 1.68;
 }
@@ -531,11 +546,15 @@
   }
 
   .essay-heading {
-    margin-block: var(--space-lg) var(--space-md);
+    margin-block: var(--space-sm) var(--space-md);
   }
 
   .essay-heading__title {
-    font-size: clamp(1.65rem, 8vw, 2.05rem);
+    font-size: clamp(1.15rem, 5.8vw, 1.75rem);
+  }
+
+  [data-reading-mode='reader'] .essay-heading__title {
+    font-size: clamp(1.25rem, 6.3vw, 1.8rem);
   }
 
   .essay-body {
@@ -572,5 +591,10 @@
 
   .essay-body {
     font-size: 11pt;
+  }
+
+  .essay-heading__title,
+  .essay-heading__recipient {
+    font-family: var(--font-reading);
   }
 }

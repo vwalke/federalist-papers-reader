@@ -10,6 +10,30 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/papers/1/');
 });
 
+async function titleMetrics(page: import('@playwright/test').Page) {
+  return page.locator('.essay-heading__title').evaluate((title) => {
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    const lineTops = new Set(
+      [...range.getClientRects()]
+        .filter(({ width, height }) => width > 0 && height > 0)
+        .map(({ top }) => Math.round(top))
+    );
+    const toolbar = document.querySelector('.reading-toolbar') as Element;
+    const flow = document.querySelector('.essay-flow') as Element;
+    const titleStyle = getComputedStyle(title);
+
+    return {
+      lines: lineTops.size,
+      titleFontFamily: titleStyle.fontFamily,
+      titleText: title.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+      contentGap: title.getBoundingClientRect().top - toolbar.getBoundingClientRect().bottom,
+      flowPaddingTop: Number.parseFloat(getComputedStyle(flow).paddingTop),
+      overflow: document.documentElement.scrollWidth - window.innerWidth
+    };
+  });
+}
+
 test('switches reading modes and remembers the preference', async ({ page }) => {
   const styleControl = page.getByRole('group', { name: 'Reading style' });
   const periodWord = page.locator('.period-spelling').first();
@@ -77,6 +101,16 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
   expect(layout.progressWidth).toBeLessThanOrEqual(60);
   expect(layout.bookmarkBefore).not.toBe('none');
   expect(layout.bookmarkAfter).not.toBe('none');
+
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/papers/85/');
+  const narrowTitle = await titleMetrics(page);
+  expect(narrowTitle.lines).toBe(1);
+  expect(narrowTitle.titleText).toBe('THE FEDERALIST. No. LXXXV.');
+  expect(narrowTitle.titleFontFamily).toContain('IM FELL English');
+  expect(narrowTitle.flowPaddingTop).toBeCloseTo(12, 0);
+  expect(narrowTitle.contentGap).toBeGreaterThanOrEqual(10);
+  expect(narrowTitle.overflow).toBeLessThanOrEqual(0);
 });
 
 test('places anonymous top matter in the Gazette first column', async ({ page }) => {
@@ -118,13 +152,25 @@ test('places anonymous top matter in the Gazette first column', async ({ page })
   expect(metrics.columnCount).toBe('3');
   expect(metrics.headingWidth).toBeLessThan(metrics.flowWidth / 2);
   expect(Math.abs(metrics.rightColumnTop - metrics.headingY)).toBeLessThan(40);
-  expect(metrics.titleFontFamily).toContain('Libre Caslon Display');
+  expect(metrics.titleFontFamily).toContain('IM FELL English');
   expect(metrics.titleText).toContain('THE FEDERALIST. No. X.');
   expect(metrics.topAuthorVisible).toBe(false);
   expect(metrics.publicationVisible).toBe(false);
   expect(metrics.mastheadVisible).toBe(true);
   expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
   expect(metrics.overflow).toBeLessThanOrEqual(0);
+
+  await page.setViewportSize({ width: 640, height: 900 });
+  await page.goto('/papers/85/');
+  const zoomEquivalent = await titleMetrics(page);
+  expect(zoomEquivalent.lines).toBe(1);
+  expect(zoomEquivalent.overflow).toBeLessThanOrEqual(0);
+
+  await page.getByRole('button', { name: 'Reader' }).click();
+  const readerTitle = await titleMetrics(page);
+  expect(readerTitle.lines).toBe(1);
+  expect(readerTitle.titleFontFamily).toContain('Libre Caslon Display');
+  expect(readerTitle.overflow).toBeLessThanOrEqual(0);
 });
 
 test('keeps the companion introduction coherent and its details responsive', async ({ page }) => {
