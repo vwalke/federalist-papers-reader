@@ -23,10 +23,12 @@ attempts lacked.
    (`--color-room` over the sheet edge), which is indistinguishable from
    clipping against the near-black room but needs no filters, no clip-path,
    and keeps the existing box-shadow.
-2. **Relief, not marks.** Creases are light logic: a broad soft shadow ramp, a
-   thin dark core, a thin catch-light, then a fast fade. No stroked gray
+2. **Relief, not marks.** The lifted corner is light logic: a flap
+   catch-light, a soft contact shadow, a thin rim highlight. No stroked gray
    lines. No stains, vignettes, or abrasion blotches — per DESIGN.md the sheet
-   is carefully preserved, not dirty.
+   is carefully preserved, not dirty. (A first pass also drew full-length
+   gutter creases; review found them artificial and distracting, so straight
+   creases were cut entirely.)
 3. **Fixed-pixel geometry.** All wear detail is generated in px units (mask
    tiles with fixed `mask-size`, px-anchored gradient stops, fixed-size corner
    blocks anchored to % offsets). Nothing stretches with page height or
@@ -35,11 +37,10 @@ attempts lacked.
    from the paper number (mulberry32, unchanged). All 85 papers are unique;
    revisiting a paper reproduces its exact wear.
 5. **Text is sacred.** Deckle depth stays under ~6px (sheet padding is ≥16px).
-   Straight creases are px-anchored inside the gutters and padding zones.
    Corner folds are fixed-size blocks that live in corner whitespace.
 6. **Existing guards stay.** Wear is absent in Reader mode, print,
-   forced-colors, and reduced-transparency; edge deckle is hidden and creases
-   dimmed on narrow screens where the sheet is full-bleed.
+   forced-colors, and reduced-transparency; edge deckle is hidden and the
+   corner fold dimmed on narrow screens where the sheet is full-bleed.
 
 ## Components
 
@@ -53,13 +54,10 @@ attempts lacked.
   jitter, so tiles repeat without seams.
 - `nicks` — 2–4 small bites (18–36px wide, 4–8px deep), each on a seeded edge
   at a seeded 8–92% offset. Discrete, so nothing repeats along an edge.
-- `creases` — 1–2 straight creases: a near-vertical one px-anchored 18–44px
-  from a seeded side, and (coin flip) a horizontal one either 60–140px from
-  the top (a period paper was folded for delivery) or 30–90px above the
-  bottom, inside the padding zone. Each carries angle skew (±1.5°), gradient
-  stop geometry, and opacity 0.5–1 scaling.
-- `cornerFold` — one dog-ear: seeded corner, 64–120px, flap-light /
-  crease-shadow / catch-light parameters.
+- `cornerFold` — a dog-ear on roughly two of three papers (seeded coin), or
+  `null`: seeded corner, 48–150px with the spread squared so small casual
+  lifts outnumber dramatic ones, flap-light / contact-shadow / rim-light
+  parameters.
 - `cornerSofteners` — tiny 6–14px chamfer bites for the remaining corners.
 - `signature` — a stable string over the edge tiles for uniqueness tests and
   the e2e `data-wear-signature` hook.
@@ -76,10 +74,8 @@ inset 0, pointer-events none) containing:
 - `.paper-wear__nick` ×2–4 — small room-colored bites, same mask technique,
   positioned at % offsets along their edge.
 - `.paper-wear__corner-chip` ×3 — chamfer bites at the non-dog-ear corners.
-- `.paper-wear__creases` — full-bleed layer whose `background-image` is the
-  list of crease gradients (px-anchored stops mixed into % positions).
-- `.paper-wear__fold--{corner}` — the dog-ear block with layered corner
-  gradients.
+- `.paper-wear__fold` — the dog-ear block with layered corner gradients,
+  rendered only when the paper carries a fold.
 - Edge tone: an inset box-shadow on the overlay root (`~36px` reach, ≤5% ink)
   replaces the radial vignette; the tiled grain in `global.css` stays and the
   full-page SVG turbulence rect goes away.
@@ -93,9 +89,8 @@ print, forced-colors, reduced-transparency, `max-width: 45.999rem`).
 
 - Unit (`tests/paper-wear.test.ts`, rewritten): stable + unique fingerprints
   for all 85 papers; tile paths seamless (start/end depth equal) and within
-  depth bounds; nick offsets within 8–92%; crease anchors within their gutter
-  bands; corner fold sized 64–120px at a valid corner; range errors outside
-  1–85.
+  depth bounds; nick offsets within 8–92%; folds on 45–70 of the 85 papers at
+  genuinely varied sizes within 48–150px; range errors outside 1–85.
 - Page (`tests/paper-page.test.ts`): `data-paper-wear` attribute still
   asserted, unchanged.
 - E2E (`tests/e2e/reader.spec.ts`): wear present in Gazette mode with a

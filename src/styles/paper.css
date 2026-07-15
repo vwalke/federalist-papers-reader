@@ -12,26 +12,9 @@
     inset 0 0 5px color-mix(in oklab, var(--color-ink) 4%, transparent);
 }
 
-.paper-wear__creases,
 .paper-wear__fold {
   position: absolute;
   background-repeat: no-repeat;
-}
-
-.paper-wear__creases {
-  inset: 0;
-
-  /* A crease pressed at the edges relaxes toward the middle of the sheet. */
-  -webkit-mask-image: radial-gradient(
-    ellipse 70% 58% at 50% 46%,
-    rgb(0 0 0 / 45%),
-    rgb(0 0 0 / 100%) 78%
-  );
-  mask-image: radial-gradient(
-    ellipse 70% 58% at 50% 46%,
-    rgb(0 0 0 / 45%),
-    rgb(0 0 0 / 100%) 78%
-  );
 }
 
 .paper-wear__edge,
@@ -520,8 +503,7 @@
 
 @media (max-width: 45.999rem) {
   .paper-wear__edge,
-  .paper-wear__bite,
-  .paper-wear__creases {
+  .paper-wear__bite {
     display: none;
   }
 

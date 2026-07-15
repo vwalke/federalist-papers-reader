@@ -52,57 +52,37 @@ describe('paper wear fingerprints', () => {
     }
   });
 
-  it('anchors creases inside the gutters and padding zones', () => {
-    for (let number = 1; number <= 85; number += 1) {
-      const wear = getPaperWear(number);
+  it('lifts a corner on only some papers, at genuinely varied sizes', () => {
+    const surfaces = Array.from({ length: 85 }, (_, index) => getPaperWear(index + 1));
+    const folds = surfaces.flatMap((wear) => (wear.cornerFold ? [wear.cornerFold] : []));
 
-      expect(wear.creases.length).toBeGreaterThanOrEqual(1);
-      expect(wear.creases.length).toBeLessThanOrEqual(2);
-      const vertical = wear.creases.filter((crease) => crease.orientation === 'vertical');
-      expect(vertical).toHaveLength(1);
+    expect(folds.length).toBeGreaterThanOrEqual(45);
+    expect(folds.length).toBeLessThanOrEqual(70);
 
-      for (const crease of wear.creases) {
-        if (crease.orientation === 'vertical') {
-          expect(['left', 'right']).toContain(crease.anchor);
-          expect(crease.offset).toBeGreaterThanOrEqual(14);
-          expect(crease.offset).toBeLessThanOrEqual(30);
-        } else {
-          expect(['top', 'bottom']).toContain(crease.anchor);
-          if (crease.anchor === 'top') {
-            expect(crease.offset).toBeGreaterThanOrEqual(60);
-            expect(crease.offset).toBeLessThanOrEqual(140);
-          } else {
-            expect(crease.offset).toBeGreaterThanOrEqual(30);
-            expect(crease.offset).toBeLessThanOrEqual(90);
-          }
-        }
-        expect(Math.abs(crease.skew)).toBeLessThanOrEqual(1.5);
-        expect(crease.shadowAlpha).toBeGreaterThanOrEqual(0.03);
-        expect(crease.shadowAlpha).toBeLessThanOrEqual(0.07);
-        expect(crease.lightAlpha).toBeGreaterThanOrEqual(0.12);
-        expect(crease.lightAlpha).toBeLessThanOrEqual(0.34);
-        expect(crease.reach).toBeGreaterThanOrEqual(8);
-        expect(crease.reach).toBeLessThanOrEqual(16);
-      }
+    const sizeBuckets = new Set(folds.map((fold) => Math.floor(fold.size / 20)));
+    expect(sizeBuckets.size).toBeGreaterThanOrEqual(4);
+
+    for (const fold of folds) {
+      expect(CORNERS).toContain(fold.corner);
+      expect(fold.size).toBeGreaterThanOrEqual(48);
+      expect(fold.size).toBeLessThanOrEqual(150);
+      expect(fold.liftAlpha).toBeGreaterThanOrEqual(0.12);
+      expect(fold.liftAlpha).toBeLessThanOrEqual(0.34);
     }
   });
 
-  it('lifts one corner gently and softens the rest', () => {
+  it('softens the corners the fold leaves alone', () => {
     for (let number = 1; number <= 85; number += 1) {
       const wear = getPaperWear(number);
-
-      expect(CORNERS).toContain(wear.cornerFold.corner);
-      expect(wear.cornerFold.size).toBeGreaterThanOrEqual(64);
-      expect(wear.cornerFold.size).toBeLessThanOrEqual(120);
-      expect(wear.cornerFold.liftAlpha).toBeGreaterThanOrEqual(0.1);
-      expect(wear.cornerFold.liftAlpha).toBeLessThanOrEqual(0.3);
 
       expect(wear.cornerSofteners.length).toBeGreaterThanOrEqual(2);
       expect(wear.cornerSofteners.length).toBeLessThanOrEqual(3);
       const chipCorners = wear.cornerSofteners.map((chip) => chip.corner);
       expect(new Set(chipCorners)).toHaveLength(chipCorners.length);
       for (const chip of wear.cornerSofteners) {
-        expect(chip.corner).not.toBe(wear.cornerFold.corner);
+        if (wear.cornerFold) {
+          expect(chip.corner).not.toBe(wear.cornerFold.corner);
+        }
         expect(chip.size).toBeGreaterThanOrEqual(6);
         expect(chip.size).toBeLessThanOrEqual(14);
         expect(chip.path).not.toContain('NaN');
@@ -116,6 +96,7 @@ describe('paper wear fingerprints', () => {
     expect(wear).not.toHaveProperty('stains');
     expect(wear).not.toHaveProperty('abrasions');
     expect(wear).not.toHaveProperty('folds');
+    expect(wear).not.toHaveProperty('creases');
     expect(wear).not.toHaveProperty('grainSeed');
   });
 
