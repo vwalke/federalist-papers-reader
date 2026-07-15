@@ -229,8 +229,8 @@
 }
 
 .essay-heading {
-  margin: 0 0 var(--space-md);
-  padding-block-end: var(--space-sm);
+  /* Half a body line of air before the drop cap, per the originals. */
+  margin: 0 0 var(--space-sm);
   text-align: center;
   break-inside: avoid;
 }
@@ -545,7 +545,7 @@
   }
 
   .essay-heading {
-    margin-block: var(--space-sm) var(--space-md);
+    margin-block: var(--space-sm);
   }
 
   .essay-heading__title {
