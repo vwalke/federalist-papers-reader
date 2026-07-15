@@ -13,7 +13,11 @@ describe('paper pages', () => {
     expect(html).toContain('class="essay-flow"');
     expect(html).toContain('THE FEDERALIST.');
     expect(html).toContain('No. I.');
-    expect(html).toContain('class="essay-heading__byline">PUBLIUS</p>');
+    expect(html).toContain('class="essay-signature">PUBLIUS</p>');
+    expect(html).not.toContain('class="essay-heading__byline"');
+    expect(html.indexOf('class="essay-signature"')).toBeGreaterThan(
+      html.indexOf('AFTER an unequivocal experience')
+    );
     expect(html).not.toContain('class="essay-heading__author"');
     expect(html).not.toContain('class="essay-heading__publication"');
     expect(html).not.toContain('For the Independent Journal. Saturday, October 27, 1787');

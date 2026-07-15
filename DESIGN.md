@@ -72,7 +72,7 @@ Text-first segmented controls for Gazette and Reader modes, a clearly labeled re
 
 ### Essay
 
-Centered paper number and recipient line followed by original body text. The first paragraph earns one drop cap. Columns use a fine rule and balanced gap; paragraphs never use artificial page breaks.
+Centered paper number and recipient line followed by original body text. The first paragraph earns one drop cap. Columns use a fine rule and balanced gap; paragraphs never use artificial page breaks. The essay carries no byline; Publius signs flush right at the foot of the final column, letterspaced, as in the original printings.
 
 ### Commentary
 

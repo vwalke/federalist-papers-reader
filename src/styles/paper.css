@@ -251,13 +251,6 @@
   display: none;
 }
 
-.essay-heading__byline {
-  font: 700 0.7rem/1.3 var(--font-reading);
-  font-variant-caps: small-caps;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-
 .essay-heading__recipient {
   margin-block-start: 0.2rem;
   font-family: var(--font-period-display);
@@ -293,9 +286,22 @@
   transform: rotate(-7deg);
 }
 
-.essay-heading__byline {
-  font-size: 0.98rem;
-  letter-spacing: 0.24em;
+/* Publius signs at the foot of the final column, as in the originals.
+   The source text is the bare word; the period is presentation. */
+.essay-signature {
+  margin-block-start: 0.35em;
+
+  /* Trailing letter-space would push the period off flush right. */
+  margin-inline-end: -0.3em;
+  break-before: avoid-column;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-align: end;
+  text-transform: uppercase;
+}
+
+.essay-signature::after {
+  content: '.';
 }
 
 .essay-body {
