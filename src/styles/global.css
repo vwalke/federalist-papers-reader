@@ -269,15 +269,57 @@ a:hover {
 }
 
 .about-lead {
-  max-inline-size: 58rem;
+  max-inline-size: 46rem;
   margin-block-start: var(--space-2xl);
+  text-align: center;
 }
 
 .about-lead h1 {
-  max-inline-size: 15ch;
   margin-block-start: var(--space-sm);
-  font: 400 clamp(2.1rem, 6vw, 4.8rem)/0.98 var(--font-display);
+  margin-inline: auto;
+  max-inline-size: 22ch;
+  font: 400 clamp(2.1rem, 6vw, 4.4rem)/1 var(--font-display);
   text-wrap: balance;
+}
+
+.about-lead__standfirst {
+  margin-block-start: var(--space-md);
+  margin-inline: auto;
+  max-inline-size: 42ch;
+  color: var(--color-muted-ink);
+  font-style: italic;
+}
+
+.about-page p.about-lead__standfirst {
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  line-height: 1.45;
+}
+
+.about-lead__ornament {
+  position: relative;
+  display: block;
+  inline-size: 3rem;
+  block-size: 0.7rem;
+  margin: var(--space-lg) auto 0;
+}
+
+.about-lead__ornament::before,
+.about-lead__ornament::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 1.35rem;
+  border-block-start: 1px solid var(--color-oxblood);
+}
+
+.about-lead__ornament::before {
+  inset-inline-start: 0;
+  transform: rotate(7deg);
+}
+
+.about-lead__ornament::after {
+  inset-inline-end: 0;
+  transform: rotate(-7deg);
 }
 
 .about-page .section-kicker {
@@ -312,6 +354,13 @@ a:hover {
   max-inline-size: 55ch;
 }
 
+.about-origin__copy .about-lede::first-letter {
+  float: left;
+  margin: 0.02em 0.09em 0 0;
+  color: var(--color-verdigris);
+  font: 400 3.1em/0.72 var(--font-display);
+}
+
 .about-origin__copy p + p,
 .about-family__copy p + p,
 .about-callout h2 + p,
@@ -320,7 +369,7 @@ a:hover {
   margin-block-start: var(--space-md);
 }
 
-.about-family > h2 + .about-family__copy {
+.about-family__head + .about-family__copy {
   margin-block-start: var(--space-md);
 }
 
@@ -346,6 +395,7 @@ a:hover {
   inline-size: 100%;
   block-size: auto;
   border: 1px solid var(--color-oxblood);
+  background: color-mix(in oklab, var(--color-newsprint) 88%, var(--color-ink));
 }
 
 .about-portrait__caption {
@@ -395,9 +445,22 @@ a:hover {
 }
 
 .about-family {
-  margin-block-start: var(--space-2xl);
-  padding-block: var(--space-xl);
-  border-block: 1px solid var(--color-rule);
+  margin-block-start: 0;
+}
+
+.about-family__tag {
+  margin-block-start: var(--space-sm);
+  color: var(--color-oxblood);
+  font-family: var(--font-reading);
+  font-variant-caps: small-caps;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.about-page p.about-family__tag {
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .about-family__copy {
@@ -405,7 +468,7 @@ a:hover {
 }
 
 .about-notes {
-  margin-block-start: var(--space-2xl);
+  margin-block-start: 0;
 }
 
 .about-notes > section {
@@ -415,6 +478,29 @@ a:hover {
 
 .about-notes > section + section {
   margin-block-start: var(--space-xl);
+}
+
+.about-rule {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-md);
+  max-inline-size: 74rem;
+  margin: var(--space-2xl) auto;
+}
+
+.about-rule::before,
+.about-rule::after {
+  content: '';
+  block-size: 4px;
+  border-block: 1px solid var(--color-rule);
+}
+
+.about-rule__mark {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--color-oxblood);
+  transform: rotate(45deg);
 }
 
 @media (min-width: 56rem) {
@@ -453,11 +539,11 @@ a:hover {
     align-items: start;
   }
 
-  .about-family > h2 {
-    max-inline-size: 13ch;
+  .about-family__head {
+    max-inline-size: 16ch;
   }
 
-  .about-family > h2 + .about-family__copy {
+  .about-family__head + .about-family__copy {
     margin-block-start: 0;
   }
 
