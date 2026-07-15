@@ -1,5 +1,11 @@
 ---
-import type { PaperCornerChip, PaperCornerFold, PaperEdge, PaperNick } from '../lib/paper-wear';
+import type {
+  PaperCornerChip,
+  PaperCornerFold,
+  PaperEdge,
+  PaperNick,
+  PaperToningBand
+} from '../lib/paper-wear';
 import { getPaperWear } from '../lib/paper-wear';
 
 interface Props {
@@ -12,6 +18,58 @@ const wear = getPaperWear(number);
 function maskUri(viewWidth: number, viewHeight: number, path: string): string {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${viewWidth} ${viewHeight}'><path d='${path}' fill='#fff'/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+/**
+ * Alpha mask for a browning band: a white gradient (dense at the sheet edge,
+ * gone by the inner boundary) gated through seeded fractal noise, so the
+ * browning depth wanders and blotches instead of reading as a uniform
+ * vignette. stitchTiles keeps the tile seamless along the edge.
+ */
+function bandMaskUri(band: PaperToningBand): string {
+  const horizontal = band.side === 'top' || band.side === 'bottom';
+  const width = horizontal ? band.tileLength : band.depth;
+  const height = horizontal ? band.depth : band.tileLength;
+  const alongFrequency = (1 / band.blotch).toFixed(4);
+  const acrossFrequency = (1 / (band.depth * 1.15)).toFixed(4);
+  const [fx, fy] = horizontal
+    ? [alongFrequency, acrossFrequency]
+    : [acrossFrequency, alongFrequency];
+  const [x1, y1, x2, y2] = {
+    top: [0, 0, 0, 1],
+    bottom: [0, 1, 0, 0],
+    left: [0, 0, 1, 0],
+    right: [1, 0, 0, 0]
+  }[band.side];
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'>` +
+    `<defs>` +
+    `<linearGradient id='g' x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}'>` +
+    `<stop offset='0' stop-color='#fff' stop-opacity='0.92'/>` +
+    `<stop offset='0.34' stop-color='#fff' stop-opacity='0.44'/>` +
+    `<stop offset='1' stop-color='#fff' stop-opacity='0'/>` +
+    `</linearGradient>` +
+    `<filter id='n' x='0' y='0' width='100%' height='100%'>` +
+    `<feTurbulence type='fractalNoise' baseFrequency='${fx} ${fy}' numOctaves='3' seed='${band.seed}' stitchTiles='stitch' result='t'/>` +
+    `<feComponentTransfer in='t' result='ta'><feFuncA type='gamma' amplitude='1.6' exponent='1.35' offset='0.06'/></feComponentTransfer>` +
+    `<feComposite in='SourceGraphic' in2='ta' operator='in'/>` +
+    `</filter>` +
+    `</defs>` +
+    `<rect width='100%' height='100%' fill='url(#g)' filter='url(#n)'/>` +
+    `</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+function bandStyle(band: PaperToningBand): string {
+  const horizontal = band.side === 'top' || band.side === 'bottom';
+  const width = horizontal ? band.tileLength : band.depth;
+  const height = horizontal ? band.depth : band.tileLength;
+  return [
+    `--edge-mask: ${bandMaskUri(band)}`,
+    `--edge-size: ${width}px ${height}px`,
+    `--edge-depth: ${band.depth}px`,
+    `--band-alpha: ${band.alpha}`
+  ].join('; ');
 }
 
 /**
@@ -118,6 +176,9 @@ function foldStyle(fold: PaperCornerFold): string {
   aria-hidden="true"
 >
   {wear.cornerFold && <div class="paper-wear__fold" style={foldStyle(wear.cornerFold)}></div>}
+  {wear.toning.bands.map((band) => (
+    <div class={`paper-wear__edge-band paper-wear__edge--${band.side}`} style={bandStyle(band)}></div>
+  ))}
   {wear.edges.map((edge) => (
     <div
       class={`paper-wear__edge-toning paper-wear__edge--${edge.side}`}

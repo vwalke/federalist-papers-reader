@@ -39,11 +39,27 @@ export interface PaperCornerChip {
   path: string;
 }
 
+export interface PaperToningBand {
+  side: PaperEdgeSide;
+  /** Length of one seamless noise tile along the edge, in px. */
+  tileLength: number;
+  /** How far the browning reaches into the sheet, in px. */
+  depth: number;
+  /** Turbulence seed for this band's blotch pattern. */
+  seed: number;
+  /** Typical blotch length along the edge, in px. */
+  blotch: number;
+  /** Layer opacity; per-edge asymmetry keeps one edge more aged than another. */
+  alpha: number;
+}
+
 export interface PaperToning {
   /** How far each deckle/nick mask is stretched to expose a browned fringe. */
   scale: number;
-  /** Opacity of the sepia fringe layer; kept very slight. */
+  /** Opacity of the sepia fringe layer hugging the torn boundary. */
   alpha: number;
+  /** Broad, blotchy browning bands, one per edge. */
+  bands: PaperToningBand[];
 }
 
 export interface PaperWear {
@@ -257,9 +273,18 @@ export function getPaperWear(number: number): PaperWear {
   const nicks = createNicks(random);
   const cornerFold = createCornerFold(random);
   const cornerSofteners = createCornerSofteners(random, cornerFold?.corner ?? null);
+  const baseBandAlpha = between(random, 0.5, 0.75);
   const toning: PaperToning = {
-    scale: between(random, 1.45, 1.95),
-    alpha: between(random, 0.1, 0.18)
+    scale: between(random, 1.65, 2.3),
+    alpha: between(random, 0.2, 0.32),
+    bands: EDGE_SIDES.map((side) => ({
+      side,
+      tileLength: Math.round(between(random, 380, 560)),
+      depth: Math.round(between(random, 24, 72)),
+      seed: Math.floor(random() * 997) + 1,
+      blotch: Math.round(between(random, 90, 240)),
+      alpha: Number((baseBandAlpha * between(random, 0.45, 1)).toFixed(3))
+    }))
   };
 
   return {

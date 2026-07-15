@@ -3,7 +3,8 @@
 }
 
 .paper-wear {
-  --wear-toning: color-mix(in oklab, var(--color-oxblood) 35%, var(--color-muted-ink) 65%);
+  /* Tea-tan oxidation tone: hue sits between ink (70) and newsprint (82). */
+  --wear-toning: oklch(0.57 0.088 72);
 
   position: absolute;
   z-index: 2;
@@ -35,8 +36,18 @@
   mix-blend-mode: multiply;
 }
 
+/* Broad oxidation band: blotchy noise-masked browning reaching in from
+   each edge, with its own depth and strength per edge per paper. */
+.paper-wear__edge-band {
+  position: absolute;
+  background-color: var(--wear-toning);
+  opacity: var(--band-alpha, 0.55);
+  mix-blend-mode: multiply;
+}
+
 .paper-wear__edge,
-.paper-wear__edge-toning {
+.paper-wear__edge-toning,
+.paper-wear__edge-band {
   -webkit-mask-image: var(--edge-mask);
   mask-image: var(--edge-mask);
   -webkit-mask-size: var(--edge-size);
@@ -518,6 +529,7 @@
 @media (max-width: 45.999rem) {
   .paper-wear__edge,
   .paper-wear__edge-toning,
+  .paper-wear__edge-band,
   .paper-wear__bite,
   .paper-wear__bite-toning {
     display: none;
