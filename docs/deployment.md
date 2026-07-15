@@ -56,20 +56,21 @@ aws amplify start-deployment --app-id <app-id> --branch-name production \
 
 If automatic deploys on every push become useful, connect the private `vwalke/federalist-papers-reader` repository in the Amplify console. The committed `amplify.yml` installs the pinned pnpm version, validates all 85 content files, builds the Astro static output, and publishes `dist/`.
 
-Set this Amplify environment variable for canonical URLs:
+Set these Amplify environment variables for canonical URLs and aggregate traffic analytics:
 
 ```text
 PUBLIC_SITE_URL=https://<your-production-domain>
+PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<your-Cloudflare-site-token>
 ```
 
-No other environment variables or secrets are required.
+Create the site token by adding the production hostname in the Cloudflare Web Analytics dashboard. The token is embedded in the public beacon markup and is not an account credential. If the analytics token is missing or invalid, the site still builds normally and emits no analytics beacon.
 
 ## Updating a manual deployment
 
 For each update:
 
 1. Pull the desired Git commit.
-2. Run `pnpm install --frozen-lockfile` and `PUBLIC_SITE_URL=<live-url> pnpm check`.
+2. Run `pnpm install --frozen-lockfile`, then build and test with `PUBLIC_SITE_URL=<live-url> PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<site-token> pnpm check`.
 3. Zip the contents of the fresh `dist/` output.
 4. Repeat `create-deployment`, upload, and `start-deployment` for the existing app and `production` branch.
 5. Verify the live routes and clear the local test progress if needed.
@@ -79,3 +80,4 @@ For each update:
 - [AWS: Deploying without a Git repository](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html)
 - [AWS CLI: `create-deployment`](https://docs.aws.amazon.com/cli/latest/reference/amplify/create-deployment.html)
 - [AWS: Host a static website](https://docs.aws.amazon.com/hands-on/latest/host-static-website/host-static-website.html)
+- [Cloudflare: Enable Web Analytics](https://developers.cloudflare.com/web-analytics/get-started/)
