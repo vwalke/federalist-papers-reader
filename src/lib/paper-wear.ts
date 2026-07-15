@@ -23,19 +23,6 @@ export interface PaperNick {
   path: string;
 }
 
-export interface PaperCrease {
-  orientation: 'vertical' | 'horizontal';
-  anchor: PaperEdgeSide;
-  /** Distance from the anchored edge in px; stays inside gutters and padding. */
-  offset: number;
-  /** Small rotation away from true vertical/horizontal, in degrees. */
-  skew: number;
-  shadowAlpha: number;
-  lightAlpha: number;
-  /** Half-width of the soft relief ramp in px. */
-  reach: number;
-}
-
 export interface PaperCornerFold {
   corner: PaperCorner;
   /** Side length of the fixed corner block in px. */
@@ -56,8 +43,8 @@ export interface PaperWear {
   signature: string;
   edges: PaperEdge[];
   nicks: PaperNick[];
-  creases: PaperCrease[];
-  cornerFold: PaperCornerFold;
+  /** Roughly two of three papers earn a lifted corner; the rest stay flat. */
+  cornerFold: PaperCornerFold | null;
   cornerSofteners: PaperCornerChip[];
 }
 
@@ -190,41 +177,18 @@ function createNicks(random: () => number): PaperNick[] {
   return sides.slice(0, count).map((side) => createNick(random, side));
 }
 
-function createCreases(random: () => number): PaperCrease[] {
-  const creases: PaperCrease[] = [
-    {
-      orientation: 'vertical',
-      anchor: random() > 0.5 ? 'left' : 'right',
-      offset: between(random, 14, 30),
-      skew: between(random, -1.5, 1.5),
-      shadowAlpha: between(random, 0.03, 0.07),
-      lightAlpha: between(random, 0.12, 0.34),
-      reach: between(random, 8, 16)
-    }
-  ];
-
-  if (random() > 0.42) {
-    const anchor = random() > 0.5 ? 'top' : 'bottom';
-    creases.push({
-      orientation: 'horizontal',
-      anchor,
-      offset: anchor === 'top' ? between(random, 60, 140) : between(random, 30, 90),
-      skew: between(random, -1.5, 1.5),
-      shadowAlpha: between(random, 0.03, 0.07),
-      lightAlpha: between(random, 0.12, 0.34),
-      reach: between(random, 8, 16)
-    });
+function createCornerFold(random: () => number): PaperCornerFold | null {
+  if (random() > 2 / 3) {
+    return null;
   }
 
-  return creases;
-}
-
-function createCornerFold(random: () => number): PaperCornerFold {
+  // Square the spread so small, casual lifts outnumber dramatic ones.
+  const spread = random();
   return {
     corner: pick(random, CORNERS),
-    size: between(random, 64, 120),
-    liftAlpha: between(random, 0.14, 0.3),
-    contactAlpha: between(random, 0.05, 0.11),
+    size: Number((48 + spread * spread * 102).toFixed(3)),
+    liftAlpha: between(random, 0.12, 0.34),
+    contactAlpha: between(random, 0.05, 0.12),
     rimAlpha: between(random, 0.08, 0.18)
   };
 }
@@ -253,7 +217,10 @@ function createCornerChip(random: () => number, corner: PaperCorner): PaperCorne
   return { corner, size, path };
 }
 
-function createCornerSofteners(random: () => number, foldCorner: PaperCorner): PaperCornerChip[] {
+function createCornerSofteners(
+  random: () => number,
+  foldCorner: PaperCorner | null
+): PaperCornerChip[] {
   const candidates = CORNERS.filter((corner) => corner !== foldCorner);
   const count = 2 + Math.floor(random() * 2);
   const chosen = [...candidates];
@@ -280,15 +247,13 @@ export function getPaperWear(number: number): PaperWear {
   const random = mulberry32(number * 2_654_435_761);
   const edges = EDGE_SIDES.map((side) => createEdge(random, side));
   const nicks = createNicks(random);
-  const creases = createCreases(random);
   const cornerFold = createCornerFold(random);
-  const cornerSofteners = createCornerSofteners(random, cornerFold.corner);
+  const cornerSofteners = createCornerSofteners(random, cornerFold?.corner ?? null);
 
   return {
     signature: `${number}-${hash(edges.map((edge) => edge.path).join('|'))}`,
     edges,
     nicks,
-    creases,
     cornerFold,
     cornerSofteners
   };

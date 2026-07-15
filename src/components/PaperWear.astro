@@ -1,5 +1,5 @@
 ---
-import type { PaperCornerChip, PaperCrease, PaperEdge, PaperNick } from '../lib/paper-wear';
+import type { PaperCornerChip, PaperCornerFold, PaperEdge, PaperNick } from '../lib/paper-wear';
 import { getPaperWear } from '../lib/paper-wear';
 
 interface Props {
@@ -61,58 +61,41 @@ const ink = (alpha: number) =>
   `color-mix(in oklab, var(--color-ink) ${(alpha * 100).toFixed(1)}%, transparent)`;
 const light = (alpha: number) => `rgb(255 255 255 / ${(alpha * 100).toFixed(1)}%)`;
 
-function creaseLayer(crease: PaperCrease): string {
-  const angle =
-    crease.orientation === 'vertical'
-      ? (crease.anchor === 'left' ? 90 : 270) + crease.skew
-      : (crease.anchor === 'top' ? 180 : 0) + crease.skew;
-  const at = (delta: number) => `calc(${crease.offset}px + ${delta.toFixed(1)}px)`;
-  return [
-    `linear-gradient(${angle.toFixed(2)}deg`,
-    `transparent ${at(-crease.reach)}`,
-    `${light(crease.lightAlpha)} ${at(-1.4)}`,
-    `${ink(crease.shadowAlpha * 1.9)} ${at(0)}`,
-    `${ink(crease.shadowAlpha)} ${at(crease.reach * 0.45)}`,
-    `transparent ${at(crease.reach)})`
-  ].join(', ');
-}
-
-const foldAngle = {
-  'top-left': 135,
-  'top-right': 225,
-  'bottom-right': 315,
-  'bottom-left': 45
-}[wear.cornerFold.corner];
-
 /**
  * The fold block is rendered 1.4x larger than the visible fold so the
  * trailing cast shadow fades out before it can clip against the block
  * boundary and leave a seam. Stops are px distances along the gradient
  * axis; the crease line sits at size / sqrt(2) from the corner tip.
  */
-const foldBlock = Math.ceil(wear.cornerFold.size * 1.4);
-const creaseAt = wear.cornerFold.size * 0.7071;
-const foldStop = (px: number) => `${px.toFixed(1)}px`;
-const foldStyle = [
-  `inset-block-${wear.cornerFold.corner.startsWith('top') ? 'start' : 'end'}: 0`,
-  `inset-inline-${wear.cornerFold.corner.endsWith('left') ? 'start' : 'end'}: 0`,
-  `inline-size: ${foldBlock}px`,
-  `block-size: ${foldBlock}px`,
-  `background-image: linear-gradient(${foldAngle}deg, ` +
-    [
-      `${light(wear.cornerFold.liftAlpha)} 0`,
-      `${light(wear.cornerFold.liftAlpha * 0.55)} ${foldStop(creaseAt * 0.62)}`,
-      `transparent ${foldStop(creaseAt * 0.94)}`,
-      `${ink(wear.cornerFold.contactAlpha * 1.6)} ${foldStop(creaseAt - 1.2)}`,
-      `${ink(wear.cornerFold.contactAlpha * 1.9)} ${foldStop(creaseAt)}`,
-      `${light(wear.cornerFold.rimAlpha)} ${foldStop(creaseAt + 1.1)}`,
-      `${ink(wear.cornerFold.contactAlpha)} ${foldStop(creaseAt + 4.5)}`,
-      `transparent ${foldStop(creaseAt * 1.24)}`
-    ].join(', ') +
-    ')'
-].join('; ');
-
-const creaseStyle = `background-image: ${wear.creases.map(creaseLayer).join(', ')}`;
+function foldStyle(fold: PaperCornerFold): string {
+  const angle = {
+    'top-left': 135,
+    'top-right': 225,
+    'bottom-right': 315,
+    'bottom-left': 45
+  }[fold.corner];
+  const block = Math.ceil(fold.size * 1.4);
+  const creaseAt = fold.size * 0.7071;
+  const stop = (px: number) => `${px.toFixed(1)}px`;
+  return [
+    `inset-block-${fold.corner.startsWith('top') ? 'start' : 'end'}: 0`,
+    `inset-inline-${fold.corner.endsWith('left') ? 'start' : 'end'}: 0`,
+    `inline-size: ${block}px`,
+    `block-size: ${block}px`,
+    `background-image: linear-gradient(${angle}deg, ` +
+      [
+        `${light(fold.liftAlpha)} 0`,
+        `${light(fold.liftAlpha * 0.55)} ${stop(creaseAt * 0.62)}`,
+        `transparent ${stop(creaseAt * 0.94)}`,
+        `${ink(fold.contactAlpha * 1.6)} ${stop(creaseAt - 1.2)}`,
+        `${ink(fold.contactAlpha * 1.9)} ${stop(creaseAt)}`,
+        `${light(fold.rimAlpha)} ${stop(creaseAt + 1.1)}`,
+        `${ink(fold.contactAlpha)} ${stop(creaseAt + 4.5)}`,
+        `transparent ${stop(creaseAt * 1.24)}`
+      ].join(', ') +
+      ')'
+  ].join('; ');
+}
 ---
 
 <div
@@ -121,8 +104,7 @@ const creaseStyle = `background-image: ${wear.creases.map(creaseLayer).join(', '
   data-wear-signature={wear.signature}
   aria-hidden="true"
 >
-  <div class="paper-wear__creases" style={creaseStyle}></div>
-  <div class="paper-wear__fold" style={foldStyle}></div>
+  {wear.cornerFold && <div class="paper-wear__fold" style={foldStyle(wear.cornerFold)}></div>}
   {wear.edges.map((edge) => (
     <div class={`paper-wear__edge paper-wear__edge--${edge.side}`} style={edgeStyle(edge)}></div>
   ))}
