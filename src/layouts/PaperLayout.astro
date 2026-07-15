@@ -37,27 +37,26 @@ const { data } = paper;
     />
     <ReadingToolbar number={data.number} />
 
-    <header class="essay-heading">
-      <h1 class="essay-heading__title">
-        <span>THE FEDERALIST.</span>{' '}
-        <span class="essay-heading__number">No. {toRomanNumeral(data.number)}.</span>
-      </h1>
-      <p class="essay-heading__topic">{data.title}</p>
-      <p class="essay-heading__recipient">{data.recipient}</p>
-      <span class="essay-heading__ornament" aria-hidden="true"></span>
-      <p class="essay-heading__byline">PUBLIUS</p>
-      <p class="essay-heading__author">{data.author}</p>
-      <p class="essay-heading__publication">{data.publicationDateLabel}</p>
-      {data.authorCertainty === 'disputed' && (
-        <p class="essay-heading__note">Authorship attribution is disputed.</p>
-      )}
-    </header>
+    <div class="essay-flow">
+      <header class="essay-heading">
+        <h1 class="essay-heading__title">
+          <span>THE FEDERALIST.</span>{' '}
+          <span class="essay-heading__number">No. {toRomanNumeral(data.number)}.</span>
+        </h1>
+        <p class="essay-heading__topic">{data.title}</p>
+        <p class="essay-heading__recipient">{data.recipient}</p>
+        <span class="essay-heading__ornament" aria-hidden="true"></span>
+        <p class="essay-heading__byline">PUBLIUS</p>
+      </header>
 
-    <div class="essay-body">
-      <slot />
+      <div class="essay-body">
+        <slot />
+      </div>
     </div>
 
     <Commentary
+      author={data.author}
+      authorCertainty={data.authorCertainty}
       nutshell={data.nutshell}
       keyArguments={data.keyArguments}
       whyItMattered={data.whyItMattered}
