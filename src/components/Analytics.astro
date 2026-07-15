@@ -1,0 +1,19 @@
+---
+import { createCloudflareBeaconData } from '../lib/analytics';
+
+const beaconData = createCloudflareBeaconData(
+  import.meta.env.PROD,
+  import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN,
+);
+---
+
+{
+  beaconData && (
+    <script
+      is:inline
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon={beaconData}
+    />
+  )
+}
