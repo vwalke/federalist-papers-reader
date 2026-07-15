@@ -29,6 +29,7 @@ async function titleMetrics(page: import('@playwright/test').Page) {
       titleText: title.textContent?.replace(/\s+/g, ' ').trim() ?? '',
       contentGap: title.getBoundingClientRect().top - toolbar.getBoundingClientRect().bottom,
       flowPaddingTop: Number.parseFloat(getComputedStyle(flow).paddingTop),
+      titleOverflow: title.scrollWidth - title.clientWidth,
       overflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
@@ -160,16 +161,23 @@ test('places anonymous top matter in the Gazette first column', async ({ page })
   expect(metrics.mastheadWidth).toBeLessThanOrEqual(metrics.sheetWidth);
   expect(metrics.overflow).toBeLessThanOrEqual(0);
 
+  await page.goto('/papers/85/');
+  const desktopLongestTitle = await titleMetrics(page);
+  expect(desktopLongestTitle.lines).toBe(1);
+  expect(desktopLongestTitle.titleOverflow).toBeLessThanOrEqual(1);
+
   await page.setViewportSize({ width: 640, height: 900 });
   await page.goto('/papers/85/');
   const zoomEquivalent = await titleMetrics(page);
   expect(zoomEquivalent.lines).toBe(1);
+  expect(zoomEquivalent.titleOverflow).toBeLessThanOrEqual(1);
   expect(zoomEquivalent.overflow).toBeLessThanOrEqual(0);
 
   await page.getByRole('button', { name: 'Reader' }).click();
   const readerTitle = await titleMetrics(page);
   expect(readerTitle.lines).toBe(1);
   expect(readerTitle.titleFontFamily).toContain('Libre Caslon Display');
+  expect(readerTitle.titleOverflow).toBeLessThanOrEqual(1);
   expect(readerTitle.overflow).toBeLessThanOrEqual(0);
 });
 

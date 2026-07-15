@@ -1,12 +1,29 @@
 const SKIPPED_TAGS = new Set(['a', 'code', 'pre', 'script', 'style']);
 const EXACT_FEDERAL = /^federal$/i;
 
+/** @typedef {{ type: 'text', value: string }} TextNode */
+/** @typedef {{
+ *   type: 'element',
+ *   tagName: 'span',
+ *   properties: {
+ *     className: string[],
+ *     'data-modern': string,
+ *     'data-gazette': string,
+ *     'aria-label': string
+ *   },
+ *   children: TextNode[]
+ * }} PeriodSpellingNode */
+
 function toGazetteSpelling(word) {
   if (word === word.toUpperCase()) return 'FŒDERAL';
   if (word[0] === word[0].toUpperCase()) return 'Fœderal';
   return 'fœderal';
 }
 
+/**
+ * @param {string} value
+ * @returns {(TextNode | PeriodSpellingNode)[]}
+ */
 export function periodizeText(value) {
   return value.split(/\b(federal)\b/gi).filter(Boolean).map((part) => {
     if (!EXACT_FEDERAL.test(part)) return { type: 'text', value: part };

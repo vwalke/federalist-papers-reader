@@ -8,7 +8,7 @@ import {
 describe('period spelling HAST transform', () => {
   it('annotates standalone federal in lower, title, and uppercase forms', () => {
     const children = periodizeText('federal Federal FEDERAL Federalist confederal');
-    const spans = children.filter((node) => node.tagName === 'span');
+    const spans = children.filter((node) => node.type === 'element');
     expect(spans.map((node) => node.properties)).toEqual([
       {
         className: ['period-spelling'],
@@ -34,7 +34,7 @@ describe('period spelling HAST transform', () => {
       'Fœderal',
       'FŒDERAL'
     ]);
-    expect(children.map((node) => node.value ?? node.children?.[0].value).join(''))
+    expect(children.map((node) => node.type === 'text' ? node.value : node.children[0].value).join(''))
       .toBe('fœderal Fœderal FŒDERAL Federalist confederal');
   });
 
