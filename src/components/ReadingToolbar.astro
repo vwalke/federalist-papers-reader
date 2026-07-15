@@ -22,6 +22,9 @@ const { number } = Astro.props;
 
   const root = document.documentElement;
   const modeButtons = document.querySelectorAll<HTMLButtonElement>('[data-mode]');
+  const periodSpellings = document.querySelectorAll<HTMLElement>(
+    '.period-spelling[data-modern][data-gazette]'
+  );
   let storage: Storage | null = null;
   try {
     storage = window.localStorage;
@@ -30,11 +33,19 @@ const { number } = Astro.props;
   }
   const preferences = createPreferences(storage);
 
+  function applyPeriodSpellings(mode: 'gazette' | 'reader') {
+    for (const spelling of periodSpellings) {
+      const value = mode === 'reader' ? spelling.dataset.modern : spelling.dataset.gazette;
+      if (value) spelling.textContent = value;
+    }
+  }
+
   function applyMode(mode: 'gazette' | 'reader') {
     root.dataset.readingMode = mode;
     for (const button of modeButtons) {
       button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
     }
+    applyPeriodSpellings(mode);
     preferences.setReadingMode(mode);
   }
 

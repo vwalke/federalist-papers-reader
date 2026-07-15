@@ -12,15 +12,21 @@ test.beforeEach(async ({ page }) => {
 
 test('switches reading modes and remembers the preference', async ({ page }) => {
   const styleControl = page.getByRole('group', { name: 'Reading style' });
+  const periodWord = page.locator('.period-spelling').first();
   await expect(styleControl.getByRole('button')).toHaveCount(2);
   await expect(styleControl.getByRole('button', { name: 'Gazette' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(periodWord).toHaveText('fœderal');
+  await expect(periodWord).toHaveAttribute('aria-label', 'federal');
 
   await page.getByRole('button', { name: 'Reader' }).click();
+  await expect(periodWord).toHaveText('federal');
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'reader');
   await page.reload();
+  await expect(periodWord).toHaveText('federal');
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'reader');
 
   await page.getByRole('button', { name: 'Gazette' }).click();
+  await expect(periodWord).toHaveText('fœderal');
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'gazette');
 });
 
