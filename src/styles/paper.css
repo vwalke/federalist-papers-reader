@@ -259,33 +259,6 @@
   line-height: 1.25;
 }
 
-.essay-heading__ornament {
-  position: relative;
-  display: block;
-  inline-size: 2.75rem;
-  block-size: 0.65rem;
-  margin: 0.35rem auto 0.25rem;
-}
-
-.essay-heading__ornament::before,
-.essay-heading__ornament::after {
-  content: '';
-  position: absolute;
-  inset-block-start: 50%;
-  inline-size: 1.25rem;
-  border-block-start: 1px solid var(--color-oxblood);
-}
-
-.essay-heading__ornament::before {
-  inset-inline-start: 0;
-  transform: rotate(7deg);
-}
-
-.essay-heading__ornament::after {
-  inset-inline-end: 0;
-  transform: rotate(-7deg);
-}
-
 /* Publius signs at the foot of the final column, as in the originals.
    The source text is the bare word; the period is presentation. */
 .essay-signature {
