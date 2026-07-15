@@ -15,6 +15,10 @@ describe('About this edition', () => {
     expect(html).toContain('class="about-origin__copy"');
     expect(html).toContain('class="about-family"');
     expect(html).toContain('class="about-family__copy"');
+    expect(html).toContain('class="about-documents"');
+    expect(html).toContain('class="about-documents__head"');
+    expect(html).toContain('class="about-documents__figure"');
+    expect(html).toContain('class="about-documents__copy"');
     expect(html).toContain('class="about-notes"');
     expect(html).not.toContain('class="about-notes__privacy"');
     expect(html).not.toContain('No account, no tracking your reading');
@@ -28,12 +32,16 @@ describe('About this edition', () => {
     const familyIndex = html.indexOf('class="about-family"');
     const notesIndex = html.indexOf('class="about-notes"');
     const colophonIndex = html.indexOf('class="about-colophon"');
+    const documentsIndex = html.indexOf('class="about-documents"');
+    const documentsHtml = html.slice(documentsIndex, notesIndex);
 
     expect(introductionIndex).toBeGreaterThan(-1);
     expect(introductionIndex).toBeLessThan(portraitIndex);
     expect(portraitIndex).toBeLessThan(letterJoyIndex);
     expect(letterJoyIndex).toBeLessThan(familyIndex);
     expect(familyIndex).toBeLessThan(notesIndex);
+    expect(documentsIndex).toBeGreaterThan(familyIndex);
+    expect(documentsIndex).toBeLessThan(notesIndex);
     expect(colophonIndex).toBeGreaterThan(notesIndex);
     expect(html).toContain('sixth-great-uncle');
     expect(html).toContain('my mom’s fifth-great-uncle');
@@ -67,5 +75,39 @@ describe('About this edition', () => {
     expect(html).toContain('decoding="async"');
     expect(html).toContain('Mom and me');
     expect(html).toContain('July 4, 2026 · Sail4th 250, New York Harbor');
+    expect(html).toContain('History in the room');
+    expect(html).toContain('Nothing substitutes for the real thing.');
+    expect(html).toContain('We are fortunate to know Seth Kaller');
+    expect(html).toContain('On July 5, 2026, Mom and I visited');
+    expect(html).toContain('visited <em>The Promise of Liberty: Words That Shaped a Nation</em>');
+    expect(html).toContain('The Promise of Liberty: Words That Shaped a Nation');
+    expect(html).toContain(
+      'carrying the printed signature of Charles Thomson—her fifth-great-uncle',
+    );
+    expect(html).toContain('Here it was, in ink and paper, directly in front of us.');
+    expect(html).toContain(
+      'no screen can reproduce the scale, texture, survival, and sheer presence',
+    );
+    expect(html).toContain('If <em>The Promise of Liberty</em>—or any exhibition');
+    expect(html).toContain('wanting to bring a piece of history home');
+    expect(html).toContain('href="https://www.thepromiseofliberty.org/"');
+    expect(html).toContain('Follow <em>The Promise of Liberty</em>');
+    expect(html).toContain('href="https://www.sethkaller.com/"');
+    expect(html).toContain('Explore history you can own');
+    expect(html).toContain('src="/images/mom-and-seth-promise-of-liberty-2026.jpg"');
+    expect(html).toContain(
+      'alt="Seth Kaller showing Mom a framed printing of the Declaration of Independence at The Promise of Liberty exhibition"',
+    );
+    expect(html).toContain('width="1200"');
+    expect(html).toContain('height="1567"');
+    expect(html).toContain('loading="lazy"');
+    expect(documentsHtml).toContain('decoding="async"');
+    expect(documentsHtml).not.toContain('target="_blank"');
+    expect(html).toContain('Mom and Seth Kaller');
+    expect(html).toContain(
+      'With a printing of the Declaration carrying Charles Thomson’s printed signature.',
+    );
+    expect(html).toContain('July 5, 2026 ·');
+    expect(html).toContain('South Street Seaport Museum, New York City.');
   });
 });
