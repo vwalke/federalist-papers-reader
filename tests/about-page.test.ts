@@ -9,6 +9,26 @@ describe('About this edition', () => {
     expect(html).toContain('This edition began with a gift for my mom.');
     expect(html).toContain('href="https://www.letterjoy.co/pages/federalist-papers"');
     expect(html).toContain('LetterJoy’s Federalist Papers series');
+    expect(html).toContain('class="paper-sheet about-page"');
+    expect(html).toContain('class="about-lead"');
+    expect(html).toContain('class="about-origin"');
+    expect(html).toContain('class="about-origin__copy"');
+    expect(html).toContain('class="about-family"');
+    expect(html).toContain('class="about-family__copy"');
+    expect(html).toContain('class="about-notes"');
+    expect(html).toContain('class="about-notes__privacy"');
+
+    const introductionIndex = html.indexOf('class="about-origin__copy"');
+    const portraitIndex = html.indexOf('class="about-portrait"');
+    const letterJoyIndex = html.indexOf('class="about-callout"');
+    const familyIndex = html.indexOf('class="about-family"');
+    const notesIndex = html.indexOf('class="about-notes"');
+
+    expect(introductionIndex).toBeGreaterThan(-1);
+    expect(introductionIndex).toBeLessThan(portraitIndex);
+    expect(portraitIndex).toBeLessThan(letterJoyIndex);
+    expect(letterJoyIndex).toBeLessThan(familyIndex);
+    expect(familyIndex).toBeLessThan(notesIndex);
     expect(html).toContain('sixth-great-uncle');
     expect(html).toContain('my mom’s fifth-great-uncle');
     expect(html).toContain('At ten years old, he arrived in America with no parents and no money.');

@@ -7,22 +7,28 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   title="About this edition — Publius"
   description="How this warm, accessible reading edition of the Federalist Papers handles original text, historical atmosphere, and companion commentary."
 >
-  <article class="paper-sheet">
+  <article class="paper-sheet about-page">
     <GazetteMasthead compact dateLine="A note to the reader" />
-    <div class="about-copy flow">
+
+    <header class="about-lead">
       <p class="section-kicker">About this edition</p>
       <h1>A conversation with my mom, one paper at a time.</h1>
-      <p class="about-copy__lede">
-        This edition began with a gift for my mom. I gave her a subscription to LetterJoy’s
-        Federalist Papers series, which sends one paper each week on 1780s-inspired newsprint. As
-        she opened them at home, I started following along online.
-      </p>
-      <p>
-        What might have become a dutiful march through a famous book became something much better:
-        a standing conversation between us. The weekly rhythm makes each argument feel less like a
-        monument and more like what it first was—a public letter meant to be read, considered, and
-        talked over.
-      </p>
+    </header>
+
+    <div class="about-origin">
+      <div class="about-origin__copy">
+        <p class="about-lede">
+          This edition began with a gift for my mom. I gave her a subscription to LetterJoy’s
+          Federalist Papers series, which sends one paper each week on 1780s-inspired newsprint. As
+          she opened them at home, I started following along online.
+        </p>
+        <p>
+          What might have become a dutiful march through a famous book became something much better:
+          a standing conversation between us. The weekly rhythm makes each argument feel less like a
+          monument and more like what it first was—a public letter meant to be read, considered, and
+          talked over.
+        </p>
+      </div>
 
       <figure class="about-portrait">
         <div class="about-portrait__mat">
@@ -60,9 +66,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           the experience their mailed edition created for our family.
         </p>
       </aside>
+    </div>
 
-      <section aria-labelledby="family-heading">
-        <h2 id="family-heading">A family thread through the founding</h2>
+    <section class="about-family" aria-labelledby="family-heading">
+      <h2 id="family-heading">A family thread through the founding</h2>
+      <div class="about-family__copy">
         <p>
           The reading has another personal connection. Charles Thomson was my sixth-great-uncle—my
           mom’s fifth-great-uncle.{' '}
@@ -104,8 +112,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           words, its emblem, and its institutional memory. That is a remarkable family thread for my
           mom and me to feel as we read these arguments together.
         </p>
-      </section>
+      </div>
+    </section>
 
+    <div class="about-notes">
       <section aria-labelledby="words-heading">
         <h2 id="words-heading">Their words, clearly set</h2>
         <p>
@@ -124,7 +134,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </p>
       </section>
 
-      <section aria-labelledby="privacy-heading">
+      <section class="about-notes__privacy" aria-labelledby="privacy-heading">
         <h2 id="privacy-heading">No account, no tracking your reading</h2>
         <p>
           Marking a paper read saves that fact only in this browser. It will not follow you to a new
