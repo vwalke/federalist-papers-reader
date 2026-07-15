@@ -57,7 +57,7 @@ describe('About this edition', () => {
     expect(html).toContain('alt="Mom and me together at Sail4th 250 in New York Harbor"');
     expect(html).toContain('width="1200"');
     expect(html).toContain('height="1600"');
-    expect(html).toContain('loading="lazy"');
+    expect(html).toContain('loading="eager"');
     expect(html).toContain('decoding="async"');
     expect(html).toContain('Mom and me');
     expect(html).toContain('July 4, 2026 · Sail4th 250, New York Harbor');
