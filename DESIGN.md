@@ -24,8 +24,10 @@ Newsprint is an intentional environmental surface, not a generic warm-neutral br
 
 ## Typography
 
-- Mastheads and the most ceremonial display moments use **IM FELL English**, self-hosted.
-- Essay body, headings, commentary, and numerals use **Libre Caslon Text**, self-hosted.
+- The outlined masthead artwork remains independent of live web fonts.
+- Gazette paper titles and recipient lines use **IM FELL English**, self-hosted, for restrained period texture.
+- Reader paper titles use **Libre Caslon Display**; essay body, commentary, and metadata use **Libre Caslon Text**, all self-hosted.
+- Gazette prose enables font-supported common and historical ligatures and uses source-attested `fœderal` rendering; Reader mode normalizes that form to `federal`.
 - Utility labels and form controls use the reader’s native system sans-serif stack for clarity and input familiarity.
 - Body copy starts at 1.0625rem on phones and grows modestly on larger screens. Reader mode is capped near 68 characters.
 - Gazette mode uses one column through 46rem, two columns at medium widths, and three only when each column remains readable.
