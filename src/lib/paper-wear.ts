@@ -1,54 +1,68 @@
-export interface PaperFold {
+export type PaperEdgeSide = 'top' | 'right' | 'bottom' | 'left';
+export type PaperCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+export interface PaperEdge {
+  side: PaperEdgeSide;
+  /** Length of one seamless deckle tile along the edge, in px. */
+  tileLength: number;
+  /** Strip thickness in px; every sampled depth stays inside it. */
+  depth: number;
+  /** Sampled intrusion depths in px; first and last match so tiles repeat seamlessly. */
+  depths: number[];
+  /** Closed tile path in px units, oriented for its side, filled where the room shows. */
   path: string;
-  highlightOffsetX: number;
-  highlightOffsetY: number;
-  opacity: number;
-  hazeWidth: number;
-  lineWidth: number;
 }
 
-export interface PaperAbrasion {
-  x: number;
-  y: number;
-  radiusX: number;
-  radiusY: number;
-  rotation: number;
-  opacity: number;
+export interface PaperNick {
+  side: PaperEdgeSide;
+  /** Position along the edge as a percentage, kept away from the corners. */
+  offset: number;
+  width: number;
+  depth: number;
+  /** Closed bite path in px units, oriented for its side. */
+  path: string;
 }
 
-export interface PaperStain {
-  x: number;
-  y: number;
-  radiusX: number;
-  radiusY: number;
-  rotation: number;
-  opacity: number;
+export interface PaperCrease {
+  orientation: 'vertical' | 'horizontal';
+  anchor: PaperEdgeSide;
+  /** Distance from the anchored edge in px; stays inside gutters and padding. */
+  offset: number;
+  /** Small rotation away from true vertical/horizontal, in degrees. */
+  skew: number;
+  shadowAlpha: number;
+  lightAlpha: number;
+  /** Half-width of the soft relief ramp in px. */
+  reach: number;
 }
 
 export interface PaperCornerFold {
-  location: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  areaPath: string;
-  creasePath: string;
-  opacity: number;
+  corner: PaperCorner;
+  /** Side length of the fixed corner block in px. */
+  size: number;
+  liftAlpha: number;
+  contactAlpha: number;
+  rimAlpha: number;
+}
+
+export interface PaperCornerChip {
+  corner: PaperCorner;
+  size: number;
+  /** Closed chamfer path in px units, oriented for its corner. */
+  path: string;
 }
 
 export interface PaperWear {
-  id: string;
-  foldSignature: string;
-  grainSeed: number;
-  grainFrequency: number;
-  opacity: number;
-  edgeOpacity: number;
-  folds: PaperFold[];
-  abrasions: PaperAbrasion[];
-  stains: PaperStain[];
+  signature: string;
+  edges: PaperEdge[];
+  nicks: PaperNick[];
+  creases: PaperCrease[];
   cornerFold: PaperCornerFold;
+  cornerSofteners: PaperCornerChip[];
 }
 
-interface Point {
-  x: number;
-  y: number;
-}
+const EDGE_SIDES: PaperEdgeSide[] = ['top', 'right', 'bottom', 'left'];
+const CORNERS: PaperCorner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
 function mulberry32(seed: number): () => number {
   return () => {
@@ -64,125 +78,198 @@ function between(random: () => number, minimum: number, maximum: number): number
   return Number((minimum + random() * (maximum - minimum)).toFixed(3));
 }
 
-function point(x: number, y: number): Point {
-  return { x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) };
+function pick<T>(random: () => number, values: readonly T[]): T {
+  return values[Math.floor(random() * values.length)];
 }
 
-function mirrorHorizontally(points: Point[]): Point[] {
-  return points.map(({ x, y }) => point(100 - x, y));
+function round(value: number): number {
+  return Number(value.toFixed(2));
 }
 
-function pathFrom(points: [Point, Point, Point, Point]): string {
-  const [start, controlOne, controlTwo, end] = points;
-  return `M ${start.x} ${start.y} C ${controlOne.x} ${controlOne.y}, ${controlTwo.x} ${controlTwo.y}, ${end.x} ${end.y}`;
-}
+/**
+ * Sample a seamless deckle boundary: two seeded sine waves (integer cycle
+ * counts keep the tile periodic) plus per-point jitter, clamped shallow.
+ */
+function createDepths(random: () => number, mean: number, ceiling: number): number[] {
+  const samples = 28 + Math.floor(random() * 17);
+  const amplitudeOne = between(random, 0.5, 1.1);
+  const amplitudeTwo = between(random, 0.3, 0.75);
+  const cyclesOne = 2 + Math.floor(random() * 2);
+  const cyclesTwo = 5 + Math.floor(random() * 3);
+  const phaseOne = between(random, 0, Math.PI * 2);
+  const phaseTwo = between(random, 0, Math.PI * 2);
+  const jitter = between(random, 0.2, 0.55);
 
-function createFold(random: () => number, points: [Point, Point, Point, Point]): PaperFold {
-  const horizontal = Math.abs(points[3].x - points[0].x) >= Math.abs(points[3].y - points[0].y);
-
-  return {
-    path: pathFrom(points),
-    highlightOffsetX: horizontal ? between(random, -0.08, 0.08) : between(random, 0.09, 0.18),
-    highlightOffsetY: horizontal ? between(random, 0.035, 0.075) : between(random, -0.03, 0.03),
-    opacity: between(random, 0.12, 0.3),
-    hazeWidth: between(random, 12, 24),
-    lineWidth: between(random, 0.8, 1.65)
-  };
-}
-
-function createFolds(random: () => number): PaperFold[] {
-  const topY = between(random, 5, 16);
-  const topEndX = between(random, 20, 43);
-  let top: [Point, Point, Point, Point] = [
-    point(0, topY),
-    point(between(random, 4, 10), topY * between(random, 0.58, 0.84)),
-    point(topEndX * between(random, 0.58, 0.82), between(random, 0.4, 2.8)),
-    point(topEndX, 0)
-  ];
-  if (random() > 0.5) top = mirrorHorizontally(top) as [Point, Point, Point, Point];
-
-  const bottomStartY = between(random, 82, 94);
-  const bottomEndX = between(random, 18, 46);
-  let bottom: [Point, Point, Point, Point] = [
-    point(0, bottomStartY),
-    point(between(random, 3, 9), between(random, bottomStartY + 1, 96)),
-    point(bottomEndX * between(random, 0.55, 0.82), between(random, 97.2, 99.5)),
-    point(bottomEndX, 100)
-  ];
-  if (random() > 0.5) bottom = mirrorHorizontally(bottom) as [Point, Point, Point, Point];
-
-  const sideStartY = between(random, 28, 60);
-  const sideEndY = Math.min(92, sideStartY + between(random, 17, 31));
-  let side: [Point, Point, Point, Point] = [
-    point(0, sideStartY),
-    point(between(random, 2.5, 7), sideStartY + between(random, 2, 7)),
-    point(between(random, 2, 8), sideEndY - between(random, 2, 7)),
-    point(0, sideEndY)
-  ];
-  if (random() > 0.5) side = mirrorHorizontally(side) as [Point, Point, Point, Point];
-
-  return [createFold(random, top), createFold(random, bottom), createFold(random, side)];
-}
-
-function createAbrasions(random: () => number): PaperAbrasion[] {
-  return Array.from({ length: 6 }, () => {
-    const side = Math.floor(random() * 4);
-    const vertical = side < 2;
-    const x = vertical
-      ? side === 0
-        ? between(random, 0.2, 3.2)
-        : between(random, 96.8, 99.8)
-      : between(random, 7, 93);
-    const y = vertical
-      ? between(random, 7, 93)
-      : side === 2
-        ? between(random, 0.15, 2.35)
-        : between(random, 97.65, 99.85);
-
-    return {
-      x,
-      y,
-      radiusX: vertical ? between(random, 0.08, 0.28) : between(random, 0.16, 0.72),
-      radiusY: vertical ? between(random, 0.16, 0.72) : between(random, 0.05, 0.2),
-      rotation: between(random, -28, 28),
-      opacity: between(random, 0.08, 0.18)
-    };
+  const depths = Array.from({ length: samples }, (_, index) => {
+    const t = (index / samples) * Math.PI * 2;
+    const wave =
+      mean +
+      amplitudeOne * Math.sin(cyclesOne * t + phaseOne) +
+      amplitudeTwo * Math.sin(cyclesTwo * t + phaseTwo) +
+      between(random, -jitter, jitter);
+    return round(Math.min(ceiling - 0.3, Math.max(0.35, wave)));
   });
+  depths.push(depths[0]);
+  return depths;
 }
 
-function createStains(random: () => number): PaperStain[] {
-  return Array.from({ length: 3 }, (_, index) => ({
-    x: index === 0 ? between(random, 3, 15) : index === 1 ? between(random, 84, 97) : between(random, 16, 84),
-    y: between(random, 5, 95),
-    radiusX: between(random, 3.5, 10),
-    radiusY: between(random, 0.55, 1.9),
-    rotation: between(random, -38, 38),
-    opacity: between(random, 0.025, 0.065)
-  }));
+function createEdge(random: () => number, side: PaperEdgeSide): PaperEdge {
+  const mean = between(random, 1.7, 3.2);
+  const depth = Math.ceil(mean + 2.2);
+  const depths = createDepths(random, mean, depth);
+  const segments = depths.length - 1;
+  const step = between(random, 340, 520) / segments;
+  const tileLength = round(step * segments);
+  const along = (index: number) => round(index * step);
+
+  let points: string[];
+  switch (side) {
+    case 'top':
+      points = depths.map((d, i) => `L ${along(i)} ${d}`).reverse();
+      points.unshift(`M 0 0 L ${tileLength} 0`);
+      break;
+    case 'bottom':
+      points = depths.map((d, i) => `L ${along(i)} ${round(depth - d)}`).reverse();
+      points.unshift(`M 0 ${depth} L ${tileLength} ${depth}`);
+      break;
+    case 'left':
+      points = depths.map((d, i) => `L ${d} ${along(i)}`).reverse();
+      points.unshift(`M 0 0 L 0 ${tileLength}`);
+      break;
+    case 'right':
+      points = depths.map((d, i) => `L ${round(depth - d)} ${along(i)}`).reverse();
+      points.unshift(`M ${depth} 0 L ${depth} ${tileLength}`);
+      break;
+  }
+
+  return { side, tileLength, depth, depths, path: `${points.join(' ')} Z` };
+}
+
+function createNick(random: () => number, side: PaperEdgeSide): PaperNick {
+  const offset = between(random, 8, 92);
+  const width = between(random, 18, 44);
+  const depth = between(random, 4, 9);
+  const apex = round(width * between(random, 0.38, 0.62));
+  const shoulderIn = round(width * 0.26);
+  const shoulderOut = round(width * 0.74);
+
+  const bite = (
+    start: string,
+    end: string,
+    controlIn: string,
+    apexPoint: string,
+    controlOut: string
+  ) => `M ${start} Q ${controlIn}, ${apexPoint} Q ${controlOut}, ${end} Z`;
+
+  let path: string;
+  switch (side) {
+    case 'top':
+      path = bite(`0 0`, `${width} 0`, `${shoulderIn} ${round(depth * 0.78)}`, `${apex} ${depth}`, `${shoulderOut} ${round(depth * 0.66)}`);
+      break;
+    case 'bottom':
+      path = bite(`0 ${depth}`, `${width} ${depth}`, `${shoulderIn} ${round(depth * 0.22)}`, `${apex} 0`, `${shoulderOut} ${round(depth * 0.34)}`);
+      break;
+    case 'left':
+      path = bite(`0 0`, `0 ${width}`, `${round(depth * 0.78)} ${shoulderIn}`, `${depth} ${apex}`, `${round(depth * 0.66)} ${shoulderOut}`);
+      break;
+    case 'right':
+      path = bite(`${depth} 0`, `${depth} ${width}`, `${round(depth * 0.22)} ${shoulderIn}`, `0 ${apex}`, `${round(depth * 0.34)} ${shoulderOut}`);
+      break;
+  }
+
+  return { side, offset, width, depth, path };
+}
+
+function createNicks(random: () => number): PaperNick[] {
+  const count = 2 + Math.floor(random() * 3);
+  const sides = [...EDGE_SIDES];
+  for (let index = sides.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1));
+    [sides[index], sides[swap]] = [sides[swap], sides[index]];
+  }
+  return sides.slice(0, count).map((side) => createNick(random, side));
+}
+
+function createCreases(random: () => number): PaperCrease[] {
+  const creases: PaperCrease[] = [
+    {
+      orientation: 'vertical',
+      anchor: random() > 0.5 ? 'left' : 'right',
+      offset: between(random, 14, 30),
+      skew: between(random, -1.5, 1.5),
+      shadowAlpha: between(random, 0.03, 0.07),
+      lightAlpha: between(random, 0.12, 0.34),
+      reach: between(random, 8, 16)
+    }
+  ];
+
+  if (random() > 0.42) {
+    const anchor = random() > 0.5 ? 'top' : 'bottom';
+    creases.push({
+      orientation: 'horizontal',
+      anchor,
+      offset: anchor === 'top' ? between(random, 60, 140) : between(random, 30, 90),
+      skew: between(random, -1.5, 1.5),
+      shadowAlpha: between(random, 0.03, 0.07),
+      lightAlpha: between(random, 0.12, 0.34),
+      reach: between(random, 8, 16)
+    });
+  }
+
+  return creases;
 }
 
 function createCornerFold(random: () => number): PaperCornerFold {
-  const locations = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const;
-  const location = locations[Math.floor(random() * locations.length)];
-  const width = between(random, 3.5, 8.5);
-  const height = between(random, 1.2, 3.4);
-  const top = location.startsWith('top');
-  const left = location.endsWith('left');
-  const cornerX = left ? 0 : 100;
-  const cornerY = top ? 0 : 100;
-  const edgeX = left ? width : 100 - width;
-  const edgeY = top ? height : 100 - height;
-  const areaPath = `M ${cornerX} ${cornerY} L ${edgeX} ${cornerY} L ${cornerX} ${edgeY} Z`;
-  const creasePath = `M ${edgeX} ${cornerY} Q ${left ? width * 0.44 : 100 - width * 0.44} ${
-    top ? height * 0.54 : 100 - height * 0.54
-  }, ${cornerX} ${edgeY}`;
-
   return {
-    location,
-    areaPath,
-    creasePath,
-    opacity: between(random, 0.28, 0.48)
+    corner: pick(random, CORNERS),
+    size: between(random, 64, 120),
+    liftAlpha: between(random, 0.14, 0.3),
+    contactAlpha: between(random, 0.05, 0.11),
+    rimAlpha: between(random, 0.08, 0.18)
   };
+}
+
+function createCornerChip(random: () => number, corner: PaperCorner): PaperCornerChip {
+  const size = between(random, 6, 14);
+  const c = round(size);
+  const inner = round(size * between(random, 0.32, 0.5));
+
+  let path: string;
+  switch (corner) {
+    case 'top-left':
+      path = `M ${c} 0 L 0 0 L 0 ${c} Q ${inner} ${inner}, ${c} 0 Z`;
+      break;
+    case 'top-right':
+      path = `M 0 0 L ${c} 0 L ${c} ${c} Q ${round(c - inner)} ${inner}, 0 0 Z`;
+      break;
+    case 'bottom-left':
+      path = `M 0 0 L 0 ${c} L ${c} ${c} Q ${inner} ${round(c - inner)}, 0 0 Z`;
+      break;
+    case 'bottom-right':
+      path = `M ${c} 0 L ${c} ${c} L 0 ${c} Q ${round(c - inner)} ${round(c - inner)}, ${c} 0 Z`;
+      break;
+  }
+
+  return { corner, size, path };
+}
+
+function createCornerSofteners(random: () => number, foldCorner: PaperCorner): PaperCornerChip[] {
+  const candidates = CORNERS.filter((corner) => corner !== foldCorner);
+  const count = 2 + Math.floor(random() * 2);
+  const chosen = [...candidates];
+  for (let index = chosen.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1));
+    [chosen[index], chosen[swap]] = [chosen[swap], chosen[index]];
+  }
+  return chosen.slice(0, count).map((corner) => createCornerChip(random, corner));
+}
+
+function hash(value: string): string {
+  let result = 5381;
+  for (let index = 0; index < value.length; index += 1) {
+    result = ((result << 5) + result + value.charCodeAt(index)) | 0;
+  }
+  return (result >>> 0).toString(36);
 }
 
 export function getPaperWear(number: number): PaperWear {
@@ -191,19 +278,18 @@ export function getPaperWear(number: number): PaperWear {
   }
 
   const random = mulberry32(number * 2_654_435_761);
-  const salt = Math.floor(random() * 16_777_215).toString(36).padStart(5, '0');
-  const folds = createFolds(random);
+  const edges = EDGE_SIDES.map((side) => createEdge(random, side));
+  const nicks = createNicks(random);
+  const creases = createCreases(random);
+  const cornerFold = createCornerFold(random);
+  const cornerSofteners = createCornerSofteners(random, cornerFold.corner);
 
   return {
-    id: `paper-${number}-${salt}`,
-    foldSignature: folds.map(({ path }) => path).join('|'),
-    grainSeed: Math.floor(between(random, 1, 999)),
-    grainFrequency: between(random, 0.58, 0.82),
-    opacity: between(random, 0.42, 0.7),
-    edgeOpacity: between(random, 0.12, 0.22),
-    folds,
-    abrasions: createAbrasions(random),
-    stains: createStains(random),
-    cornerFold: createCornerFold(random)
+    signature: `${number}-${hash(edges.map((edge) => edge.path).join('|'))}`,
+    edges,
+    nicks,
+    creases,
+    cornerFold,
+    cornerSofteners
   };
 }
