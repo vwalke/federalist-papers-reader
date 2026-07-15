@@ -26,6 +26,14 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
       callout: box('.about-callout'),
       familyHeading: box('.about-family__head'),
       familyCopy: box('.about-family__copy'),
+      documentsDisplay: getComputedStyle(
+        about.querySelector('.about-documents') as Element,
+      ).display,
+      documentsHead: box('.about-documents__head'),
+      documentsFigure: box('.about-documents__figure'),
+      documentsImage: box('.about-documents__image'),
+      documentsCaption: box('.about-documents__caption'),
+      documentsCopy: box('.about-documents__copy'),
       colophon: box('.about-colophon'),
       colophonTextAlign: getComputedStyle(about.querySelector('.about-colophon') as Element).textAlign,
       noteBoxes,
@@ -40,6 +48,17 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
   expect(Math.abs(layout.copy.x - layout.callout.x)).toBeLessThan(2);
   expect(layout.callout.y).toBeGreaterThan(layout.copy.y);
   expect(layout.familyHeading.x).toBeLessThan(layout.familyCopy.x);
+  expect(layout.documentsDisplay).toBe('grid');
+  expect(layout.documentsFigure.x).toBeLessThan(layout.documentsHead.x);
+  expect(layout.documentsFigure.x).toBeLessThan(layout.documentsCopy.x);
+  expect(Math.abs(layout.documentsHead.x - layout.documentsCopy.x)).toBeLessThan(2);
+  expect(layout.documentsCopy.y).toBeGreaterThan(layout.documentsHead.y);
+  expect(layout.documentsCaption.y).toBeGreaterThan(
+    layout.documentsImage.y + layout.documentsImage.height,
+  );
+  expect(layout.documentsCaption.y + layout.documentsCaption.height).toBeLessThanOrEqual(
+    layout.documentsFigure.y + layout.documentsFigure.height + 1,
+  );
   expect(layout.noteBoxes).toHaveLength(2);
   expect(Math.abs(layout.noteBoxes[0].y - layout.noteBoxes[1].y)).toBeLessThan(2);
   expect(layout.colophon.y).toBeGreaterThan(
@@ -59,6 +78,9 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
       '.about-portrait',
       '.about-callout',
       '.about-family',
+      '.about-documents__head',
+      '.about-documents__figure',
+      '.about-documents__copy',
       '.about-notes',
       '.about-colophon'
     ];
@@ -76,6 +98,9 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
       boxes,
       noteYPositions,
       originDisplay: getComputedStyle(about.querySelector('.about-origin') as Element).display,
+      documentsDisplay: getComputedStyle(
+        about.querySelector('.about-documents') as Element,
+      ).display,
       overflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
@@ -88,6 +113,10 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
   expect(layout.boxes[2].y).toBeLessThan(layout.boxes[3].y);
   expect(layout.boxes[3].y).toBeLessThan(layout.boxes[4].y);
   expect(layout.boxes[4].y).toBeLessThan(layout.boxes[5].y);
+  expect(layout.boxes[5].y).toBeLessThan(layout.boxes[6].y);
+  expect(layout.boxes[6].y).toBeLessThan(layout.boxes[7].y);
+  expect(layout.boxes[7].y).toBeLessThan(layout.boxes[8].y);
+  expect(layout.documentsDisplay).toBe('block');
   expect(layout.noteYPositions).toHaveLength(2);
   expect(layout.noteYPositions[0]).toBeLessThan(layout.noteYPositions[1]);
   expect(layout.overflow).toBeLessThanOrEqual(0);
@@ -100,12 +129,14 @@ test('waits for a comfortable measure before enabling the grids', async ({ page 
   const displays = await page.locator('.about-page').evaluate((about) => ({
     origin: getComputedStyle(about.querySelector('.about-origin') as Element).display,
     family: getComputedStyle(about.querySelector('.about-family') as Element).display,
+    documents: getComputedStyle(about.querySelector('.about-documents') as Element).display,
     notes: getComputedStyle(about.querySelector('.about-notes') as Element).display,
     overflow: document.documentElement.scrollWidth - window.innerWidth
   }));
 
   expect(displays.origin).toBe('block');
   expect(displays.family).toBe('block');
+  expect(displays.documents).toBe('block');
   expect(displays.notes).toBe('block');
   expect(displays.overflow).toBeLessThanOrEqual(0);
 });
@@ -120,6 +151,7 @@ test('prints the About page in one column', async ({ page }) => {
     return {
       origin: getComputedStyle(about.querySelector('.about-origin') as Element).display,
       family: getComputedStyle(about.querySelector('.about-family') as Element).display,
+      documents: getComputedStyle(about.querySelector('.about-documents') as Element).display,
       notes: getComputedStyle(about.querySelector('.about-notes') as Element).display,
       secondNoteDivider: getComputedStyle(secondNote).borderInlineStartWidth
     };
@@ -127,6 +159,7 @@ test('prints the About page in one column', async ({ page }) => {
 
   expect(printLayout.origin).toBe('block');
   expect(printLayout.family).toBe('block');
+  expect(printLayout.documents).toBe('block');
   expect(printLayout.notes).toBe('block');
   expect(printLayout.secondNoteDivider).toBe('0px');
 });
