@@ -481,6 +481,36 @@ a:hover {
   margin-block-start: var(--space-xl);
 }
 
+.about-colophon {
+  max-inline-size: 74rem;
+  margin: var(--space-2xl) auto 0;
+  color: var(--color-muted-ink);
+  text-align: center;
+}
+
+.about-colophon::before {
+  content: '';
+  display: block;
+  inline-size: 3rem;
+  margin: 0 auto var(--space-md);
+  border-block-start: 1px solid var(--color-rule);
+}
+
+.about-page .about-colophon p {
+  font: 400 0.82rem/1.5 var(--font-reading);
+}
+
+.about-colophon a {
+  color: inherit;
+  text-decoration-color: color-mix(in oklab, currentColor 58%, transparent);
+  text-underline-offset: 0.18em;
+}
+
+.about-colophon a:hover {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
 .about-rule {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
