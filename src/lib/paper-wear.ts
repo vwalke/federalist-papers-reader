@@ -39,6 +39,13 @@ export interface PaperCornerChip {
   path: string;
 }
 
+export interface PaperToning {
+  /** How far each deckle/nick mask is stretched to expose a browned fringe. */
+  scale: number;
+  /** Opacity of the sepia fringe layer; kept very slight. */
+  alpha: number;
+}
+
 export interface PaperWear {
   signature: string;
   edges: PaperEdge[];
@@ -46,6 +53,7 @@ export interface PaperWear {
   /** Roughly two of three papers earn a lifted corner; the rest stay flat. */
   cornerFold: PaperCornerFold | null;
   cornerSofteners: PaperCornerChip[];
+  toning: PaperToning;
 }
 
 const EDGE_SIDES: PaperEdgeSide[] = ['top', 'right', 'bottom', 'left'];
@@ -249,12 +257,17 @@ export function getPaperWear(number: number): PaperWear {
   const nicks = createNicks(random);
   const cornerFold = createCornerFold(random);
   const cornerSofteners = createCornerSofteners(random, cornerFold?.corner ?? null);
+  const toning: PaperToning = {
+    scale: between(random, 1.45, 1.95),
+    alpha: between(random, 0.1, 0.18)
+  };
 
   return {
     signature: `${number}-${hash(edges.map((edge) => edge.path).join('|'))}`,
     edges,
     nicks,
     cornerFold,
-    cornerSofteners
+    cornerSofteners,
+    toning
   };
 }
