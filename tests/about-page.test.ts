@@ -17,18 +17,23 @@ describe('About this edition', () => {
     expect(html).toContain('class="about-family__copy"');
     expect(html).toContain('class="about-notes"');
     expect(html).toContain('class="about-notes__privacy"');
+    expect(html).toContain('class="about-colophon"');
+    expect(html).toContain('This is a production of');
+    expect(html).toContain('<a href="https://walkeforward.com">WalkeForward, LLC.</a>');
 
     const introductionIndex = html.indexOf('class="about-origin__copy"');
     const portraitIndex = html.indexOf('class="about-portrait"');
     const letterJoyIndex = html.indexOf('class="about-callout"');
     const familyIndex = html.indexOf('class="about-family"');
     const notesIndex = html.indexOf('class="about-notes"');
+    const colophonIndex = html.indexOf('class="about-colophon"');
 
     expect(introductionIndex).toBeGreaterThan(-1);
     expect(introductionIndex).toBeLessThan(portraitIndex);
     expect(portraitIndex).toBeLessThan(letterJoyIndex);
     expect(letterJoyIndex).toBeLessThan(familyIndex);
     expect(familyIndex).toBeLessThan(notesIndex);
+    expect(colophonIndex).toBeGreaterThan(notesIndex);
     expect(html).toContain('sixth-great-uncle');
     expect(html).toContain('my mom’s fifth-great-uncle');
     expect(html).toContain('At ten years old, he arrived in America with no parents and no money.');
