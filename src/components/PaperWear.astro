@@ -14,22 +14,33 @@ function maskUri(viewWidth: number, viewHeight: number, path: string): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-function edgeStyle(edge: PaperEdge): string {
+/**
+ * Each bite is drawn twice: a sepia twin stretched by the toning scale sits
+ * underneath, and the room-colored bite covers all but its outer fringe, so
+ * a sliver of browning hugs the torn boundary.
+ */
+function edgeStyle(edge: PaperEdge, toningScale = 1): string {
   const horizontal = edge.side === 'top' || edge.side === 'bottom';
   const width = horizontal ? edge.tileLength : edge.depth;
   const height = horizontal ? edge.depth : edge.tileLength;
+  const depth = (edge.depth * toningScale).toFixed(1);
+  const maskWidth = horizontal ? edge.tileLength : Number(depth);
+  const maskHeight = horizontal ? Number(depth) : edge.tileLength;
   return [
     `--edge-mask: ${maskUri(width, height, edge.path)}`,
-    `--edge-size: ${width}px ${height}px`,
-    `--edge-depth: ${edge.depth}px`
+    `--edge-size: ${maskWidth}px ${maskHeight}px`,
+    `--edge-depth: ${depth}px`
   ].join('; ');
 }
 
-function nickStyle(nick: PaperNick): string {
+function nickStyle(nick: PaperNick, toningScale = 1): string {
   const horizontal = nick.side === 'top' || nick.side === 'bottom';
   const width = horizontal ? nick.width : nick.depth;
   const height = horizontal ? nick.depth : nick.width;
-  const across = `calc(${nick.offset}% - ${(nick.width / 2).toFixed(1)}px)`;
+  const along = nick.width * (1 + (toningScale - 1) * 0.55);
+  const grown = (value: number, alongEdge: boolean) =>
+    (value * (alongEdge ? 1 + (toningScale - 1) * 0.55 : toningScale)).toFixed(1);
+  const across = `calc(${nick.offset}% - ${(along / 2).toFixed(1)}px)`;
   const place =
     nick.side === 'top'
       ? `inset-block-start: 0; inset-inline-start: ${across}`
@@ -40,19 +51,20 @@ function nickStyle(nick: PaperNick): string {
           : `inset-inline-end: 0; inset-block-start: ${across}`;
   return [
     place,
-    `inline-size: ${width}px`,
-    `block-size: ${height}px`,
+    `inline-size: ${grown(width, horizontal)}px`,
+    `block-size: ${grown(height, !horizontal)}px`,
     `--bite-mask: ${maskUri(width, height, nick.path)}`
   ].join('; ');
 }
 
-function chipStyle(chip: PaperCornerChip): string {
+function chipStyle(chip: PaperCornerChip, toningScale = 1): string {
   const [block, inline] = chip.corner.split('-');
+  const size = (chip.size * (1 + (toningScale - 1) * 0.7)).toFixed(1);
   return [
     `inset-block-${block === 'top' ? 'start' : 'end'}: 0`,
     `inset-inline-${inline === 'left' ? 'start' : 'end'}: 0`,
-    `inline-size: ${chip.size}px`,
-    `block-size: ${chip.size}px`,
+    `inline-size: ${size}px`,
+    `block-size: ${size}px`,
     `--bite-mask: ${maskUri(chip.size, chip.size, chip.path)}`
   ].join('; ');
 }
@@ -102,9 +114,22 @@ function foldStyle(fold: PaperCornerFold): string {
   class="paper-wear"
   data-paper-wear={number}
   data-wear-signature={wear.signature}
+  style={`--wear-toning-alpha: ${wear.toning.alpha}`}
   aria-hidden="true"
 >
   {wear.cornerFold && <div class="paper-wear__fold" style={foldStyle(wear.cornerFold)}></div>}
+  {wear.edges.map((edge) => (
+    <div
+      class={`paper-wear__edge-toning paper-wear__edge--${edge.side}`}
+      style={edgeStyle(edge, wear.toning.scale)}
+    ></div>
+  ))}
+  {wear.nicks.map((nick) => (
+    <div class="paper-wear__bite-toning" style={nickStyle(nick, wear.toning.scale)}></div>
+  ))}
+  {wear.cornerSofteners.map((chip) => (
+    <div class="paper-wear__bite-toning" style={chipStyle(chip, wear.toning.scale)}></div>
+  ))}
   {wear.edges.map((edge) => (
     <div class={`paper-wear__edge paper-wear__edge--${edge.side}`} style={edgeStyle(edge)}></div>
   ))}

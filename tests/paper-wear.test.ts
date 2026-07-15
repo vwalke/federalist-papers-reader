@@ -90,6 +90,17 @@ describe('paper wear fingerprints', () => {
     }
   });
 
+  it('keeps edge browning very slight', () => {
+    for (let number = 1; number <= 85; number += 1) {
+      const { toning } = getPaperWear(number);
+
+      expect(toning.scale).toBeGreaterThanOrEqual(1.4);
+      expect(toning.scale).toBeLessThanOrEqual(2);
+      expect(toning.alpha).toBeGreaterThanOrEqual(0.08);
+      expect(toning.alpha).toBeLessThanOrEqual(0.2);
+    }
+  });
+
   it('carries no painted-on grime from earlier attempts', () => {
     const wear = getPaperWear(12);
 

@@ -3,13 +3,15 @@
 }
 
 .paper-wear {
+  --wear-toning: color-mix(in oklab, var(--color-oxblood) 35%, var(--color-muted-ink) 65%);
+
   position: absolute;
   z-index: 2;
   inset: 0;
   pointer-events: none;
   box-shadow:
-    inset 0 0 38px color-mix(in oklab, var(--color-ink) 5%, transparent),
-    inset 0 0 5px color-mix(in oklab, var(--color-ink) 4%, transparent);
+    inset 0 0 38px color-mix(in oklab, var(--wear-toning) 6%, transparent),
+    inset 0 0 5px color-mix(in oklab, var(--wear-toning) 5%, transparent);
 }
 
 .paper-wear__fold {
@@ -23,7 +25,18 @@
   background-color: var(--color-room);
 }
 
-.paper-wear__edge {
+/* Browned fiber fringe: the same masks as the bites, stretched slightly,
+   painted underneath so only their outer sliver stays visible. */
+.paper-wear__edge-toning,
+.paper-wear__bite-toning {
+  position: absolute;
+  background-color: var(--wear-toning);
+  opacity: var(--wear-toning-alpha, 0.14);
+  mix-blend-mode: multiply;
+}
+
+.paper-wear__edge,
+.paper-wear__edge-toning {
   -webkit-mask-image: var(--edge-mask);
   mask-image: var(--edge-mask);
   -webkit-mask-size: var(--edge-size);
@@ -62,7 +75,8 @@
   inset-inline-end: 0;
 }
 
-.paper-wear__bite {
+.paper-wear__bite,
+.paper-wear__bite-toning {
   -webkit-mask-image: var(--bite-mask);
   mask-image: var(--bite-mask);
   -webkit-mask-size: 100% 100%;
@@ -503,7 +517,9 @@
 
 @media (max-width: 45.999rem) {
   .paper-wear__edge,
-  .paper-wear__bite {
+  .paper-wear__edge-toning,
+  .paper-wear__bite,
+  .paper-wear__bite-toning {
     display: none;
   }
 

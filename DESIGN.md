@@ -96,9 +96,9 @@ One restrained entrance may reveal the masthead and rules as if a press sheet ha
 
 ## Paper Material and Wear
 
-Every paper in Gazette mode receives a stable, unique material fingerprint derived from its paper number. The fingerprint varies the edge silhouette, two or three shallow crease paths, tiny nicks, corner softness, and the opacity and position of surface wear. No two papers may share the same combined pattern, but revisiting a paper must reproduce its original fingerprint.
+Every paper in Gazette mode receives a stable, unique material fingerprint derived from its paper number. The fingerprint varies the edge silhouette, tiny nicks, corner softness, and the presence and size of a single lifted corner, which appears on roughly two of three papers so flat sheets keep the folded ones honest. No two papers may share the same combined pattern, but revisiting a paper must reproduce its original fingerprint. Full-length crease lines were tried and rejected as artificial; do not reintroduce them.
 
-Generate the variation as build-time CSS custom properties and lightweight inline SVG/CSS overlays, never as 85 large raster backgrounds. Keep all distress outside the live text area. Wear is more restrained on narrow screens and absent from Reader mode, print, high-contrast/forced-colors mode, and reduced-transparency fallbacks. The page should appear carefully preserved, not dirty: no stains, foxing, burns, missing chunks, tape, or deep folds.
+Generate the variation as build-time CSS custom properties and lightweight inline SVG/CSS overlays, never as 85 large raster backgrounds. Keep all distress outside the live text area. Wear is more restrained on narrow screens and absent from Reader mode, print, high-contrast/forced-colors mode, and reduced-transparency fallbacks. The page should appear carefully preserved, not dirty: no stains, foxing, burns, missing chunks, tape, or deep folds. The one sanctioned aging tone is a very slight warm browning that hugs the deckled boundary and its nicks — oxidized fiber at the exposed edge, never a wash over the sheet interior.
 
 ## Accessibility
 

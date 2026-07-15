@@ -59,6 +59,8 @@ attempts lacked.
   lifts outnumber dramatic ones, flap-light / contact-shadow / rim-light
   parameters.
 - `cornerSofteners` — tiny 6–14px chamfer bites for the remaining corners.
+- `toning` — per-paper edge browning: a mask-stretch scale (1.45–1.95) and a
+  very slight opacity (0.10–0.18) for the sepia fringe described below.
 - `signature` — a stable string over the edge tiles for uniqueness tests and
   the e2e `data-wear-signature` hook.
 
@@ -76,9 +78,14 @@ inset 0, pointer-events none) containing:
 - `.paper-wear__corner-chip` ×3 — chamfer bites at the non-dog-ear corners.
 - `.paper-wear__fold` — the dog-ear block with layered corner gradients,
   rendered only when the paper carries a fold.
-- Edge tone: an inset box-shadow on the overlay root (`~36px` reach, ≤5% ink)
-  replaces the radial vignette; the tiled grain in `global.css` stays and the
-  full-page SVG turbulence rect goes away.
+- `.paper-wear__edge-toning` / `.paper-wear__bite-toning` — sepia twins of
+  every deckle strip, nick, and chip, drawn underneath from the same masks
+  but stretched by the toning scale, so a 1.5–3px browned-fiber fringe hugs
+  each torn boundary (multiply blend, per-paper opacity). Deeper bites earn
+  proportionally wider browning, which is how real paper oxidizes.
+- Edge tone: a warm inset box-shadow on the overlay root (`~36px` reach, ≤6%
+  of the toning color) replaces the radial vignette; the tiled grain in
+  `global.css` stays and the full-page SVG turbulence rect goes away.
 
 ### `src/styles/paper.css`
 
