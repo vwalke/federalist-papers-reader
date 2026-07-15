@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "validate:content": "node scripts/validate-content.mjs",
-    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && pnpm build && pnpm test"
+    "verify:analytics-output": "node scripts/verify-analytics-output.mjs",
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && pnpm verify:analytics-output && pnpm test"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.3.3",

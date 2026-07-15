@@ -29,10 +29,12 @@ The safe sequence is:
 
 1. Create one Amplify app named `publius-federalist-reader` and one `production` branch in `us-east-1`.
 2. Read the app’s `defaultDomain` from AWS.
-3. Rebuild with `PUBLIC_SITE_URL=https://production.<defaultDomain>` so canonical metadata uses the live address.
-4. Zip the *contents* of `dist/`, not the `dist` directory itself.
-5. Call `create-deployment`, upload to its short-lived `zipUploadUrl`, then call `start-deployment` with the returned job ID.
-6. Wait for the job status to become `SUCCEED`, then verify `/`, `/papers/1/`, `/papers/85/`, and an unknown route.
+3. Add `production.<defaultDomain>` in the Cloudflare Web Analytics dashboard and copy its site token.
+4. Run `pnpm install --frozen-lockfile` and `pnpm check`.
+5. Build the upload artifact with `PUBLIC_SITE_URL=https://production.<defaultDomain> PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<site-token> pnpm build` so canonical metadata and analytics are configured before upload.
+6. Zip the *contents* of `dist/`, not the `dist` directory itself.
+7. Call `create-deployment`, upload to its short-lived `zipUploadUrl`, then call `start-deployment` with the returned job ID.
+8. Wait for the job status to become `SUCCEED`, then verify `/`, `/papers/1/`, `/papers/85/`, and an unknown route.
 
 The relevant AWS CLI operations are:
 
@@ -70,10 +72,11 @@ Create the site token by adding the production hostname in the Cloudflare Web An
 For each update:
 
 1. Pull the desired Git commit.
-2. Run `pnpm install --frozen-lockfile`, then build and test with `PUBLIC_SITE_URL=<live-url> PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<site-token> pnpm check`.
-3. Zip the contents of the fresh `dist/` output.
-4. Repeat `create-deployment`, upload, and `start-deployment` for the existing app and `production` branch.
-5. Verify the live routes and clear the local test progress if needed.
+2. Run `pnpm install --frozen-lockfile` and `pnpm check`.
+3. Create the upload artifact with `PUBLIC_SITE_URL=<live-url> PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<site-token> pnpm build`.
+4. Zip the contents of the fresh `dist/` output.
+5. Repeat `create-deployment`, upload, and `start-deployment` for the existing app and `production` branch.
+6. Verify the live routes and clear the local test progress if needed.
 
 ## Sources
 
