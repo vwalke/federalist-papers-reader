@@ -13,6 +13,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <header class="about-lead">
       <p class="section-kicker">About this edition</p>
       <h1>A conversation with my mom, one paper at a time.</h1>
+      <p class="about-lead__standfirst">
+        How a weekly gift to my mom became a standing conversation between us&mdash;and the family
+        thread running through the reading.
+      </p>
+      <span class="about-lead__ornament" aria-hidden="true"></span>
     </header>
 
     <div class="about-origin">
@@ -38,7 +43,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             alt="Mom and me together at Sail4th 250 in New York Harbor"
             width="1200"
             height="1600"
-            loading="lazy"
+            loading="eager"
             decoding="async"
           />
         </div>
@@ -68,8 +73,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </aside>
     </div>
 
+    <div class="about-rule" aria-hidden="true"><span class="about-rule__mark"></span></div>
+
     <section class="about-family" aria-labelledby="family-heading">
-      <h2 id="family-heading">A family thread through the founding</h2>
+      <div class="about-family__head">
+        <h2 id="family-heading">A family thread through the founding</h2>
+        <p class="about-family__tag">Charles Thomson &middot; Secretary of the Continental Congress, 1774&ndash;1789</p>
+      </div>
       <div class="about-family__copy">
         <p>
           The reading has another personal connection. Charles Thomson was my sixth-great-uncle—my
@@ -114,6 +124,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </p>
       </div>
     </section>
+
+    <div class="about-rule" aria-hidden="true"><span class="about-rule__mark"></span></div>
 
     <div class="about-notes">
       <section aria-labelledby="words-heading">
