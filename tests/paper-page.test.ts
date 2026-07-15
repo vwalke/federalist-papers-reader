@@ -18,6 +18,11 @@ describe('paper pages', () => {
     expect(html).not.toContain('class="essay-heading__publication"');
     expect(html).not.toContain('For the Independent Journal. Saturday, October 27, 1787');
     expect(html).toContain('AFTER an unequivocal experience');
+    expect(html).toContain('class="period-spelling"');
+    expect(html).toContain('data-modern="federal"');
+    expect(html).toContain('data-gazette="fœderal"');
+    expect(html).toContain('aria-label="federal"');
+    expect(html).toContain('>fœderal</span>');
     expect(html).toContain('id="companion-heading"');
     expect(html).toContain('Reading companion');
     expect(html).not.toContain('In a nutshell');

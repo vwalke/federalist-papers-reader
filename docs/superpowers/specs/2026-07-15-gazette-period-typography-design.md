@@ -38,7 +38,7 @@ The heading will retain semantic text rather than an image. Its font size will s
 
 ## Period Spelling Rendering
 
-The normalized Markdown remains the canonical source. A local build-time rehype transform will wrap only exact, case-preserving occurrences of the standalone word `federal` in rendered paper prose. It will not touch `Federalist`, metadata, links, code, or substrings inside larger words.
+The normalized Markdown remains the canonical source. A local build-time HAST transform, registered through Astro 7's native Sätteri Markdown processor, will wrap only exact, case-preserving occurrences of the standalone word `federal` in rendered paper prose. It will not touch `Federalist`, metadata, links, code, or substrings inside larger words.
 
 Each transformed word will carry two values:
 
