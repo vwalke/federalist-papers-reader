@@ -59,8 +59,11 @@ attempts lacked.
   lifts outnumber dramatic ones, flap-light / contact-shadow / rim-light
   parameters.
 - `cornerSofteners` — tiny 6–14px chamfer bites for the remaining corners.
-- `toning` — per-paper edge browning: a mask-stretch scale (1.45–1.95) and a
-  very slight opacity (0.10–0.18) for the sepia fringe described below.
+- `toning` — per-paper edge browning: a mask-stretch scale (1.65–2.3) and
+  opacity (0.20–0.32) for the sepia fringe described below, plus four
+  `bands` (one per edge) whose depth (24–72px), blotch length, turbulence
+  seed, and opacity differ per edge, so one edge can be heavily aged while
+  another stays cleaner — the asymmetry real documents show.
 - `signature` — a stable string over the edge tiles for uniqueness tests and
   the e2e `data-wear-signature` hook.
 
@@ -78,10 +81,15 @@ inset 0, pointer-events none) containing:
 - `.paper-wear__corner-chip` ×3 — chamfer bites at the non-dog-ear corners.
 - `.paper-wear__fold` — the dog-ear block with layered corner gradients,
   rendered only when the paper carries a fold.
+- `.paper-wear__edge-band` ×4 — broad oxidation bands: a tea-tan layer
+  masked by a seeded SVG tile in which a dense-at-the-edge white gradient is
+  gated through stitched fractal noise, so the browning depth wanders and
+  blotches instead of reading as a uniform vignette. Bands overlap at the
+  corners, which naturally ages corners hardest.
 - `.paper-wear__edge-toning` / `.paper-wear__bite-toning` — sepia twins of
   every deckle strip, nick, and chip, drawn underneath from the same masks
-  but stretched by the toning scale, so a 1.5–3px browned-fiber fringe hugs
-  each torn boundary (multiply blend, per-paper opacity). Deeper bites earn
+  but stretched by the toning scale, so a browned-fiber fringe hugs each
+  torn boundary (multiply blend, per-paper opacity). Deeper bites earn
   proportionally wider browning, which is how real paper oxidizes.
 - Edge tone: a warm inset box-shadow on the overlay root (`~36px` reach, ≤6%
   of the toning color) replaces the radial vignette; the tiled grain in

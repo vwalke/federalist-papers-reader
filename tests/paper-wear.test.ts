@@ -90,14 +90,30 @@ describe('paper wear fingerprints', () => {
     }
   });
 
-  it('keeps edge browning very slight', () => {
+  it('browns the edges visibly but unevenly, never the sheet interior', () => {
     for (let number = 1; number <= 85; number += 1) {
       const { toning } = getPaperWear(number);
 
-      expect(toning.scale).toBeGreaterThanOrEqual(1.4);
-      expect(toning.scale).toBeLessThanOrEqual(2);
-      expect(toning.alpha).toBeGreaterThanOrEqual(0.08);
-      expect(toning.alpha).toBeLessThanOrEqual(0.2);
+      expect(toning.scale).toBeGreaterThanOrEqual(1.6);
+      expect(toning.scale).toBeLessThanOrEqual(2.4);
+      expect(toning.alpha).toBeGreaterThanOrEqual(0.18);
+      expect(toning.alpha).toBeLessThanOrEqual(0.34);
+
+      expect(toning.bands.map((band) => band.side)).toEqual([...EDGE_SIDES]);
+      for (const band of toning.bands) {
+        expect(band.depth).toBeGreaterThanOrEqual(20);
+        expect(band.depth).toBeLessThanOrEqual(80);
+        expect(band.tileLength).toBeGreaterThanOrEqual(380);
+        expect(band.tileLength).toBeLessThanOrEqual(560);
+        expect(band.blotch).toBeGreaterThanOrEqual(90);
+        expect(band.blotch).toBeLessThanOrEqual(240);
+        expect(Number.isInteger(band.seed)).toBe(true);
+        expect(band.alpha).toBeGreaterThanOrEqual(0.2);
+        expect(band.alpha).toBeLessThanOrEqual(0.8);
+      }
+
+      const alphas = toning.bands.map((band) => band.alpha);
+      expect(Math.max(...alphas)).toBeGreaterThan(Math.min(...alphas));
     }
   });
 
