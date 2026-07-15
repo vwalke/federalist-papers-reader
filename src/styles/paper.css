@@ -482,6 +482,10 @@
     column-rule: 1px solid color-mix(in oklab, var(--color-rule) 62%, transparent);
   }
 
+  [data-reading-mode='gazette'] .essay-heading__title {
+    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+  }
+
   .commentary__details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -498,6 +502,10 @@
 @media (min-width: 68rem) {
   [data-reading-mode='gazette'] .essay-flow {
     columns: 3 18rem;
+  }
+
+  [data-reading-mode='gazette'] .essay-heading__title {
+    font-size: clamp(1.15rem, calc(2.1vw - 0.2rem), 1.45rem);
   }
 
   .commentary__details {
