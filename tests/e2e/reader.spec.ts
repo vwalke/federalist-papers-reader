@@ -258,6 +258,29 @@ test('keeps the companion introduction coherent and its details responsive', asy
   expect(mobile.overflow).toBeLessThanOrEqual(0);
 });
 
+test('scales the reading text from the toolbar slider and remembers it', async ({ page }) => {
+  await page.goto('/papers/3/');
+
+  const slider = page.getByRole('slider', { name: 'Text size' });
+  const paragraph = page.locator('.essay-body p').first();
+  const sizeOf = () =>
+    paragraph.evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize));
+
+  await expect(slider).toHaveValue('0');
+  await expect(slider).toHaveAttribute('aria-valuetext', 'Standard');
+  const standard = await sizeOf();
+
+  await slider.fill('4');
+  await expect(slider).toHaveAttribute('aria-valuetext', 'Largest');
+  const largest = await sizeOf();
+  expect(largest / standard).toBeGreaterThan(1.5);
+  expect(largest / standard).toBeLessThan(1.6);
+
+  await page.reload();
+  await expect(page.getByRole('slider', { name: 'Text size' })).toHaveValue('4');
+  expect(await sizeOf()).toBeCloseTo(largest, 1);
+});
+
 test('renders varied archival wear without clipping the sheet', async ({ page }) => {
   await page.goto('/papers/1/');
 

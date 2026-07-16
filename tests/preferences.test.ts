@@ -27,6 +27,22 @@ describe('browser-only reading preferences', () => {
     expect(preferences.isPaperRead(51)).toBe(true);
   });
 
+  it('persists only the known text scale steps', () => {
+    const storage = new MemoryStorage();
+    const preferences = createPreferences(storage);
+
+    expect(preferences.getTextScale()).toBe(1);
+
+    preferences.setTextScale(1.25);
+    expect(preferences.getTextScale()).toBe(1.25);
+
+    preferences.setTextScale(3);
+    expect(preferences.getTextScale()).toBe(1.25);
+
+    storage.setItem('publius:text-scale', 'enormous');
+    expect(preferences.getTextScale()).toBe(1);
+  });
+
   it('recovers from unavailable or malformed storage', () => {
     const brokenStorage = {
       getItem() { throw new Error('blocked'); },
@@ -36,7 +52,9 @@ describe('browser-only reading preferences', () => {
 
     expect(preferences.getReadingMode()).toBe('gazette');
     expect(preferences.getReadPapers()).toEqual(new Set());
+    expect(preferences.getTextScale()).toBe(1);
     expect(() => preferences.setPaperRead(1, true)).not.toThrow();
+    expect(() => preferences.setTextScale(1.25)).not.toThrow();
   });
 
   it('finds the next unread paper and wraps once', () => {

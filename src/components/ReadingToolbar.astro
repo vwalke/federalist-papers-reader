@@ -15,13 +15,32 @@ const { number } = Astro.props;
     <button type="button" data-mode="gazette" aria-pressed="true">Gazette</button>
     <button type="button" data-mode="reader" aria-pressed="false">Reader</button>
   </div>
+  <div class="reading-toolbar__scale">
+    <span class="reading-toolbar__scale-letter" aria-hidden="true">A</span>
+    <input
+      class="reading-toolbar__scale-slider"
+      type="range"
+      min="0"
+      max="4"
+      step="1"
+      value="0"
+      aria-label="Text size"
+      aria-valuetext="Standard"
+      data-text-scale
+    />
+    <span
+      class="reading-toolbar__scale-letter reading-toolbar__scale-letter--large"
+      aria-hidden="true">A</span
+    >
+  </div>
 </nav>
 
 <script>
-  import { createPreferences } from '../lib/preferences';
+  import { createPreferences, TEXT_SCALE_STEPS } from '../lib/preferences';
 
   const root = document.documentElement;
   const modeButtons = document.querySelectorAll<HTMLButtonElement>('[data-mode]');
+  const scaleSlider = document.querySelector<HTMLInputElement>('[data-text-scale]');
   const periodSpellings = document.querySelectorAll<HTMLElement>(
     '.period-spelling[data-modern][data-gazette]'
   );
@@ -54,5 +73,22 @@ const { number } = Astro.props;
 
   for (const button of modeButtons) {
     button.addEventListener('click', () => applyMode(button.dataset.mode === 'reader' ? 'reader' : 'gazette'));
+  }
+
+  const SCALE_LABELS = ['Standard', 'Slightly larger', 'Large', 'Extra large', 'Largest'];
+
+  function applyTextScale(stepIndex: number) {
+    const scale = TEXT_SCALE_STEPS[stepIndex] ?? TEXT_SCALE_STEPS[0];
+    root.style.setProperty('--reading-scale', String(scale));
+    scaleSlider?.setAttribute('aria-valuetext', SCALE_LABELS[stepIndex] ?? SCALE_LABELS[0]);
+    preferences.setTextScale(scale);
+  }
+
+  if (scaleSlider) {
+    const savedIndex = TEXT_SCALE_STEPS.indexOf(preferences.getTextScale());
+    const initialIndex = savedIndex === -1 ? 0 : savedIndex;
+    scaleSlider.value = String(initialIndex);
+    applyTextScale(initialIndex);
+    scaleSlider.addEventListener('input', () => applyTextScale(Number(scaleSlider.value)));
   }
 </script>

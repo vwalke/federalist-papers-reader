@@ -70,6 +70,8 @@ A centered publication name, compact descriptor, double rule, issue metadata, an
 
 Text-first segmented controls for Gazette and Reader modes, a clearly labeled read-status button, and a route back to the index. Every control has a 44px target and visible focus.
 
+Beside the mode toggle sits a five-step text-size slider: a fine ink rule with hairline step ticks, an oxblood printer's-diamond thumb, and a small and large Caslon "A" at the ends (hidden on narrow screens). The chosen step multiplies the essay and companion prose through `--reading-scale`; Gazette column measures and the Reader line-length cap scale with it, so enlarged text reflows into fewer, wider columns rather than cramped ones. Mastheads, headings, rules, and controls never scale. The preference persists per browser and is applied before first paint.
+
 ### Essay
 
 Centered paper number and recipient line followed by original body text. The first paragraph earns one drop cap. Columns use a fine rule and balanced gap; paragraphs never use artificial page breaks. The essay carries no byline; Publius signs flush right at the foot of the final column, letterspaced, as in the original printings.
