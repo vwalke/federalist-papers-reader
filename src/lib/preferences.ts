@@ -1,10 +1,18 @@
 export type ReadingMode = 'gazette' | 'reader';
 
+export const TEXT_SCALE_STEPS = [1, 1.12, 1.25, 1.4, 1.55] as const;
+export type TextScale = (typeof TEXT_SCALE_STEPS)[number];
+
 const MODE_KEY = 'publius:reading-mode';
 const READ_KEY = 'publius:read-papers';
+const SCALE_KEY = 'publius:text-scale';
 
 function validPaperNumber(value: unknown): value is number {
   return Number.isInteger(value) && Number(value) >= 1 && Number(value) <= 85;
+}
+
+function validTextScale(value: unknown): value is TextScale {
+  return TEXT_SCALE_STEPS.includes(value as TextScale);
 }
 
 export function createPreferences(storage: Storage | null | undefined) {
@@ -40,6 +48,13 @@ export function createPreferences(storage: Storage | null | undefined) {
     },
     setReadingMode(mode: ReadingMode): void {
       safeSet(MODE_KEY, mode);
+    },
+    getTextScale(): TextScale {
+      const parsed = Number(safeGet(SCALE_KEY));
+      return validTextScale(parsed) ? parsed : 1;
+    },
+    setTextScale(scale: number): void {
+      if (validTextScale(scale)) safeSet(SCALE_KEY, String(scale));
     },
     getReadPapers,
     isPaperRead(number: number): boolean {

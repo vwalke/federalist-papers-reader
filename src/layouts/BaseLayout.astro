@@ -42,6 +42,10 @@ const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : unde
         try {
           const savedMode = localStorage.getItem('publius:reading-mode');
           if (savedMode === 'reader') document.documentElement.dataset.readingMode = 'reader';
+          const savedScale = Number(localStorage.getItem('publius:text-scale'));
+          if ([1.12, 1.25, 1.4, 1.55].includes(savedScale)) {
+            document.documentElement.style.setProperty('--reading-scale', String(savedScale));
+          }
         } catch {}
       </script>
     )}
