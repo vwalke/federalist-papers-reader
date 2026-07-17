@@ -8,6 +8,7 @@
   --color-rule: color-mix(in oklab, var(--color-ink) 72%, transparent);
   --color-room: oklch(0.18 0.014 70);
   --font-period-display: 'IM FELL English', 'Libre Caslon Text', Georgia, serif;
+  --font-period-body: 'IM FELL DW Pica', 'Libre Caslon Text', Georgia, serif;
   --font-display: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, serif;
   --font-reading: 'Libre Caslon Text', Georgia, serif;
   --font-utility: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

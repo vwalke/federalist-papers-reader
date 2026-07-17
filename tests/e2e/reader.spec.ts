@@ -38,14 +38,19 @@ async function titleMetrics(page: import('@playwright/test').Page) {
 test('switches reading modes and remembers the preference', async ({ page }) => {
   const styleControl = page.getByRole('group', { name: 'Reading style' });
   const periodWord = page.locator('.period-spelling').first();
+  const bodyFont = () =>
+    page.locator('.essay-body').evaluate((body) => getComputedStyle(body).fontFamily);
   await expect(styleControl.getByRole('button')).toHaveCount(2);
   await expect(styleControl.getByRole('button', { name: 'Gazette' })).toHaveAttribute('aria-pressed', 'true');
   await expect(periodWord).toHaveText('fœderal');
   await expect(periodWord).toHaveAttribute('aria-label', 'federal');
+  expect(await bodyFont()).toContain('IM FELL DW Pica');
 
   await page.getByRole('button', { name: 'Reader' }).click();
   await expect(periodWord).toHaveText('federal');
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'reader');
+  expect(await bodyFont()).not.toContain('IM FELL DW Pica');
+  expect(await bodyFont()).toContain('Libre Caslon Text');
   await page.reload();
   await expect(periodWord).toHaveText('federal');
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'reader');

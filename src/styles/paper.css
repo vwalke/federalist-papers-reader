@@ -334,12 +334,20 @@
 }
 
 .essay-body {
-  font-size: calc(clamp(1.02rem, 1.35vw, 1.1rem) * var(--reading-scale, 1));
+  font-size: calc(clamp(1.02rem, 1.35vw, 1.1rem) * var(--reading-scale, 1) * var(--essay-font-boost, 1));
   font-variant-ligatures: common-ligatures discretionary-ligatures historical-ligatures contextual;
   font-variant-numeric: oldstyle-nums;
   hyphens: auto;
   line-height: 1.38;
   text-align: left;
+}
+
+/* Gazette essays are set in the worn Fell text cut; it runs small at equal
+   rem, so the boost matches its apparent size to the Reader's Caslon. */
+[data-reading-mode='gazette'] .essay-body {
+  --essay-font-boost: 1.08;
+
+  font-family: var(--font-period-body);
 }
 
 .essay-body p {
@@ -625,7 +633,7 @@
   }
 
   .essay-body {
-    font-size: calc(1.0625rem * var(--reading-scale, 1));
+    font-size: calc(1.0625rem * var(--reading-scale, 1) * var(--essay-font-boost, 1));
     line-height: 1.55;
   }
 

@@ -11,6 +11,9 @@ importers:
       '@astrojs/markdown-satteri':
         specifier: 0.3.3
         version: 0.3.3
+      '@fontsource/im-fell-dw-pica':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@fontsource/im-fell-english':
         specifier: 5.2.6
         version: 5.2.6
@@ -498,6 +501,9 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource/im-fell-dw-pica@5.2.6':
+    resolution: {integrity: sha512-LJvnx6MbwJGYF7eMpXKqJQohLkvB4RUzebTZEeYssvjTn9IqCWqwBRS8ewIlPritPkl6vNOjsTo92owBW9XRTw==}
 
   '@fontsource/im-fell-english@5.2.6':
     resolution: {integrity: sha512-mVEuyEgLDyaChb0GvQRs5Pyg7SmB0RcPZqR8ub2OnskeiViIieBESRrS4Uovn1hxJ/Dh6xNRaLlmMtPeO8lWRQ==}
@@ -2434,6 +2440,8 @@ snapshots:
     optional: true
 
   '@exodus/bytes@1.15.1': {}
+
+  '@fontsource/im-fell-dw-pica@5.2.6': {}
 
   '@fontsource/im-fell-english@5.2.6': {}
 
