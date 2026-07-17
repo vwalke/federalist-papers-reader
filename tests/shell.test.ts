@@ -3,6 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 describe('static site shell', () => {
+  it('uses concise Federalist Papers titles for the general and About pages', async () => {
+    const home = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    const about = await readFile(new URL('../dist/about/index.html', import.meta.url), 'utf8');
+
+    expect(home).toContain('<title>The Federalist Papers</title>');
+    expect(about).toContain('<title>About this edition - The Federalist Papers</title>');
+  });
+
   it('renders the skip link, main landmark, masthead, and viewport metadata', async () => {
     const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
 
