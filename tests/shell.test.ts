@@ -24,4 +24,23 @@ describe('static site shell', () => {
     expect(html).not.toContain('static.cloudflareinsights.com/beacon.min.js');
     expect(html).not.toContain('data-cf-beacon');
   });
+
+  it('publishes an installable Apple Home Screen shell with standalone safe areas', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    const css = await readFile(
+      new URL('../src/styles/global.css', import.meta.url),
+      'utf8',
+    );
+
+    expect(html).toContain('rel="manifest" href="/site.webmanifest"');
+    expect(html).toContain('rel="apple-touch-icon" sizes="180x180"');
+    expect(html).toContain('name="apple-mobile-web-app-capable" content="yes"');
+    expect(html).toContain('name="apple-mobile-web-app-title" content="Federalist"');
+    expect(html).toContain(
+      'name="apple-mobile-web-app-status-bar-style" content="black-translucent"',
+    );
+    expect(css).toContain('@media (display-mode: standalone)');
+    expect(css).toContain('env(safe-area-inset-top)');
+    expect(css).toContain('env(safe-area-inset-bottom)');
+  });
 });
