@@ -34,6 +34,7 @@ describe('paper pages', () => {
     expect(html).toContain('Talk it over');
     expect(html).toContain('role="group"');
     expect(html).toContain('aria-label="Reading style"');
+    expect(html).toContain('<span class="progress-control__mark" aria-hidden="true">✓</span>');
     expect(html).not.toContain('>View</span>');
     expect(html).toContain('data-paper-wear="1"');
     expect(html).toContain('href="/papers/2/"');

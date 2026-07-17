@@ -85,14 +85,11 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
       (control) => control.getBoundingClientRect().height
     ),
     progressWidth: document.querySelector('.progress-control')?.getBoundingClientRect().width ?? Infinity,
-    bookmarkBefore: getComputedStyle(
-      document.querySelector('.progress-control__mark') as Element,
-      '::before'
-    ).content,
-    bookmarkAfter: getComputedStyle(
-      document.querySelector('.progress-control__mark') as Element,
-      '::after'
-    ).content
+    toolbarDisplay: getComputedStyle(document.querySelector('.reading-toolbar') as Element).display,
+    modesRect: document.querySelector('.reading-toolbar__modes')?.getBoundingClientRect().toJSON(),
+    progressRect: document.querySelector('.progress-control')?.getBoundingClientRect().toJSON(),
+    scaleRect: document.querySelector('.reading-toolbar__scale')?.getBoundingClientRect().toJSON(),
+    checkText: document.querySelector('.progress-control__mark')?.textContent
   }));
 
   expect(['auto', '1']).toContain(layout.columns);
@@ -100,8 +97,24 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
   expect(layout.mastheadWidth).toBeLessThanOrEqual(layout.sheetWidth);
   expect(layout.controlHeights.every((height) => height >= 44)).toBe(true);
   expect(layout.progressWidth).toBeLessThanOrEqual(60);
-  expect(layout.bookmarkBefore).not.toBe('none');
-  expect(layout.bookmarkAfter).not.toBe('none');
+  expect(layout.toolbarDisplay).toBe('grid');
+  expect(layout.checkText).toBe('✓');
+  expect(Math.abs((layout.modesRect?.top ?? 0) - (layout.progressRect?.top ?? 0))).toBeLessThanOrEqual(2);
+  expect(layout.scaleRect?.top ?? 0).toBeGreaterThan(layout.modesRect?.bottom ?? Infinity);
+
+  await page.setViewportSize({ width: 500, height: 844 });
+  await page.goto('/papers/10/');
+  const mediumToolbar = await page.locator('.reading-toolbar').evaluate((toolbar) => ({
+    display: getComputedStyle(toolbar).display,
+    modesTop: toolbar.querySelector('.reading-toolbar__modes')?.getBoundingClientRect().top,
+    progressTop: toolbar.querySelector('.progress-control')?.getBoundingClientRect().top,
+    scaleTop: toolbar.querySelector('.reading-toolbar__scale')?.getBoundingClientRect().top,
+    overflow: document.documentElement.scrollWidth - window.innerWidth
+  }));
+  expect(mediumToolbar.display).toBe('flex');
+  expect(Math.abs((mediumToolbar.modesTop ?? 0) - (mediumToolbar.progressTop ?? 0))).toBeLessThanOrEqual(2);
+  expect(Math.abs((mediumToolbar.scaleTop ?? 0) - (mediumToolbar.progressTop ?? 0))).toBeLessThanOrEqual(2);
+  expect(mediumToolbar.overflow).toBeLessThanOrEqual(0);
 
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto('/papers/85/');
