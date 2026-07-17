@@ -78,6 +78,19 @@ For each update:
 5. Repeat `create-deployment`, upload, and `start-deployment` for the existing app and `production` branch.
 6. Verify the live routes and clear the local test progress if needed.
 
+## Apple Home Screen verification
+
+After each production deployment, verify the standalone experience on a real iPhone or iPad:
+
+1. Open the production site in Safari, use **Share → Add to Home Screen**, and confirm the suggested name is **Federalist**.
+2. Confirm the installed icon is the framed oxblood **F**, not a generic webpage thumbnail.
+3. Launch the site from the Home Screen and confirm it opens without Safari's address and tab bars.
+4. Open a paper in portrait and landscape. Check that the header clears the camera/notch area, the footer clears the Home indicator, and no content scrolls sideways.
+5. At phone widths, confirm Gazette and Reader share the first toolbar row, text size occupies the second row, and every control remains easy to tap.
+6. Mark a paper as read and confirm the outlined oxblood check becomes a filled oxblood button with a light check. Relaunch the Home Screen app and confirm the read state remains.
+
+This is intentionally a polished standalone website, not an offline-first PWA. It does not install a service worker or promise that essays will open without a connection.
+
 ## Sources
 
 - [AWS: Deploying without a Git repository](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html)
