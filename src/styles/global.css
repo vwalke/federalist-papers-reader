@@ -791,6 +791,17 @@ a:hover {
   }
 }
 
+@media (display-mode: standalone) {
+  .site-utility {
+    min-block-size: calc(3.75rem + env(safe-area-inset-top));
+    padding-block-start: env(safe-area-inset-top);
+  }
+
+  .site-footer {
+    padding-block-end: max(var(--space-xl), env(safe-area-inset-bottom));
+  }
+}
+
 @media print {
   :root,
   body,
