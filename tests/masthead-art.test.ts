@@ -8,12 +8,17 @@ import { buildMastheadSvg } from '../scripts/generate-masthead.mjs';
 describe('Independent Journal masthead artwork', () => {
   it('generates vector outlines instead of machine-readable SVG text', async () => {
     const { default: opentype } = await import('opentype.js');
-    const fontPath = new URL(
+    const titleFontPath = new URL(
+      '../node_modules/@fontsource/im-fell-english/files/im-fell-english-latin-400-normal.woff',
+      import.meta.url
+    );
+    const subtitleFontPath = new URL(
       '../node_modules/@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff',
       import.meta.url
     );
-    const font = await opentype.load(fileURLToPath(fontPath));
-    const svg = buildMastheadSvg(font);
+    const titleFont = await opentype.load(fileURLToPath(titleFontPath));
+    const subtitleFont = await opentype.load(fileURLToPath(subtitleFontPath));
+    const svg = buildMastheadSvg(titleFont, subtitleFont);
 
     expect(svg).toContain('viewBox="0 35 1200 145"');
     expect(svg).toContain('<path');

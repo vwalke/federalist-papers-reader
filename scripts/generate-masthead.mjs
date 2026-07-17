@@ -29,9 +29,11 @@ function outlineRun(font, text, y, size, spacing) {
   return { data, left, right: left + width };
 }
 
-export function buildMastheadSvg(font) {
-  const title = outlineRun(font, 'THE INDEPENDENT JOURNAL', 103, 76, 6.5);
-  const subtitle = outlineRun(font, 'OR, THE GENERAL ADVERTISER', 159, 24, 7);
+export function buildMastheadSvg(titleFont, subtitleFont = titleFont) {
+  // IM Fell English runs wider than Caslon; 68/5 fills the same measure
+  // the Caslon setting did at 76/6.5.
+  const title = outlineRun(titleFont, 'THE INDEPENDENT JOURNAL', 103, 68, 5);
+  const subtitle = outlineRun(subtitleFont, 'OR, THE GENERAL ADVERTISER', 159, 24, 7);
   const gap = 24;
   const leftAccentEnd = subtitle.left - gap;
   const rightAccentStart = subtitle.right + gap;
@@ -54,7 +56,13 @@ export function buildMastheadSvg(font) {
 }
 
 async function generate() {
-  const fontPath = fileURLToPath(
+  const titleFontPath = fileURLToPath(
+    new URL(
+      '../node_modules/@fontsource/im-fell-english/files/im-fell-english-latin-400-normal.woff',
+      import.meta.url
+    )
+  );
+  const subtitleFontPath = fileURLToPath(
     new URL(
       '../node_modules/@fontsource/libre-caslon-display/files/libre-caslon-display-latin-400-normal.woff',
       import.meta.url
@@ -63,10 +71,11 @@ async function generate() {
   const outputPath = fileURLToPath(
     new URL('../public/masthead-independent-journal.svg', import.meta.url)
   );
-  const font = await opentype.load(fontPath);
+  const titleFont = await opentype.load(titleFontPath);
+  const subtitleFont = await opentype.load(subtitleFontPath);
 
   await mkdir(fileURLToPath(new URL('../public/', import.meta.url)), { recursive: true });
-  await writeFile(outputPath, buildMastheadSvg(font), 'utf8');
+  await writeFile(outputPath, buildMastheadSvg(titleFont, subtitleFont), 'utf8');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

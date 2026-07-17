@@ -24,7 +24,7 @@ Newsprint is an intentional environmental surface, not a generic warm-neutral br
 
 ## Typography
 
-- The outlined masthead artwork remains independent of live web fonts.
+- The outlined masthead artwork remains independent of live web fonts. Its nameplate outlines are IM FELL English capitals over a Libre Caslon Display subtitle line, regenerated via `pnpm generate:masthead`; the vector lockup is what lets the nameplate span the sheet edge-to-edge at every viewport with no font flash.
 - Gazette paper titles and recipient lines use **IM FELL English**, self-hosted, for restrained period texture.
 - Gazette essay bodies use **IM FELL DW Pica**, the Fell text-size cut, self-hosted and boosted about eight percent so its apparent size matches the Reader's Caslon. Its worn letterforms carry the period voice; the companion commentary stays in Libre Caslon Text as the modern editorial voice.
 - Reader paper titles use **Libre Caslon Display**; Reader essay body, commentary, and metadata use **Libre Caslon Text**, all self-hosted.
