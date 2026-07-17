@@ -21,7 +21,39 @@ aws iam list-account-aliases --profile walkeonline --output json
 
 The deployment prepared on July 14, 2026 expects account `243117234794`, IAM user `vwalke`, and alias `vawscloud`. Stop immediately if any value differs. Never substitute a default profile and never use a MotionPro, Vinli, or SOFICO credential.
 
-## Recommended first deployment: Amplify manual hosting
+## Current setup: continuous deployment from GitHub
+
+Since July 16, 2026 the site deploys automatically. Amplify app
+`d3ngbcec5mdybl` (name `federalist-papers-reader`, `us-east-1`) is connected
+to the private `vwalke/federalist-papers-reader` repository through the AWS
+Amplify GitHub App, scoped to that repository only. Every push to `main`
+builds with the committed `amplify.yml` (pinned pnpm via corepack, frozen
+install, `pnpm build`, publishes `dist/`) and goes live at:
+
+```text
+https://main.d3ngbcec5mdybl.amplifyapp.com
+```
+
+The app sets `PUBLIC_SITE_URL=https://main.d3ngbcec5mdybl.amplifyapp.com` as
+an Amplify environment variable so canonical metadata matches the live host.
+`PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN` is currently unset; adding it in the
+Amplify console enables the analytics beacon with no code change.
+
+To watch or manage builds:
+
+```bash
+aws amplify list-jobs --app-id d3ngbcec5mdybl --branch-name main \
+  --profile walkeonline --region us-east-1
+aws amplify start-job --app-id d3ngbcec5mdybl --branch-name main \
+  --job-type RELEASE --profile walkeonline --region us-east-1
+```
+
+The original manually-deployed app (`publius-federalist-reader`,
+`dovlbmwf2anfw`, URL `production.dovlbmwf2anfw.amplifyapp.com`) was retired
+when continuous deployment went live; Amplify cannot convert a manual app to
+Git-based hosting, so the Git-connected app replaced it.
+
+## Fallback: Amplify manual hosting
 
 Manual hosting avoids granting AWS access to the private GitHub repository. It deploys the generated `dist/` files directly. AWS documents a 5 GB limit for the zipped build artifact; this site is only a few megabytes.
 
