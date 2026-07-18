@@ -20,10 +20,10 @@ export async function signToken(
   subscriberId: number, purpose: TokenPurpose, envSecret: string, subscriberSecret: string
 ): Promise<string> {
   const payload = `${subscriberId}.${purpose}`;
-  return `${payload}.${await hmac(envSecret + subscriberSecret, payload)}`;
+  return `${payload}.${await hmac(envSecret + ':' + subscriberSecret, payload)}`;
 }
 
-/** Returns the subscriber id, or null for any invalid token. Never throws. */
+/** Returns null for any malformed or invalid token; errors from the lookup callback propagate. */
 export async function verifyToken(
   token: string, purpose: TokenPurpose, envSecret: string,
   lookupSubscriberSecret: (id: number) => Promise<string | null>
@@ -31,11 +31,12 @@ export async function verifyToken(
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [idRaw, tokenPurpose, signature] = parts;
+  if (!/^[1-9]\d*$/.test(idRaw)) return null;
   const id = Number(idRaw);
   if (!Number.isInteger(id) || id <= 0 || tokenPurpose !== purpose) return null;
   const subscriberSecret = await lookupSubscriberSecret(id);
   if (!subscriberSecret) return null;
-  const expected = await hmac(envSecret + subscriberSecret, `${id}.${purpose}`);
+  const expected = await hmac(envSecret + ':' + subscriberSecret, `${id}.${purpose}`);
   if (expected.length !== signature.length) return null;
   let mismatch = 0;
   for (let i = 0; i < expected.length; i++) mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
