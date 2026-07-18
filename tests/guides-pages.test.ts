@@ -39,4 +39,9 @@ describe('guide pages', () => {
     expect(home).toContain('href="/guides/where-to-start/"');
     expect(home).toContain('href="/guides/most-important/"');
   });
+
+  it('cross-links a paper to its theme guide', async () => {
+    const paper10 = await read('papers/10/index.html');
+    expect(paper10).toContain('href="/guides/faction/"');
+  });
 });
