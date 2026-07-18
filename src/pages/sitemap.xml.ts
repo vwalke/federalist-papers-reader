@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { getCollection } from 'astro:content';
 
+import { getOrderedGuides } from '../lib/guides';
 import { getOrderedPapers } from '../lib/papers';
 
 // Dependency-free sitemap: static pages + every paper. Absolute URLs require
@@ -12,9 +13,13 @@ export async function GET(context: APIContext): Promise<Response> {
     (await getCollection('papers')).map((entry) => ({ ...entry, number: entry.data.number }))
   );
 
+  const guides = await getOrderedGuides();
+
   const paths = [
     '/',
     '/about/',
+    '/guides/',
+    ...guides.map((guide) => `/guides/${guide.id}/`),
     ...papers.map((paper) => `/papers/${paper.data.number}/`)
   ];
 
