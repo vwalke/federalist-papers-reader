@@ -110,7 +110,7 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
   const token = new URL(request.url).searchParams.get('token');
   const sub = await requireSubscriber(token, 'confirm', env, db);
   if (!sub) return page('<h1>That link is not valid.</h1><p>It may have expired — subscribe again from the site.</p>', 400);
-  await db.activate(sub.id);
+  await db.activate(sub.id, request.headers.get('CF-Connecting-IP'));
   const ctx = await emailContext(env, sub);
   const today = new Date().toISOString().slice(0, 10);
   const firstDelivery = sub.program === 'weekly'

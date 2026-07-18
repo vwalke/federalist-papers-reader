@@ -14,7 +14,7 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     getSubscriberById: vi.fn(async () => SUB),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(async () => SUB),
-    activate: vi.fn(async () => {}),
+    activate: vi.fn(async (_id: number, _confirmIp: string | null) => {}),
     setStatus: vi.fn(async () => {}),
     setProgram: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
@@ -103,7 +103,7 @@ describe('GET /api/confirm', () => {
       new Request(`https://federalistreader.org/api/confirm?token=${token}`), ENV, db, sender);
     expect(res.status).toBe(303);
     expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/confirmed/');
-    expect(db.activate).toHaveBeenCalledWith(7);
+    expect(db.activate).toHaveBeenCalledWith(7, null);
     expect(sent[0].subject).toContain('Welcome');
   });
 
