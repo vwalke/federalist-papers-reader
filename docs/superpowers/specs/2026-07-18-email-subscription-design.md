@@ -1,15 +1,15 @@
 # Publius by Post — Email Subscription Design
 
 **Date:** 2026-07-18
-**Status:** Draft for review (designed autonomously; assumptions and decisions flagged inline)
-**Scope:** Product design specification only. Implementation plan to follow after review.
+**Status:** Approved by operator 2026-07-18 with three amendments (sender address, end-of-season cadence, dual launch) — incorporated below.
+**Scope:** Product design specification only. Implementation plan to follow.
 
 ## Overview
 
 Let readers receive the Federalist Papers by email, one of two ways:
 
 1. **The Weekly Course** — one paper per week in original order, Paper 1 through Paper 85, starting the week they subscribe. Every subscriber walks the same 85-week road (a year and seven months) on their own start date.
-2. **As It Happened** — each paper arrives on the anniversary of its original publication date, mapped onto the current year. The season runs late October through late May, at the original bursty cadence (some weeks bring three or four papers), so readers feel the flood of Publius the way New Yorkers did in 1787–88.
+2. **As It Happened** — each paper arrives on the anniversary of its original publication date, mapped onto the current year. The season runs October 27 through April 26, at the original bursty cadence (some weeks bring three or four papers), so readers feel the flood of Publius the way New Yorkers did in 1787–88.
 
 Both programs reuse the site's existing per-paper data (`publicationDate`, `nutshell`, `keyArguments`, `talkItOver` frontmatter) and the Gazette design language, adapted to what email clients can render.
 
@@ -50,8 +50,8 @@ Both programs reuse the site's existing per-paper data (`publicationDate`, `nuts
 
 - Each paper is sent on its original **month and day**, mapped to the current cycle: October 27 → Paper 1, and so on through the season. Delivery at 7:00 a.m. Eastern.
 - **Multiple papers on one date become a single email** — one "issue" listing each paper due that day, matching the newspaper form and avoiding same-morning multiple sends.
-- **Papers 78–85** never ran in the 1787–88 newspapers; all eight carry the McLean's Edition date of May 28, 1788. Decision: after the May 28 issue announces "the bound volume is out," papers 78–85 are delivered **one per week for eight weeks (early June through late July)** as a "From McLean's Edition" finale, via explicit date overrides in the schedule data. Alternative rejected: dumping all eight in one email (unreadable) or ending the season abruptly on May 28 (anticlimax for the eight most-read judiciary papers, including 78 and 84).
-- **Season boundary:** subscribers who join between seasons (August–October) get a welcome email stating when the season opens. Subscribers who join mid-season **join in progress** by default; the welcome email shows what has already run, with links, and offers a one-click switch to the Weekly Course for those who want to start at Paper 1.
+- **Papers 78–85** never ran in the 1787–88 newspapers; all eight carry the McLean's Edition date of May 28, 1788. Operator decision (2026-07-18): keep the season's stride to the end rather than slowing down. Papers 75–77 already sit at the papers' natural cadence on their true dates (Mar 26, Apr 1, Apr 2); papers 78–85 get explicit date overrides at an every-3-days cadence continuing from there — **April 5, 8, 11, 14, 17, 20, 23, and 26** — framed as "From McLean's Edition." The season therefore closes on April 26 with Paper 85's Concluding Remarks. Alternatives rejected: a weekly June–July finale (feels like a big slowdown after the winter flood) and a single May 28 bundle of all eight (unreadable).
+- **Season boundary:** subscribers who join between seasons (late April through late October) get a welcome email stating when the season opens. Subscribers who join mid-season **join in progress** by default; the welcome email shows what has already run, with links, and offers a one-click switch to the Weekly Course for those who want to start at Paper 1.
 - February 29 has no paper in the source data, but the mapping logic treats any Feb 29 date as Feb 28 in non-leap years, as a guard.
 
 ## User experience
@@ -149,8 +149,8 @@ deliveries(
 
 - **Double opt-in** (proof of consent stored: timestamp + confirming IP).
 - **One-click unsubscribe**: `List-Unsubscribe` + `List-Unsubscribe-Post` headers (RFC 8058) — required by Gmail/Yahoo bulk-sender rules and good practice at any size — plus the visible footer link.
-- **CAN-SPAM postal address**: the footer must carry a valid physical address. If the operator prefers not to publish a home address, a PO box or virtual mailbox (~$10–15/mo) is the one recurring non-technical cost. **Open item for the operator.**
-- **Sending domain**: `mail.federalistreader.org` subdomain with SPF, DKIM, DMARC (p=quarantine to start) — isolates the root domain's reputation. From: "Publius — The Federalist <papers@mail.federalistreader.org>".
+- **CAN-SPAM postal address**: the footer carries the operator's own mailing address (operator decision — "it isn't a secret anyway"). Stored as a Worker environment variable, supplied at implementation time; no PO box cost.
+- **Sending address** (operator decision): From: "Publius — The Federalist <publius@federalistreader.org>" — the root domain, not a subdomain. SPF, DKIM, and DMARC (p=quarantine to start) go on `federalistreader.org` via Resend's domain verification. Trade-off accepted: sending reputation is shared with the root domain rather than isolated on a subdomain; acceptable at this scale with double opt-in keeping the list clean.
 - **Privacy**: address + program + delivery log only; no tracking pixels; deletion on unsubscribe after a 30-day suppression-list hold (so "unsubscribed" is remembered long enough to honor it).
 
 ## Costs
@@ -179,18 +179,17 @@ Notes:
 - E2E (Playwright, existing harness with `PLAYWRIGHT_PORT`): signup form with and without JS, confirm flow, manage page actions.
 - Manual: render the template through Gmail/Outlook/Apple Mail (Litmus one-off or free previews) before launch; verify clipping stays under ~100KB.
 
-## Decisions made autonomously (flag if wrong)
+## Decisions
+
+Designed autonomously, then reviewed by the operator 2026-07-18:
 
 1. Cloudflare Worker + D1 + Resend over a managed newsletter platform.
 2. Saturday 7 a.m. ET default delivery for the Weekly Course.
 3. Excerpt-plus-link emails rather than full text.
-4. Papers 78–85 as a weekly June–July "McLean's Edition" finale in the calendar program.
+4. Papers 78–85 every 3 days, April 5–26, as the "From McLean's Edition" finale (operator amendment: keep the season's stride; a weekly finale would read as a slowdown).
 5. Mid-season calendar signups join in progress (with a switch-to-weekly offer).
 6. One program per subscriber at a time.
 7. No open/click tracking.
-
-## Open items for the operator
-
-- Postal address for the email footer (PO box vs. existing address).
-- Approve the sender name/address wording.
-- Season 1 framing: launch the Weekly Course immediately and open As It Happened signups for October 27, 2026?
+8. Sender: `Publius — The Federalist <publius@federalistreader.org>` (operator choice, root domain).
+9. Footer postal address: operator's own mailing address, supplied as a Worker env var at implementation.
+10. Launch both programs at once: Weekly Course delivers immediately on signup; As It Happened takes signups now for the October 27, 2026 season opening (welcome email states the opening date).
