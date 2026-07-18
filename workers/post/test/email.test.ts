@@ -53,4 +53,15 @@ describe('confirmation and welcome', () => {
     const calendar = renderWelcome('calendar', '2026-10-27', CTX);
     expect(calendar.html).toContain('October 27');
   });
+  it('welcome text carries the delivery date, manage link, and no HTML residue', () => {
+    const weekly = renderWelcome('weekly', '2026-07-25', CTX);
+    expect(weekly.text).toContain('2026-07-25');
+    expect(weekly.text).toContain(CTX.manageUrl);
+    const calendar = renderWelcome('calendar', '2026-10-27', CTX);
+    expect(calendar.text).toContain('October 27');
+    for (const text of [weekly.text, calendar.text]) {
+      expect(text).not.toContain('&oelig;');
+      expect(text).not.toContain('<');
+    }
+  });
 });
