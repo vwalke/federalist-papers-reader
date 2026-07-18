@@ -21,6 +21,7 @@ const { Content } = await render(guide);
 
 const allGuides = await getOrderedGuides();
 const others = allGuides.filter((g) => g.id !== guide.id);
+const hasPapers = data.papers.length > 0;
 
 const pageURL = Astro.site ? new URL(`/guides/${guide.id}/`, Astro.site).href : undefined;
 const itemList = {
@@ -28,16 +29,20 @@ const itemList = {
   '@type': 'CollectionPage',
   name: data.title,
   description: data.description,
-  ...(pageURL ? { url: pageURL } : {}),
-  mainEntity: {
-    '@type': 'ItemList',
-    itemListElement: data.papers.map((p, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: `Federalist No. ${p.number}`,
-      ...(Astro.site ? { url: new URL(`/papers/${p.number}/`, Astro.site).href } : {})
-    }))
-  }
+  ...(pageURL ? { url: pageURL, mainEntityOfPage: pageURL } : {}),
+  ...(hasPapers
+    ? {
+        mainEntity: {
+          '@type': 'ItemList',
+          itemListElement: data.papers.map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: `Federalist No. ${p.number}`,
+            ...(Astro.site ? { url: new URL(`/papers/${p.number}/`, Astro.site).href } : {})
+          }))
+        }
+      }
+    : {})
 };
 ---
 
@@ -62,18 +67,44 @@ const itemList = {
       <Content />
     </div>
 
-    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+    {hasPapers ? (
+      <>
+        <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
 
-    <CuratedList entries={data.papers} />
+        <CuratedList entries={data.papers} />
 
-    <nav class="guide-crosslinks" aria-label="More guides">
-      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
-      <h2 class="guide-crosslinks__title">Further companions</h2>
-      <ul>
-        {others.map((g) => (
-          <li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>
-        ))}
-      </ul>
-    </nav>
+        <nav class="guide-crosslinks" aria-label="More guides">
+          <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+          <h2 class="guide-crosslinks__title">Further companions</h2>
+          <ul>
+            {others.map((g) => (
+              <li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </>
+    ) : (
+      <>
+        <p class="guide-cta">
+          <a class="button-link" href="/papers/1/">Begin with Paper No. 1 <span aria-hidden="true">→</span></a>
+        </p>
+
+        <section class="guide-group" aria-labelledby="companions-title">
+          <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+          <h2 class="guide-group__title" id="companions-title">The companions</h2>
+          <p class="guide-group__note">Five short guides, by essentials and by theme.</p>
+          <ol class="curated-list">
+            {others.map((g) => (
+              <li class="curated-entry">
+                <div class="curated-entry__body">
+                  <h3 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h3>
+                  <p class="curated-entry__why">{g.data.standfirst}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </>
+    )}
   </article>
 </BaseLayout>

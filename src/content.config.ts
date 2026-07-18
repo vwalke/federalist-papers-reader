@@ -39,6 +39,7 @@ const guides = defineCollection({
     standfirst: z.string().min(1),
     order: z.number().int().min(1),
     kind: z.enum(['guide', 'theme']),
+    // A hub page (where-to-start) may carry no curated list of its own.
     papers: z
       .array(
         z.object({
@@ -46,7 +47,7 @@ const guides = defineCollection({
           why: z.string().min(1)
         })
       )
-      .min(1)
+      .default([])
   })
 });
 

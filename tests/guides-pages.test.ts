@@ -16,15 +16,25 @@ describe('guide pages', () => {
   });
 
   it('lists curated papers with resolved topics and links', async () => {
-    const start = await read('guides/where-to-start/index.html');
-    expect(start).toContain('href="/papers/10/"');
-    expect(start).toContain('Faction and the Large Republic'); // paper 10 topic
-    expect(start).toContain('If men were angels'); // paper 51 why-copy
+    const essentials = await read('guides/most-important/index.html');
+    expect(essentials).toContain('href="/papers/1/"');
+    expect(essentials).toContain('href="/papers/10/"');
+    expect(essentials).toContain('Faction and the Large Republic'); // paper 10 topic
+    expect(essentials).toContain('Ambition must be made'); // paper 51 why-copy
   });
 
-  it('emits ItemList JSON-LD on a guide', async () => {
+  it('emits ItemList JSON-LD on a curated guide', async () => {
+    const essentials = await read('guides/most-important/index.html');
+    expect(essentials).toContain('"@type":"ItemList"');
+  });
+
+  it('routes the where-to-start hub to the companions and Paper No. 1', async () => {
     const start = await read('guides/where-to-start/index.html');
-    expect(start).toContain('"@type":"ItemList"');
+    expect(start).toContain('href="/papers/1/"'); // begin-reading CTA
+    expect(start).toContain('href="/guides/most-important/"');
+    expect(start).toContain('href="/guides/faction/"');
+    expect(start).toContain('href="/guides/the-judiciary/"');
+    expect(start).not.toContain('"@type":"ItemList"'); // no curated list of its own
   });
 
   it('includes guide URLs in the sitemap', async () => {
@@ -34,10 +44,9 @@ describe('guide pages', () => {
     expect(sitemap).toContain('https://federalistreader.org/guides/the-judiciary/');
   });
 
-  it('surfaces the guides from the homepage', async () => {
+  it('surfaces the where-to-start hub from the homepage', async () => {
     const home = await read('index.html');
     expect(home).toContain('href="/guides/where-to-start/"');
-    expect(home).toContain('href="/guides/most-important/"');
   });
 
   it('cross-links a paper to its theme guide', async () => {
