@@ -7,3 +7,5 @@ test-results/
 .superpowers/
 .worktrees/
 .claude/
+workers/post/.wrangler/
+workers/post/.dev.vars
