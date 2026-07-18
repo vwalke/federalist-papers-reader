@@ -26,4 +26,11 @@ describe('guide pages', () => {
     const start = await read('guides/where-to-start/index.html');
     expect(start).toContain('"@type":"ItemList"');
   });
+
+  it('includes guide URLs in the sitemap', async () => {
+    const sitemap = await read('sitemap.xml');
+    expect(sitemap).toContain('https://federalistreader.org/guides/');
+    expect(sitemap).toContain('https://federalistreader.org/guides/where-to-start/');
+    expect(sitemap).toContain('https://federalistreader.org/guides/the-judiciary/');
+  });
 });
