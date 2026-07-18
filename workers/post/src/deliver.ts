@@ -72,6 +72,7 @@ export async function runDaily(
 ): Promise<void> {
   await db.autoResume(todayIso);
   await db.purgeUnsubscribed(30);
+  await db.purgeStalePending(7);
   const dueCalendarPapers = papersDueOnDate(papers, todayIso);
   let sent = 0, failed = 0, retried = 0;
 

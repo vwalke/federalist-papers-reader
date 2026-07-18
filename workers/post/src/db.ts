@@ -18,6 +18,7 @@ export interface Db {
     status: 'sent' | 'failed', providerMessageId?: string): Promise<void>;
   listRetryable(): Promise<Array<{ subscriber_id: number; paper_number: number; scheduled_for: string }>>;
   purgeUnsubscribed(olderThanDays: number): Promise<void>;
+  purgeStalePending(olderThanDays: number): Promise<void>;
 }
 
 export function makeDb(d1: D1Database): Db {
@@ -102,6 +103,12 @@ export function makeDb(d1: D1Database): Db {
       await d1.prepare(
         `DELETE FROM subscribers WHERE status = 'unsubscribed'
          AND unsubscribed_at < datetime('now', ?)`
+      ).bind(`-${olderThanDays} days`).run();
+    },
+    async purgeStalePending(olderThanDays) {
+      await d1.prepare(
+        `DELETE FROM subscribers WHERE status = 'pending'
+         AND created_at < datetime('now', ?)`
       ).bind(`-${olderThanDays} days`).run();
     }
   };
