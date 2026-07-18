@@ -153,7 +153,7 @@ async function handleManagePost(request: Request, env: Env, db: Db): Promise<Res
   const form = await request.formData();
   const token = form.get('token') as string | null;
   const sub = await requireSubscriber(token, 'manage', env, db);
-  if (!sub) return page('<h1>That link is not valid.</h1>', 400);
+  if (!sub || sub.status === 'unsubscribed') return page('<h1>That link is not valid.</h1>', 400);
   const action = String(form.get('action') ?? '');
   const until = (form.get('until') as string | null) || null;
   if (until !== null && !/^\d{4}-\d{2}-\d{2}$/.test(until)) {
