@@ -18,10 +18,19 @@ interface Props {
   description: string;
   pageClass?: string;
   readingMode?: boolean;
+  ogImage?: string;
 }
 
-const { title, description, pageClass = '', readingMode = false } = Astro.props;
+const {
+  title,
+  description,
+  pageClass = '',
+  readingMode = false,
+  ogImage = '/social-cards/default.jpg'
+} = Astro.props;
 const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
+// Social crawlers require an absolute image URL; relative paths are dropped.
+const ogImageURL = Astro.site ? new URL(ogImage, Astro.site).href : ogImage;
 ---
 
 <!doctype html>
@@ -35,10 +44,21 @@ const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : unde
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Federalist" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta property="og:site_name" content="Federalist Reader" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/social-card.svg" />
+    {canonicalURL && <meta property="og:url" content={canonicalURL} />}
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+    <meta name="twitter:image:alt" content={title} />
     {canonicalURL && <link rel="canonical" href={canonicalURL} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/site.webmanifest" />
