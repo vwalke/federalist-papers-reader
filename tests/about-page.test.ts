@@ -19,7 +19,11 @@ describe('About this edition', () => {
     expect(html).toContain('class="about-documents__head"');
     expect(html).toContain('class="about-documents__figure"');
     expect(html).toContain('class="about-documents__copy"');
-    expect(html).toContain('class="about-notes"');
+    expect(html).toContain('class="about-closing"');
+    expect(html).toContain('class="about-closing__column"');
+    expect(html).toContain('Questions, comments');
+    expect(html).toContain('mailto:publius@federalistreader.org');
+    expect(html).toContain('https://x.com/ReadPublius');
     expect(html).not.toContain('class="about-notes__privacy"');
     expect(html).not.toContain('No account, no tracking your reading');
     expect(html).toContain('class="about-colophon"');
@@ -30,7 +34,7 @@ describe('About this edition', () => {
     const portraitIndex = html.indexOf('class="about-portrait"');
     const letterJoyIndex = html.indexOf('class="about-callout"');
     const familyIndex = html.indexOf('class="about-family"');
-    const notesIndex = html.indexOf('class="about-notes"');
+    const notesIndex = html.indexOf('class="about-closing"');
     const colophonIndex = html.indexOf('class="about-colophon"');
     const documentsIndex = html.indexOf('class="about-documents"');
     const documentsHtml = html.slice(documentsIndex, notesIndex);
