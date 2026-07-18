@@ -15,6 +15,11 @@ describe('paper pages', () => {
     expect(html).toContain('name="twitter:card" content="summary_large_image"');
     expect(html).toContain('property="og:image:width" content="1200"');
     expect(html).not.toContain('social-card.svg');
+    expect(html).toContain('class="essay-share"');
+    expect(html).toContain('Share this paper');
+    expect(html).toContain('data-share-x');
+    expect(html).toMatch(/href="https:\/\/twitter\.com\/intent\/tweet\?[^"]*papers%2F1%2F/);
+    expect(html).toContain('data-share-copy');
     expect(html).toContain('class="essay-flow"');
     expect(html).toContain('data-gazette="FŒDERALIST"');
     expect(html).toContain('data-modern="FEDERALIST"');

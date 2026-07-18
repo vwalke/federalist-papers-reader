@@ -1,0 +1,69 @@
+---
+interface Props {
+  number: number;
+}
+
+const { number } = Astro.props;
+const path = `/papers/${number}/`;
+const url = Astro.site ? new URL(path, Astro.site).href : path;
+const shareText = `The Federalist No. ${number}, as it appeared in 1787`;
+const xIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}`;
+---
+
+<aside class="essay-share" aria-label="Share this paper">
+  <span class="essay-share__ornament" aria-hidden="true">✦</span>
+  <p class="essay-share__prompt">Share this paper</p>
+  <div class="essay-share__actions">
+    <a
+      class="essay-share__action"
+      href={xIntent}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-share-x
+    >
+      Post on X
+    </a>
+    <span class="essay-share__divider" aria-hidden="true"></span>
+    <button type="button" class="essay-share__action" data-share-copy>
+      <span data-copy-label aria-live="polite">Copy link</span>
+    </button>
+  </div>
+</aside>
+
+<script>
+  const share = document.querySelector<HTMLElement>('.essay-share');
+  if (share) {
+    // The live address is always the canonical link, so prefer it over the
+    // build-time URL (which is relative during local development).
+    const shareUrl = window.location.href.split('#')[0];
+
+    const xLink = share.querySelector<HTMLAnchorElement>('[data-share-x]');
+    if (xLink) {
+      const intent = new URL(xLink.href);
+      intent.searchParams.set('url', shareUrl);
+      xLink.href = intent.toString();
+    }
+
+    const copyButton = share.querySelector<HTMLButtonElement>('[data-share-copy]');
+    const copyLabel = share.querySelector<HTMLElement>('[data-copy-label]');
+    if (copyButton && copyLabel && navigator.clipboard) {
+      let resetTimer: number | undefined;
+      copyButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          copyLabel.textContent = 'Link copied';
+          copyButton.classList.add('is-copied');
+          window.clearTimeout(resetTimer);
+          resetTimer = window.setTimeout(() => {
+            copyLabel.textContent = 'Copy link';
+            copyButton.classList.remove('is-copied');
+          }, 2200);
+        } catch {
+          // Clipboard blocked; the X link and address bar still work.
+        }
+      });
+    } else if (copyButton) {
+      copyButton.hidden = true;
+    }
+  }
+</script>
