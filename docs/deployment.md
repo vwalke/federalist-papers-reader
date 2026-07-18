@@ -262,6 +262,87 @@ within. The binding constraint in practice is Resend's 100/day cap: because
 subscribers largely share the same weekly send day, Saturday sends are the
 first to cluster near that limit as the subscriber list grows.
 
+### Backups
+
+The D1 database is the only state that cannot be regenerated from git.
+`.github/workflows/backup-d1.yml` exports it nightly at 12:00 UTC (an hour
+after the delivery cron, so each dump includes that day's deliveries) with
+`wrangler d1 export` and uploads the dump to S3 under `d1/`. The workflow
+refuses to upload a dump that lacks the schema or looks truncated, and it
+only ever writes new objects — retention is entirely the bucket's 365-day
+lifecycle rule below. Keeping the copy on AWS rather than R2 is deliberate:
+it survives a Cloudflare account problem. GitHub emails the workflow author
+when a scheduled run fails.
+
+**One-time AWS setup.** Pick a region and a bucket name (below:
+`us-east-1`, `federalistreader-backups`), then:
+
+```bash
+aws s3api create-bucket --bucket federalistreader-backups --region us-east-1
+aws s3api put-public-access-block --bucket federalistreader-backups \
+  --public-access-block-configuration \
+  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+aws s3api put-bucket-lifecycle-configuration --bucket federalistreader-backups \
+  --lifecycle-configuration '{"Rules":[{"ID":"expire-d1-backups","Status":"Enabled",
+    "Filter":{"Prefix":"d1/"},"Expiration":{"Days":365}}]}'
+```
+
+(Outside `us-east-1`, `create-bucket` also needs
+`--create-bucket-configuration LocationConstraint=<region>`.)
+
+Create an IAM user that can do nothing but drop backups into that prefix:
+
+```bash
+aws iam create-user --user-name federalistreader-backup
+aws iam put-user-policy --user-name federalistreader-backup \
+  --policy-name put-d1-backups --policy-document '{"Version":"2012-10-17",
+  "Statement":[{"Effect":"Allow","Action":"s3:PutObject",
+  "Resource":"arn:aws:s3:::federalistreader-backups/d1/*"}]}'
+aws iam create-access-key --user-name federalistreader-backup
+```
+
+**One-time Cloudflare setup.** Create an API token (dashboard → My Profile →
+API Tokens) with the single permission **Account → D1 → Edit** (the export
+endpoint requires the write scope). The account id is on the Workers
+overview page.
+
+**GitHub secrets.** From the repo root:
+
+```bash
+gh secret set CLOUDFLARE_API_TOKEN      # the D1-scoped token
+gh secret set CLOUDFLARE_ACCOUNT_ID
+gh secret set AWS_ACCESS_KEY_ID         # from create-access-key above
+gh secret set AWS_SECRET_ACCESS_KEY
+gh secret set AWS_REGION                # e.g. us-east-1
+gh secret set BACKUP_BUCKET             # e.g. federalistreader-backups
+```
+
+To avoid long-lived AWS keys entirely, set `AWS_ROLE_ARN` to an OIDC role
+instead of the two key secrets — the workflow prefers the role when that
+secret exists. (Requires adding GitHub as an OIDC identity provider in IAM
+and trusting this repo; see AWS's "configure-aws-credentials" OIDC docs.)
+
+**First run.** Trigger the workflow manually (Actions → Backup D1 to S3 →
+Run workflow) and confirm an object appears:
+`aws s3 ls s3://federalistreader-backups/d1/`.
+
+**Restore.** Download the newest dump, create a fresh database, load it, and
+repoint the worker:
+
+```bash
+aws s3 cp "s3://federalistreader-backups/d1/<newest>.sql" restore.sql
+npx wrangler d1 create publius-post-restored
+npx wrangler d1 execute publius-post-restored --remote --file restore.sql
+```
+
+Then set the new `database_id` in `workers/post/wrangler.toml` and redeploy
+the worker. Restoring into a fresh database (rather than the damaged one)
+keeps the original around for forensics.
+
+**Caveat.** GitHub disables scheduled workflows after 60 days without any
+repo activity — it emails a warning first. Any push resets the clock; if the
+repo ever goes fully dormant, re-enable the workflow from the Actions tab.
+
 ## Sources
 
 - [Cloudflare Pages: Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/)

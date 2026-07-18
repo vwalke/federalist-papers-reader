@@ -1,0 +1,61 @@
+name: Backup D1 to S3
+
+# Nightly export of the publius-post subscriber database. Runs an hour after
+# the worker's 11:00 UTC delivery cron so each dump includes that day's
+# deliveries. Retention lives on the bucket (365-day lifecycle rule on the
+# d1/ prefix), never here — this job only ever writes new objects.
+# Setup and restore: docs/deployment.md, "Backups".
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # used only when AWS_ROLE_ARN selects the OIDC path
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/post
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Export the production database
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler@4 d1 export publius-post --remote --output=backup.sql
+
+      - name: Refuse an implausible dump
+        run: |
+          grep -q "CREATE TABLE" backup.sql
+          grep -qi "subscribers" backup.sql
+          test "$(wc -c < backup.sql)" -ge 1024
+
+      - name: Configure AWS credentials (OIDC role)
+        if: ${{ secrets.AWS_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configure AWS credentials (access key)
+        if: ${{ secrets.AWS_ROLE_ARN == '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp backup.sql \
+            "s3://${{ secrets.BACKUP_BUCKET }}/d1/publius-post-$(date -u +%Y-%m-%dT%H%MZ).sql"
