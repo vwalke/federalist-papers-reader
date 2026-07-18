@@ -37,6 +37,18 @@ export function buildAppIconSvg(font) {
 </svg>`;
 }
 
+export function buildXAvatarSvg(font) {
+  const { path } = placeMonogram(font);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" data-x-avatar="federalist-reader" data-monogram="F">
+  <circle cx="256" cy="256" r="256" fill="${NEWSPRINT}"/>
+  <circle cx="256" cy="256" r="222" fill="none" stroke="${INK}" stroke-width="12"/>
+  <circle cx="256" cy="256" r="203" fill="none" stroke="${INK}" stroke-width="4"/>
+  <path d="${path}" fill="${OXBLOOD}"/>
+  <path d="M256 99l13 13-13 13-13-13zM256 387l13 13-13 13-13-13z" fill="${OXBLOOD}"/>
+</svg>`;
+}
+
 async function generate() {
   const fontPath = fileURLToPath(
     new URL(
@@ -47,11 +59,26 @@ async function generate() {
   const font = await opentype.load(fontPath);
   const svg = buildAppIconSvg(font);
   const svgBuffer = Buffer.from(svg);
+  const xAvatarSvg = buildXAvatarSvg(font);
   const iconsDirectory = new URL('../public/icons/', import.meta.url);
+  const profileDirectory = new URL('../public/profile/', import.meta.url);
 
   await mkdir(iconsDirectory, { recursive: true });
+  await mkdir(profileDirectory, { recursive: true });
   await writeFile(new URL('../public/app-icon.svg', import.meta.url), `${svg}\n`);
   await writeFile(new URL('../public/favicon.svg', import.meta.url), `${svg}\n`);
+  await writeFile(
+    new URL('../public/profile/federalist-reader-x-avatar.svg', import.meta.url),
+    `${xAvatarSvg}\n`,
+  );
+  await sharp(Buffer.from(xAvatarSvg))
+    .resize(400, 400)
+    .png()
+    .toFile(
+      fileURLToPath(
+        new URL('../public/profile/federalist-reader-x-avatar.png', import.meta.url),
+      ),
+    );
   await sharp(svgBuffer)
     .resize(180, 180)
     .png()
