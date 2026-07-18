@@ -59,7 +59,7 @@ Both programs reuse the site's existing per-paper data (`publicationDate`, `nuts
 ### Entry points (site)
 
 1. **End-of-paper coupon (primary).** After the Publius signature at the foot of each essay, a ruled "By Subscription" block: one line of copy, email field, the two program choices as compact radio rows, a Subscribe button. This is the moment of highest intent — the reader just finished a paper.
-2. **`/subscribe` page.** The full pitch: what each program is, a sample email, the schedule, privacy note ("your address is used for these papers and nothing else"). All other entry points link here.
+2. **`/subscribe` page.** The full pitch: what each program is, a sample email, the schedule, and a light-touch note on easy exit ("unsubscribing is one click, honored instantly"). Operator decision 2026-07-18: no exclusivity promise about address use — future sharing (e.g. with a non-profit) stays possible, unemphasized. All other entry points link here.
 3. **Index and About mentions.** A single ledger-style line on the index page and a sentence in About linking to `/subscribe`. No popups, no interstitials — the anti-references forbid SaaS-style capture.
 
 ### Signup flow
