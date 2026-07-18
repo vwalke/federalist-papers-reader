@@ -10,6 +10,11 @@ describe('paper pages', () => {
     expect(html).toContain('General Introduction');
     expect(html).toContain('src="/masthead-independent-journal.svg"');
     expect(html).toContain('alt=""');
+    expect(html).toMatch(/property="og:image" content="[^"]*\/social-cards\/1\.jpg"/);
+    expect(html).toMatch(/name="twitter:image" content="[^"]*\/social-cards\/1\.jpg"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
+    expect(html).toContain('property="og:image:width" content="1200"');
+    expect(html).not.toContain('social-card.svg');
     expect(html).toContain('class="essay-flow"');
     expect(html).toContain('THE FEDERALIST.');
     expect(html).toContain('No. I.');
@@ -52,5 +57,19 @@ describe('paper pages', () => {
 
     expect(html).toContain('No. LXXXV.');
     expect(html).toContain('New-York · First collected May 28, 1788');
+  });
+
+  it('ships a committed social card for every paper plus a shared default', async () => {
+    const { readdir } = await import('node:fs/promises');
+    const cards = new Set(await readdir(new URL('../public/social-cards/', import.meta.url)));
+
+    expect(cards.has('default.jpg')).toBe(true);
+    for (let number = 1; number <= 85; number += 1) {
+      expect(cards.has(`${number}.jpg`)).toBe(true);
+    }
+
+    const home = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    expect(home).toMatch(/property="og:image" content="[^"]*\/social-cards\/default\.jpg"/);
+    expect(home).toContain('name="twitter:card" content="summary_large_image"');
   });
 });
