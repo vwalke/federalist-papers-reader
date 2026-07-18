@@ -7,6 +7,7 @@ import EssayShare from '../components/EssayShare.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
+import { getThemeGuidesForPaper } from '../lib/guides';
 import { formatIssueDateline, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
 
@@ -62,6 +63,8 @@ const structuredData = [
     ].filter(Boolean)
   }
 ];
+
+const themeGuides = await getThemeGuidesForPaper(data.number);
 ---
 
 <BaseLayout
@@ -111,5 +114,16 @@ const structuredData = [
       previous={previous ? { number: previous.data.number, title: previous.data.title } : null}
       next={next ? { number: next.data.number, title: next.data.title } : null}
     />
+
+    {themeGuides.length > 0 && (
+      <nav class="essay-theme-link" aria-label="Related themes">
+        <span class="section-kicker">Explore the theme</span>
+        <ul>
+          {themeGuides.map((g) => (
+            <li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>
+          ))}
+        </ul>
+      </nav>
+    )}
   </article>
 </BaseLayout>
