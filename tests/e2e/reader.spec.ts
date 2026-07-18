@@ -37,17 +37,20 @@ async function titleMetrics(page: import('@playwright/test').Page) {
 
 test('switches reading modes and remembers the preference', async ({ page }) => {
   const styleControl = page.getByRole('group', { name: 'Reading style' });
-  const periodWord = page.locator('.period-spelling').first();
+  const periodWord = page.locator('.essay-body .period-spelling').first();
+  const titleWord = page.locator('.essay-heading__title .period-spelling');
   const bodyFont = () =>
     page.locator('.essay-body').evaluate((body) => getComputedStyle(body).fontFamily);
   await expect(styleControl.getByRole('button')).toHaveCount(2);
   await expect(styleControl.getByRole('button', { name: 'Gazette' })).toHaveAttribute('aria-pressed', 'true');
   await expect(periodWord).toHaveText('fœderal');
   await expect(periodWord).toHaveAttribute('aria-label', 'federal');
+  await expect(titleWord).toHaveText('FŒDERALIST');
   expect(await bodyFont()).toContain('IM FELL DW Pica');
 
   await page.getByRole('button', { name: 'Reader' }).click();
   await expect(periodWord).toHaveText('federal');
+  await expect(titleWord).toHaveText('FEDERALIST');
   await expect(page.locator('html')).toHaveAttribute('data-reading-mode', 'reader');
   expect(await bodyFont()).not.toContain('IM FELL DW Pica');
   expect(await bodyFont()).toContain('Libre Caslon Text');
@@ -125,7 +128,7 @@ test('uses one Gazette column on mobile without horizontal overflow', async ({ p
   await page.goto('/papers/85/');
   const narrowTitle = await titleMetrics(page);
   expect(narrowTitle.lines).toBe(1);
-  expect(narrowTitle.titleText).toBe('THE FEDERALIST. No. LXXXV.');
+  expect(narrowTitle.titleText).toBe('THE FŒDERALIST. No. LXXXV.');
   expect(narrowTitle.titleFontFamily).toContain('IM FELL English');
   expect(narrowTitle.flowPaddingTop).toBeCloseTo(12, 0);
   expect(narrowTitle.contentGap).toBeGreaterThanOrEqual(10);
@@ -172,7 +175,7 @@ test('places anonymous top matter in the Gazette first column', async ({ page })
   expect(metrics.headingWidth).toBeLessThan(metrics.flowWidth / 2);
   expect(Math.abs(metrics.rightColumnTop - metrics.headingY)).toBeLessThan(40);
   expect(metrics.titleFontFamily).toContain('IM FELL English');
-  expect(metrics.titleText).toContain('THE FEDERALIST. No. X.');
+  expect(metrics.titleText).toContain('THE FŒDERALIST. No. X.');
   expect(metrics.topAuthorVisible).toBe(false);
   expect(metrics.publicationVisible).toBe(false);
   expect(metrics.mastheadVisible).toBe(true);
