@@ -6,7 +6,7 @@ export interface Db {
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
   upsertPending(email: string, program: Program, tokenSecret: string): Promise<Subscriber>;
   activate(id: number): Promise<void>;
-  setStatus(id: number, status: Subscriber['status'], pausedUntil?: string | null): Promise<void>;
+  setStatus(id: number, status: 'active' | 'paused', pausedUntil?: string | null): Promise<void>;
   setProgram(id: number, program: Program, progressIndex: number): Promise<void>;
   setProgress(id: number, progressIndex: number): Promise<void>;
   unsubscribe(id: number): Promise<void>;
@@ -27,15 +27,17 @@ export function makeDb(d1: D1Database): Db {
     getSubscriberByEmail: (email) =>
       one(d1.prepare('SELECT * FROM subscribers WHERE email = ?').bind(email.toLowerCase())),
     async upsertPending(email, program, tokenSecret) {
-      await d1.prepare(
+      const row = await d1.prepare(
         `INSERT INTO subscribers (email, program, token_secret) VALUES (?, ?, ?)
          ON CONFLICT(email) DO UPDATE SET
-           program = excluded.program,
+           program = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.program ELSE subscribers.program END,
            status = CASE WHEN subscribers.status = 'unsubscribed' THEN 'pending' ELSE subscribers.status END,
            token_secret = CASE WHEN subscribers.status = 'unsubscribed' THEN excluded.token_secret ELSE subscribers.token_secret END,
-           unsubscribed_at = NULL`
-      ).bind(email.toLowerCase(), program, tokenSecret).run();
-      return (await this.getSubscriberByEmail(email))!;
+           unsubscribed_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.unsubscribed_at END
+         RETURNING *`
+      ).bind(email.toLowerCase(), program, tokenSecret).first();
+      if (!row) throw new Error('upsertPending returned no row');
+      return row as unknown as Subscriber;
     },
     async activate(id) {
       await d1.prepare(
@@ -87,9 +89,13 @@ export function makeDb(d1: D1Database): Db {
       ).bind(status, providerMessageId ?? null, subscriberId, paperNumber, scheduledFor).run();
     },
     async listRetryable() {
+      // Stale queued rows are retried too (claimed, then the worker died mid-send):
+      // at-least-once semantics — a rare duplicate email beats a silently lost paper.
       const { results } = await d1.prepare(
-        `SELECT subscriber_id, paper_number, scheduled_for FROM deliveries
-         WHERE status = 'failed' AND created_at >= datetime('now', '-2 days')`).all();
+        `SELECT d.subscriber_id, d.paper_number, d.scheduled_for FROM deliveries d
+         JOIN subscribers s ON s.id = d.subscriber_id AND s.status = 'active'
+         WHERE (d.status = 'failed' OR (d.status = 'queued' AND d.created_at < datetime('now','-1 hour')))
+           AND d.created_at >= datetime('now','-2 days')`).all();
       return results as unknown as Array<{ subscriber_id: number; paper_number: number; scheduled_for: string }>;
     },
     async purgeUnsubscribed(olderThanDays) {
