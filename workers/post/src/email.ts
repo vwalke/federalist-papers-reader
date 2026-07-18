@@ -20,7 +20,7 @@ export function escapeHtml(value: string): string {
 }
 
 function shell(bodyHtml: string, ctx: EmailContext): string {
-  return `<!doctype html><html><body style="margin:0;padding:24px 12px;background:#E7DFCE;">
+  return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:24px 12px;background:#E7DFCE;">
 <div style="max-width:560px;margin:0 auto;background:${PAPER};color:${INK};font-family:${SERIF};padding:32px 28px;border:1px solid rgba(42,33,24,0.28);">
 <div style="text-align:center;">
   <div style="font-size:28px;letter-spacing:2px;">The F&oelig;deralist</div>
@@ -31,8 +31,8 @@ ${bodyHtml}
 <hr style="border:none;border-top:1px solid rgba(42,33,24,0.28);margin:22px 0 14px;">
 <p style="font-size:11px;color:${MUTED};text-align:center;line-height:1.7;font-family:Arial,sans-serif;">
 ${ctx.progressLine ? escapeHtml(ctx.progressLine) + '<br>' : ''}
-<a href="${ctx.manageUrl}" style="color:${MUTED};">Manage subscription</a> &middot;
-<a href="${ctx.unsubscribeUrl}" style="color:${MUTED};">Unsubscribe</a><br>
+<a href="${escapeHtml(ctx.manageUrl)}" style="color:${MUTED};">Manage subscription</a> &middot;
+<a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:${MUTED};">Unsubscribe</a><br>
 Federalist Reader &middot; ${escapeHtml(ctx.postalAddress)}
 </p></div></body></html>`;
 }
@@ -48,7 +48,7 @@ function paperSection(paper: PaperContent, ctx: EmailContext): string {
 <p style="text-align:center;font-style:italic;color:${MUTED};margin-top:0;">${escapeHtml(paper.recipient)}</p>
 <div style="border-left:2px solid ${VERDIGRIS};padding-left:12px;font-style:italic;color:${MUTED};font-size:14px;margin:16px 0;">${escapeHtml(paper.nutshell)}</div>
 ${excerpt}
-<p style="text-align:center;margin:22px 0;"><a href="${url}" style="background:${VERDIGRIS};color:${PAPER};font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 22px;display:inline-block;">Continue Reading at the Gazette</a></p>
+<p style="text-align:center;margin:22px 0;"><a href="${escapeHtml(url)}" style="background:${VERDIGRIS};color:${PAPER};font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 22px;display:inline-block;">Continue Reading at the Gazette</a></p>
 <p style="font-size:14px;"><strong>Talk it over.</strong> <em>${escapeHtml(paper.talkItOver)}</em></p>`;
 }
 
@@ -71,7 +71,7 @@ export function renderPaperIssue(papers: PaperContent[], ctx: EmailContext): Ren
 export function renderConfirmation(confirmUrl: string, ctx: EmailContext): RenderedEmail {
   const html = shell(`
 <p style="font-size:15px;line-height:1.6;">You asked to receive the Federalist Papers by post. One click seals it — if this wasn't you, simply ignore this letter and nothing more will arrive.</p>
-<p style="text-align:center;margin:22px 0;"><a href="${confirmUrl}" style="background:${VERDIGRIS};color:${PAPER};font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 22px;display:inline-block;">Confirm Subscription</a></p>`, ctx);
+<p style="text-align:center;margin:22px 0;"><a href="${escapeHtml(confirmUrl)}" style="background:${VERDIGRIS};color:${PAPER};font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 22px;display:inline-block;">Confirm Subscription</a></p>`, ctx);
   return {
     subject: 'Confirm your subscription — The Federalist by Post',
     html,
@@ -79,6 +79,10 @@ export function renderConfirmation(confirmUrl: string, ctx: EmailContext): Rende
   };
 }
 
+/**
+ * @param firstDelivery Human-formatted date for the reader (e.g. "July 25, 2026"),
+ *   not an ISO string — it is interpolated verbatim into the email copy.
+ */
 export function renderWelcome(program: Program, firstDelivery: string, ctx: EmailContext): RenderedEmail {
   const body = program === 'weekly'
     ? `<p style="font-size:15px;line-height:1.6;">Welcome to <strong>The Weekly Course</strong>. Federalist No. 1 arrives Saturday, <strong>${escapeHtml(firstDelivery)}</strong>, and one paper follows each Saturday for eighty-five weeks.</p>`
