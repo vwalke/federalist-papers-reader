@@ -1,0 +1,15 @@
+{
+  "name": "publius-post",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply publius-post --local",
+    "migrate:remote": "wrangler d1 migrations apply publius-post --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "wrangler": "^4.112.0"
+  }
+}

@@ -1,0 +1,20 @@
+name = "publius-post"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+routes = [
+  { pattern = "federalistreader.org/api/*", zone_name = "federalistreader.org" },
+  { pattern = "federalistreader.org/manage", zone_name = "federalistreader.org" }
+]
+
+[triggers]
+crons = ["0 11 * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "publius-post"
+database_id = "REPLACE-IN-TASK-13"   # placeholder until `wrangler d1 create` runs in the deployment task
+
+[vars]
+SITE_URL = "https://federalistreader.org"
+FROM_ADDRESS = "Publius — The Federalist <publius@federalistreader.org>"
