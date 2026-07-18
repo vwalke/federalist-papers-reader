@@ -26,6 +26,7 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     markDelivery: vi.fn(async () => {}),
     listRetryable: vi.fn(async () => []),
     purgeUnsubscribed: vi.fn(async () => {}),
+    purgeStalePending: vi.fn(async () => {}),
     ...overrides
   };
 }

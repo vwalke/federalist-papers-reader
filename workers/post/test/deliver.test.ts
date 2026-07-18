@@ -25,6 +25,7 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(), activate: vi.fn(), setStatus: vi.fn(), setProgram: vi.fn(),
     unsubscribe: vi.fn(), unsubscribeByEmail: vi.fn(), purgeUnsubscribed: vi.fn(async () => {}),
+    purgeStalePending: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
     listDeliverable: vi.fn(async () => subscribers.filter((s) => s.status === 'active')),
     autoResume: vi.fn(async () => {}),
@@ -45,6 +46,12 @@ describe('runDaily', () => {
     sent.push(mail); return 'msg';
   };
   beforeEach(() => { sent = []; });
+
+  it('purges stale pending signups older than seven days', async () => {
+    const db = makeStubDb([sub({ progress_index: 4 })]);
+    await runDaily(ENV, db, sender, '2026-07-18', 0);
+    expect(db.purgeStalePending).toHaveBeenCalledWith(7);
+  });
 
   it('sends the next weekly paper on Saturday and advances progress', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
