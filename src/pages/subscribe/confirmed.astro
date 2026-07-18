@@ -1,0 +1,47 @@
+---
+import GazetteMasthead from '../../components/GazetteMasthead.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Confirmed - The Federalist Papers"
+  description="Your subscription is confirmed. Weekly Course subscribers get their first paper next Saturday; As It Happened subscribers join when the season opens October 27."
+>
+  <article class="paper-sheet about-page subscribe-page">
+    <GazetteMasthead compact dateLine="By subscription" />
+
+    <header class="about-lead">
+      <p class="section-kicker">Confirmed</p>
+      <h1>Your subscription is sealed.</h1>
+      <p class="about-lead__standfirst">
+        Thank you for confirming. A welcome letter is already on its way with the details of your
+        program and how to pause, switch, or unsubscribe whenever you like.
+      </p>
+      <span class="about-lead__ornament" aria-hidden="true"></span>
+    </header>
+
+    <div class="subscribe-programs">
+      <section class="subscribe-programs__program">
+        <h2>If you chose the Weekly Course</h2>
+        <p>
+          Your first paper, No. 1, arrives next Saturday morning&mdash;then one more each Saturday
+          after, in order, for eighty-five weeks.
+        </p>
+      </section>
+
+      <section class="subscribe-programs__program">
+        <h2>If you chose As It Happened</h2>
+        <p>
+          The season opens October 27 with Federalist No. 1, then follows the 1787&ndash;88
+          calendar through the April finale. If you joined mid-season, your welcome letter shows
+          what has already run.
+        </p>
+      </section>
+    </div>
+
+    <p class="subscribe-privacy">
+      Don&rsquo;t want to wait for the mail? <a href="/papers/1/">Read Federalist No. 1</a> right
+      now, or <a href="/#all-papers">browse the full collection</a>.
+    </p>
+  </article>
+</BaseLayout>

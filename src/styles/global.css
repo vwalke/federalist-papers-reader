@@ -882,3 +882,31 @@ a:hover {
     border-block-start: 1px solid var(--color-rule);
   }
 }
+
+/* Subscribe pages: full pitch, "check your post", and "confirmed" all share
+   this program-description layout and the about-page typography above. */
+.subscribe-programs {
+  display: grid;
+  gap: var(--space-xl);
+  max-inline-size: 60rem;
+  margin: var(--space-2xl) auto 0;
+}
+
+.subscribe-programs__program h2 {
+  margin-block-end: var(--space-xs);
+}
+
+.subscribe-privacy {
+  max-inline-size: 56rem;
+  margin-inline: auto;
+  color: var(--color-muted-ink);
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  text-align: center;
+}
+
+@media (min-width: 56rem) {
+  .subscribe-programs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,57 @@
+---
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import SubscribeCoupon from '../components/SubscribeCoupon.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+import '../styles/paper.css';
+---
+
+<BaseLayout
+  title="Subscribe by post - The Federalist Papers"
+  description="Have the Federalist Papers delivered by email, one paper at a time&mdash;on a weekly schedule or on the original 1787&ndash;88 dates."
+>
+  <article class="paper-sheet about-page subscribe-page">
+    <GazetteMasthead compact dateLine="Subscribe by post" />
+
+    <header class="about-lead">
+      <p class="section-kicker">By subscription</p>
+      <h1>Have Publius call at your address.</h1>
+      <p class="about-lead__standfirst">
+        Choose a program below and the next paper&mdash;and every one after it&mdash;will find its
+        way to your inbox. No account, no password, and you can leave whenever you like.
+      </p>
+      <span class="about-lead__ornament" aria-hidden="true"></span>
+    </header>
+
+    <div class="subscribe-programs">
+      <section class="subscribe-programs__program" aria-labelledby="weekly-heading">
+        <h2 id="weekly-heading">The Weekly Course</h2>
+        <p>
+          One paper each Saturday morning, in original order, for eighty-five weeks. Your first
+          paper is No. 1, delivered the first Saturday after you confirm&mdash;so every subscriber
+          walks the same road, just on their own start date.
+        </p>
+      </section>
+
+      <section class="subscribe-programs__program" aria-labelledby="calendar-heading">
+        <h2 id="calendar-heading">As It Happened</h2>
+        <p>
+          Each paper arrives on the anniversary of its original 1787&ndash;88 publication, at the
+          same bursty pace New Yorkers read it in. The season opens October 27 and closes April
+          26, with the eight papers of the McLean&rsquo;s Edition finale delivered every three
+          days through April.
+        </p>
+      </section>
+    </div>
+
+    <div class="about-rule" aria-hidden="true"><span class="about-rule__mark"></span></div>
+
+    <p class="subscribe-privacy">
+      Your address is used for these papers and nothing else. We never sell or share it, and
+      unsubscribing is one click, honored instantly&mdash;no account, no login, no talking anyone
+      out of it.
+    </p>
+
+    <SubscribeCoupon />
+  </article>
+</BaseLayout>

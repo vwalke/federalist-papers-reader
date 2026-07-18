@@ -1,0 +1,51 @@
+---
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+---
+
+<aside class="subscribe-coupon" aria-labelledby="subscribe-coupon-title">
+  <h2 id="subscribe-coupon-title" class="subscribe-coupon__title">By Subscription</h2>
+  <p class="subscribe-coupon__pitch">
+    Have Publius call at your address&mdash;the next paper, and every one after it.
+  </p>
+  <form class="subscribe-coupon__form" method="post" action="/api/subscribe">
+    <fieldset class="subscribe-coupon__programs">
+      <legend class="visually-hidden">Delivery program</legend>
+      <label class="subscribe-coupon__program">
+        <input type="radio" name="program" value="weekly" checked />
+        <span>The Weekly Course&mdash;one paper each Saturday</span>
+      </label>
+      <label class="subscribe-coupon__program">
+        <input type="radio" name="program" value="calendar" />
+        <span>As It Happened&mdash;on the original dates</span>
+      </label>
+    </fieldset>
+    <p class="subscribe-coupon__honeypot" aria-hidden="true">
+      <label>
+        Leave this field empty
+        <input type="text" name="contact_time" tabindex="-1" autocomplete="off" />
+      </label>
+    </p>
+    <div class="subscribe-coupon__row">
+      <label class="visually-hidden" for="subscribe-email">Email address</label>
+      <input
+        id="subscribe-email"
+        type="email"
+        name="email"
+        required
+        placeholder="your@address.com"
+        autocomplete="email"
+      />
+      <button type="submit">Subscribe</button>
+    </div>
+    {turnstileSiteKey && (
+      <>
+        <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-size="invisible"></div>
+        <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+      </>
+    )}
+    <p class="subscribe-coupon__fine">
+      Your address is used for these papers and nothing else. Confirmed by return post.
+      <a href="/subscribe/">Learn more.</a>
+    </p>
+  </form>
+</aside>

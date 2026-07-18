@@ -1,0 +1,48 @@
+---
+import GazetteMasthead from '../../components/GazetteMasthead.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Check your post - The Federalist Papers"
+  description="A confirmation letter is on its way. Nothing arrives until you click it, and the link expires in seven days."
+>
+  <article class="paper-sheet about-page subscribe-page">
+    <GazetteMasthead compact dateLine="By subscription" />
+
+    <header class="about-lead">
+      <p class="section-kicker">Check your post</p>
+      <h1>A confirmation letter is on its way.</h1>
+      <p class="about-lead__standfirst">
+        We&rsquo;ve sent a note to the address you gave us. Open it and click the button inside to
+        confirm your subscription&mdash;nothing else arrives until you do.
+      </p>
+      <span class="about-lead__ornament" aria-hidden="true"></span>
+    </header>
+
+    <div class="subscribe-programs">
+      <section class="subscribe-programs__program">
+        <h2>Nothing sends until you confirm</h2>
+        <p>
+          This step exists so no one else can sign your address up on your behalf. Once you
+          confirm, your first paper is on its way.
+        </p>
+      </section>
+
+      <section class="subscribe-programs__program">
+        <h2>The link expires in seven days</h2>
+        <p>
+          Don&rsquo;t see the letter? Check a spam or promotions folder, then{' '}
+          <a href="/subscribe/">try subscribing again</a>&mdash;a fresh confirmation link resets
+          the clock.
+        </p>
+      </section>
+    </div>
+
+    <p class="subscribe-privacy">
+      In the meantime, the papers are always here to read. Start with{' '}
+      <a href="/papers/1/">Federalist No. 1</a>, or{' '}
+      <a href="/#all-papers">browse the full collection</a>.
+    </p>
+  </article>
+</BaseLayout>
