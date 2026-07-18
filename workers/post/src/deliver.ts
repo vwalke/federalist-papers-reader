@@ -129,5 +129,8 @@ export async function runDaily(
     }
   }
 
+  // The dead-man's switch: written only when the run reaches the end, so the
+  // nightly backup workflow can tell a completed run from a silent death.
+  await db.recordDailyRun(todayIso);
   console.log('runDaily done', { date: todayIso, sent, failed, retried });
 }

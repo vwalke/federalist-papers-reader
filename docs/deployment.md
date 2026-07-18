@@ -230,11 +230,16 @@ listening, and visitors get a 404.
 - **Watching the cron.** Tail the worker live with `npx wrangler tail` from
   `workers/post/`. A successful daily run logs a `runDaily done` line with the
   date and counts of sent, failed, and retried deliveries.
-- **Alerting.** Set up a Cloudflare notification so a failing cron doesn't
-  fail silently: in the Cloudflare dashboard, go to **Notifications**, add a
-  new notification for the `publius-post` worker's cron/error events, and
-  point it at a free email alert. Without this, a broken daily run just stops
-  sending papers with no signal until a subscriber notices.
+- **Alerting.** Cloudflare has no notification type for Workers cron
+  failures — its notification catalog covers no Workers events at all, and
+  Cron Events/Workers Logs are view-only. The dead-man's switch lives in the
+  nightly backup instead: every completed `runDaily` writes a
+  `last_daily_run` heartbeat into the `ops_meta` table, and the scheduled
+  12:00 UTC backup run fails — triggering GitHub's workflow-failure email —
+  if the heartbeat inside the dump isn't today's date. Manual backup runs
+  report the heartbeat without enforcing it (they may run before 11:00 UTC).
+  If the alert fires, check `npx wrangler tail` and the worker's Cron Events
+  in the dashboard.
 - **Production smoke test.** After any worker deploy, or as part of initial
   setup: subscribe with a personal email address from the live site, confirm
   the confirmation email arrives, click through to confirm, and confirm the

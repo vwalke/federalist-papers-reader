@@ -36,7 +36,8 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
       return true;
     }),
     markDelivery: vi.fn(async () => {}),
-    listRetryable: vi.fn(async () => [])
+    listRetryable: vi.fn(async () => []),
+    recordDailyRun: vi.fn(async () => {})
   } as unknown as Db & { claimed: string[] };
 }
 
@@ -110,6 +111,19 @@ describe('runDaily', () => {
     expect(sent).toHaveLength(1);
     expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-04', 'sent', 'msg');
     expect(db.setProgress).not.toHaveBeenCalled();
+  });
+
+  it('records the heartbeat after a completed run', async () => {
+    const db = makeStubDb([sub({ progress_index: 4 })]);
+    await runDaily(ENV, db, sender, '2026-07-18', 0);
+    expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-18');
+  });
+
+  it('records the heartbeat even when every send fails', async () => {
+    const db = makeStubDb([sub({ progress_index: 4 })]);
+    const failing = async () => { throw new Error('resend down'); };
+    await runDaily(ENV, db, failing, '2026-07-18', 0);
+    expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-18');
   });
 
   it('skips a retry whose subscriber has since unsubscribed', async () => {

@@ -43,6 +43,22 @@ jobs:
           grep -qi "subscribers" backup.sql
           test "$(wc -c < backup.sql)" -ge 1024
 
+      # Dead-man's switch for the delivery cron: every completed runDaily
+      # writes today's date into ops_meta, and this dump was taken an hour
+      # after the 11:00 UTC run. Cloudflare has no cron-failure alert type,
+      # so this failing scheduled run (and GitHub's email) is the alarm.
+      # Manual dispatches only report — they may run before 11:00 UTC.
+      - name: Verify the delivery cron heartbeat
+        run: |
+          hb=$(grep -oE "last_daily_run','[0-9]{4}-[0-9]{2}-[0-9]{2}" backup.sql \
+            | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+          today=$(date -u +%Y-%m-%d)
+          echo "last_daily_run: ${hb:-absent}; today (UTC): $today"
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$hb" != "$today" ]; then
+            echo "::error::Delivery cron heartbeat is stale or missing — the 11:00 UTC runDaily may not have completed."
+            exit 1
+          fi
+
       - name: Configure AWS credentials (OIDC role)
         if: ${{ env.AWS_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4

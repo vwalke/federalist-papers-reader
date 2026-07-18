@@ -19,6 +19,7 @@ export interface Db {
   listRetryable(): Promise<Array<{ subscriber_id: number; paper_number: number; scheduled_for: string }>>;
   purgeUnsubscribed(olderThanDays: number): Promise<void>;
   purgeStalePending(olderThanDays: number): Promise<void>;
+  recordDailyRun(todayIso: string): Promise<void>;
 }
 
 export function makeDb(d1: D1Database): Db {
@@ -110,6 +111,12 @@ export function makeDb(d1: D1Database): Db {
         `DELETE FROM subscribers WHERE status = 'pending'
          AND created_at < datetime('now', ?)`
       ).bind(`-${olderThanDays} days`).run();
+    },
+    async recordDailyRun(todayIso) {
+      await d1.prepare(
+        `INSERT INTO ops_meta (key, value, updated_at) VALUES ('last_daily_run', ?, datetime('now'))
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`
+      ).bind(todayIso).run();
     }
   };
 }
