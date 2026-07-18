@@ -16,7 +16,9 @@ describe('paper pages', () => {
     expect(html).toContain('property="og:image:width" content="1200"');
     expect(html).not.toContain('social-card.svg');
     expect(html).toContain('class="essay-flow"');
-    expect(html).toContain('THE FEDERALIST.');
+    expect(html).toContain('data-gazette="FŒDERALIST"');
+    expect(html).toContain('data-modern="FEDERALIST"');
+    expect(html).toContain('>FŒDERALIST</span>');
     expect(html).toContain('No. I.');
     expect(html).toContain('class="essay-signature">PUBLIUS</p>');
     expect(html).not.toContain('class="essay-heading__byline"');

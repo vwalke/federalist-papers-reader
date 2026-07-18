@@ -540,7 +540,8 @@
   }
 
   [data-reading-mode='gazette'] .essay-heading__title {
-    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+    /* Sized so the longest title clears its column with the wide OE ligature. */
+    font-size: clamp(1.15rem, 2.45vw, 1.41rem);
   }
 
   .commentary__details {
@@ -562,7 +563,7 @@
   }
 
   [data-reading-mode='gazette'] .essay-heading__title {
-    font-size: clamp(1.15rem, calc(2.1vw - 0.2rem), 1.45rem);
+    font-size: clamp(1.15rem, calc(2.05vw - 0.2rem), 1.41rem);
   }
 
   .commentary__details {
