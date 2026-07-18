@@ -5,7 +5,7 @@ export interface Db {
   getSubscriberById(id: number): Promise<Subscriber | null>;
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
   upsertPending(email: string, program: Program, tokenSecret: string): Promise<Subscriber>;
-  activate(id: number): Promise<void>;
+  activate(id: number, confirmIp: string | null): Promise<void>;
   setStatus(id: number, status: 'active' | 'paused', pausedUntil?: string | null): Promise<void>;
   setProgram(id: number, program: Program, progressIndex: number): Promise<void>;
   setProgress(id: number, progressIndex: number): Promise<void>;
@@ -40,10 +40,10 @@ export function makeDb(d1: D1Database): Db {
       if (!row) throw new Error('upsertPending returned no row');
       return row as unknown as Subscriber;
     },
-    async activate(id) {
+    async activate(id, confirmIp) {
       await d1.prepare(
-        `UPDATE subscribers SET status = 'active', confirmed_at = datetime('now')
-         WHERE id = ? AND status = 'pending'`).bind(id).run();
+        `UPDATE subscribers SET status = 'active', confirmed_at = datetime('now'), confirm_ip = ?
+         WHERE id = ? AND status = 'pending'`).bind(confirmIp, id).run();
     },
     async setStatus(id, status, pausedUntil = null) {
       await d1.prepare('UPDATE subscribers SET status = ?, paused_until = ? WHERE id = ?')

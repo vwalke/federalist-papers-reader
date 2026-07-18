@@ -11,7 +11,8 @@ CREATE TABLE subscribers (
   token_secret TEXT NOT NULL,                  -- per-subscriber HMAC salt; rotating revokes links
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   confirmed_at TEXT,
-  unsubscribed_at TEXT
+  unsubscribed_at TEXT,
+  confirm_ip TEXT                              -- IP that confirmed the subscription, as proof of consent
 );
 
 CREATE TABLE deliveries (
