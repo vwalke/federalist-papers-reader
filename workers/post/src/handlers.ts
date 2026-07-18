@@ -2,7 +2,7 @@
 import type { Db } from './db';
 import type { Env, Program, Subscriber } from './types';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
-import { renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
+import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
 import type { OutboundEmail } from './resend';
 
 export type Sender = (apiKey: string, mail: OutboundEmail) => Promise<string>;
@@ -13,8 +13,10 @@ function redirect(location: string): Response {
   return new Response(null, { status: 303, headers: { Location: location } });
 }
 
-function page(html: string, status = 200): Response {
-  return new Response(html, { status, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+function page(html: string, status = 200, noStore = false): Response {
+  const headers: Record<string, string> = { 'Content-Type': 'text/html; charset=utf-8' };
+  if (noStore) headers['Cache-Control'] = 'no-store';
+  return new Response(html, { status, headers });
 }
 
 async function emailContext(env: Env, sub: Subscriber): Promise<EmailContext> {
@@ -78,6 +80,15 @@ async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender)
   return redirect(`${env.SITE_URL}/subscribe/check-inbox/`);
 }
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** '2026-07-25' -> 'July 25, 2026' — no ICU dependence. */
+function humanDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  return `${MONTHS[month - 1]} ${day}, ${year}`;
+}
+
 function nextSendDate(fromIso: string, sendDow: number): string {
   const date = new Date(`${fromIso}T00:00:00Z`);
   do { date.setUTCDate(date.getUTCDate() + 1); } while (date.getUTCDay() !== sendDow);
@@ -102,7 +113,8 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
   await db.activate(sub.id);
   const ctx = await emailContext(env, sub);
   const today = new Date().toISOString().slice(0, 10);
-  const firstDelivery = sub.program === 'weekly' ? nextSendDate(today, sub.send_dow) : 'October 27';
+  const firstDelivery = sub.program === 'weekly'
+    ? humanDate(nextSendDate(today, sub.send_dow)) : 'October 27';
   await deliver(env, send, sub, renderWelcome(sub.program, firstDelivery, ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
 }
@@ -112,8 +124,8 @@ function managePage(sub: Subscriber, token: string): string {
     ? `Paper ${sub.progress_index} of 85 — The Weekly Course`
     : 'As It Happened — papers arrive on their original dates';
   const status = sub.status === 'paused'
-    ? `<p><strong>Paused${sub.paused_until ? ` until ${sub.paused_until}` : ''}.</strong></p>` : '';
-  const field = `<input type="hidden" name="token" value="${token}">`;
+    ? `<p><strong>Paused${sub.paused_until ? ` until ${escapeHtml(sub.paused_until)}` : ''}.</strong></p>` : '';
+  const field = `<input type="hidden" name="token" value="${escapeHtml(token)}">`;
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manage subscription — The Federalist</title>
 <style>body{font-family:Georgia,serif;background:#E7DFCE;color:#2A2118;max-width:34rem;margin:2rem auto;padding:0 1rem;}
@@ -133,8 +145,8 @@ button.quit{color:#7B2519}</style></head><body>
 async function handleManageGet(request: Request, env: Env, db: Db): Promise<Response> {
   const token = new URL(request.url).searchParams.get('token');
   const sub = await requireSubscriber(token, 'manage', env, db);
-  if (!sub || sub.status === 'unsubscribed') return page('<h1>That link is not valid.</h1>', 400);
-  return page(managePage(sub, token!));
+  if (!sub || sub.status === 'unsubscribed') return page('<h1>That link is not valid.</h1>', 400, true);
+  return page(managePage(sub, token!), 200, true);
 }
 
 async function handleManagePost(request: Request, env: Env, db: Db): Promise<Response> {
@@ -144,6 +156,9 @@ async function handleManagePost(request: Request, env: Env, db: Db): Promise<Res
   if (!sub) return page('<h1>That link is not valid.</h1>', 400);
   const action = String(form.get('action') ?? '');
   const until = (form.get('until') as string | null) || null;
+  if (until !== null && !/^\d{4}-\d{2}-\d{2}$/.test(until)) {
+    return page('<h1>That date is not valid.</h1><p>Use the form YYYY-MM-DD.</p>', 400);
+  }
   switch (action) {
     case 'pause': await db.setStatus(sub.id, 'paused', until); break;
     case 'resume': await db.setStatus(sub.id, 'active', null); break;
@@ -158,35 +173,55 @@ async function handleManagePost(request: Request, env: Env, db: Db): Promise<Res
   return redirect(`${env.SITE_URL}/manage?token=${token}`);
 }
 
-async function handleUnsubscribe(request: Request, env: Env, db: Db): Promise<Response> {
+// GET must not mutate: mail scanners prefetch links and would silently unsubscribe
+// readers. GET renders a single-button POST form; POST performs the unsubscribe.
+async function handleUnsubscribeGet(request: Request, env: Env, db: Db): Promise<Response> {
   const token = new URL(request.url).searchParams.get('token');
   const sub = await requireSubscriber(token, 'unsub', env, db);
-  if (!sub) return page('<h1>That link is not valid.</h1>', 400);
-  await db.unsubscribe(sub.id);
-  return page('<h1>Unsubscribed.</h1><p>Publius will call no more. <a href="/subscribe/">Re-subscribe</a> any time.</p>');
+  if (!sub) return page('<h1>That link is not valid.</h1>', 400, true);
+  return page(`<h1>Unsubscribe</h1>
+<form method="post" action="/api/unsubscribe?token=${escapeHtml(token!)}"><button>Unsubscribe</button></form>`, 200, true);
 }
+
+async function handleUnsubscribePost(request: Request, env: Env, db: Db): Promise<Response> {
+  const token = new URL(request.url).searchParams.get('token');
+  const sub = await requireSubscriber(token, 'unsub', env, db);
+  if (!sub) return page('<h1>That link is not valid.</h1>', 400, true);
+  await db.unsubscribe(sub.id);
+  return page('<h1>Unsubscribed.</h1><p>Publius will call no more. <a href="/subscribe/">Re-subscribe</a> any time.</p>', 200, true);
+}
+
+const SVIX_TOLERANCE_SECONDS = 5 * 60;
 
 async function verifySvix(request: Request, secret: string, payload: string): Promise<boolean> {
   const id = request.headers.get('svix-id');
   const timestamp = request.headers.get('svix-timestamp');
   const signatures = request.headers.get('svix-signature');
   if (!id || !timestamp || !signatures) return false;
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > SVIX_TOLERANCE_SECONDS) return false;
   const keyBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, '')), (c) => c.charCodeAt(0));
   const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const signed = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${id}.${timestamp}.${payload}`));
   const expected = btoa(String.fromCharCode(...new Uint8Array(signed)));
-  return signatures.split(' ').some((part) => part.split(',')[1] === expected);
+  return signatures.split(' ').some((part) => part.startsWith('v1,') && part.slice(3) === expected);
 }
 
 async function handleWebhook(request: Request, env: Env, db: Db): Promise<Response> {
+  // Fail closed: without a configured signing secret we cannot authenticate the
+  // caller, so never process the event.
+  if (!env.RESEND_WEBHOOK_SECRET) return new Response('webhook secret not configured', { status: 401 });
   const payload = await request.text();
-  if (env.RESEND_WEBHOOK_SECRET &&
-      !(await verifySvix(request, env.RESEND_WEBHOOK_SECRET, payload))) {
+  if (!(await verifySvix(request, env.RESEND_WEBHOOK_SECRET, payload))) {
     return new Response('bad signature', { status: 401 });
   }
-  const event = JSON.parse(payload) as { type: string; data: { to: string[] } };
-  if (event.type === 'email.bounced' || event.type === 'email.complained') {
-    for (const to of event.data.to ?? []) await db.unsubscribeByEmail(to);
+  try {
+    const event = JSON.parse(payload) as { type: string; data: { to: string[] } };
+    if (event.type === 'email.bounced' || event.type === 'email.complained') {
+      for (const to of event.data.to ?? []) await db.unsubscribeByEmail(to);
+    }
+  } catch {
+    return new Response('bad payload', { status: 400 });
   }
   return new Response('ok');
 }
@@ -198,8 +233,8 @@ export async function handleRequest(request: Request, env: Env, db: Db, send: Se
   if (method === 'GET' && pathname === '/api/confirm') return handleConfirm(request, env, db, send);
   if (method === 'GET' && pathname === '/manage') return handleManageGet(request, env, db);
   if (method === 'POST' && pathname === '/api/manage') return handleManagePost(request, env, db);
-  if (pathname === '/api/unsubscribe' && (method === 'GET' || method === 'POST'))
-    return handleUnsubscribe(request, env, db);
+  if (method === 'GET' && pathname === '/api/unsubscribe') return handleUnsubscribeGet(request, env, db);
+  if (method === 'POST' && pathname === '/api/unsubscribe') return handleUnsubscribePost(request, env, db);
   if (method === 'POST' && pathname === '/api/webhooks/resend') return handleWebhook(request, env, db);
   return new Response('Not found', { status: 404 });
 }

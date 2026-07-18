@@ -137,17 +137,34 @@ describe('manage', () => {
     await handleRequest(post('/api/manage', { token: await manageToken(), action: 'restart' }), ENV, db, sender);
     expect(db.setProgress).toHaveBeenCalledWith(7, 0);
   });
+
+  it('rejects a POST with an invalid token', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(
+      post('/api/manage', { token: 'junk', action: 'pause' }), ENV, db, sender);
+    expect(res.status).toBe(400);
+    expect(db.setStatus).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed pause date with 400', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(
+      post('/api/manage', { token: await manageToken(), action: 'pause', until: 'next Tuesday' }), ENV, db, sender);
+    expect(res.status).toBe(400);
+    expect(db.setStatus).not.toHaveBeenCalled();
+  });
 });
 
 describe('unsubscribe', () => {
-  it('honors the one-click GET link', async () => {
+  it('renders a confirm form on GET without unsubscribing (scanner-safe)', async () => {
     const { signToken } = await import('../src/tokens');
     const token = await signToken(7, 'unsub', ENV.TOKEN_SECRET, SUB.token_secret);
     const db = makeStubDb();
     const res = await handleRequest(
       new Request(`https://federalistreader.org/api/unsubscribe?token=${token}`), ENV, db, sender);
     expect(res.status).toBe(200);
-    expect(db.unsubscribe).toHaveBeenCalledWith(7);
+    expect(await res.text()).toContain('<form');
+    expect(db.unsubscribe).not.toHaveBeenCalled();
   });
 
   it('honors the RFC 8058 POST', async () => {
@@ -162,13 +179,53 @@ describe('unsubscribe', () => {
 });
 
 describe('resend webhook', () => {
-  it('unsubscribes on bounce when no signing secret is configured (dev mode)', async () => {
+  const WEBHOOK_SECRET = `whsec_${btoa('test-webhook-secret')}`;
+  const WEBHOOK_ENV = { ...ENV, RESEND_WEBHOOK_SECRET: WEBHOOK_SECRET } as Env;
+  const BOUNCE = JSON.stringify({ type: 'email.bounced', data: { to: ['reader@example.com'] } });
+
+  async function svixHeaders(payload: string): Promise<Record<string, string>> {
+    const id = 'msg_webhook_1';
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const keyBytes = Uint8Array.from(atob(WEBHOOK_SECRET.replace(/^whsec_/, '')), (c) => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey(
+      'raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const signed = await crypto.subtle.sign(
+      'HMAC', key, new TextEncoder().encode(`${id}.${timestamp}.${payload}`));
+    const signature = btoa(String.fromCharCode(...new Uint8Array(signed)));
+    return {
+      'Content-Type': 'application/json',
+      'svix-id': id, 'svix-timestamp': timestamp, 'svix-signature': `v1,${signature}`
+    };
+  }
+
+  function webhookRequest(headers: Record<string, string>): Request {
+    return new Request('https://federalistreader.org/api/webhooks/resend', {
+      method: 'POST', headers, body: BOUNCE
+    });
+  }
+
+  it('fails closed with 401 when no signing secret is configured', async () => {
     const db = makeStubDb();
-    const res = await handleRequest(new Request('https://federalistreader.org/api/webhooks/resend', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'email.bounced', data: { to: ['reader@example.com'] } })
-    }), ENV, db, sender);
+    const res = await handleRequest(
+      webhookRequest(await svixHeaders(BOUNCE)), ENV, db, sender);
+    expect(res.status).toBe(401);
+    expect(db.unsubscribeByEmail).not.toHaveBeenCalled();
+  });
+
+  it('unsubscribes on bounce with a valid signature', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(
+      webhookRequest(await svixHeaders(BOUNCE)), WEBHOOK_ENV, db, sender);
     expect(res.status).toBe(200);
     expect(db.unsubscribeByEmail).toHaveBeenCalledWith('reader@example.com');
+  });
+
+  it('rejects a bad signature with 401', async () => {
+    const db = makeStubDb();
+    const headers = await svixHeaders(BOUNCE);
+    headers['svix-signature'] = `v1,${btoa('forged-signature-bytes-here-1234')}`;
+    const res = await handleRequest(webhookRequest(headers), WEBHOOK_ENV, db, sender);
+    expect(res.status).toBe(401);
+    expect(db.unsubscribeByEmail).not.toHaveBeenCalled();
   });
 });
