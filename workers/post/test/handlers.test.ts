@@ -70,6 +70,14 @@ describe('POST /api/subscribe', () => {
     expect(sent[0].subject).toContain('Confirm');
   });
 
+  it('tolerates a trailing slash on the route (trailingSlash: always site)', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(
+      post('/api/subscribe/', { email: 'reader@example.com', program: 'weekly' }), ENV, db, sender);
+    expect(res.status).toBe(303);
+    expect(db.upsertPending).toHaveBeenCalled();
+  });
+
   it('silently accepts honeypot submissions without touching the database', async () => {
     const db = makeStubDb();
     const res = await handleRequest(
