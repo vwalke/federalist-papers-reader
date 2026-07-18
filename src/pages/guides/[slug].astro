@@ -49,22 +49,26 @@ const itemList = {
   jsonLd={itemList}
 >
   <article class="paper-sheet guide-page">
-    <GazetteMasthead compact dateLine={data.kicker} />
+    <GazetteMasthead compact dateLine="A reader's companion" />
 
     <header class="guide-lead">
       <p class="section-kicker">{data.kicker}</p>
       <h1>{data.title}</h1>
       <p class="guide-lead__standfirst">{data.standfirst}</p>
+      <span class="guide-lead__ornament" aria-hidden="true"></span>
     </header>
 
     <div class="guide-intro">
       <Content />
     </div>
 
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
     <CuratedList entries={data.papers} />
 
     <nav class="guide-crosslinks" aria-label="More guides">
-      <p class="section-kicker">More guides</p>
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-crosslinks__title">Further companions</h2>
       <ul>
         {others.map((g) => (
           <li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>

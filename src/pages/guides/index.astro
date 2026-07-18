@@ -5,6 +5,8 @@ import { getOrderedGuides } from '../../lib/guides';
 import '../../styles/guide.css';
 
 const guides = await getOrderedGuides();
+const waysIn = guides.filter((g) => g.data.kind === 'guide');
+const themes = guides.filter((g) => g.data.kind === 'theme');
 ---
 
 <BaseLayout
@@ -13,21 +15,47 @@ const guides = await getOrderedGuides();
   pageClass="guide-page"
 >
   <article class="paper-sheet guide-page">
-    <GazetteMasthead compact dateLine="Guides" />
+    <GazetteMasthead compact dateLine="A reader's companion" />
 
     <header class="guide-lead">
       <p class="section-kicker">Find your way in</p>
-      <h1>Guides to the Federalist Papers</h1>
-      <p class="guide-lead__standfirst">Short paths into eighty-five essays — by where to start and by theme.</p>
+      <h1>Guides to the papers</h1>
+      <p class="guide-lead__standfirst">
+        Short paths into eighty-five essays — by where to start, and by the questions they argue.
+      </p>
+      <span class="guide-lead__ornament" aria-hidden="true"></span>
     </header>
 
-    <ol class="curated-list">
-      {guides.map((g) => (
-        <li class="curated-entry">
-          <h2 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h2>
-          <p class="curated-entry__why">{g.data.standfirst}</p>
-        </li>
-      ))}
-    </ol>
+    <section class="guide-group" aria-labelledby="ways-in-title">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-group__title" id="ways-in-title">Ways in</h2>
+      <p class="guide-group__note">If the shelf of essays looks daunting, begin here.</p>
+      <ol class="curated-list">
+        {waysIn.map((g) => (
+          <li class="curated-entry">
+            <div class="curated-entry__body">
+              <h3 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h3>
+              <p class="curated-entry__why">{g.data.standfirst}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="guide-group" aria-labelledby="themes-title">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-group__title" id="themes-title">The papers by theme</h2>
+      <p class="guide-group__note">Four questions the essays keep returning to.</p>
+      <ol class="curated-list">
+        {themes.map((g) => (
+          <li class="curated-entry">
+            <div class="curated-entry__body">
+              <h3 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h3>
+              <p class="curated-entry__why">{g.data.standfirst}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
   </article>
 </BaseLayout>
