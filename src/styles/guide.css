@@ -1,5 +1,8 @@
 .guide-lead { margin-bottom: 2rem; }
-.guide-lead__standfirst { font-size: 1.15rem; line-height: 1.5; max-width: 40ch; }
+.guide-lead__standfirst { font-size: 1.15rem; line-height: 1.5; max-width: 48ch; }
+.guide-intro { max-width: 64ch; }
+.guide-intro p { margin: 0 0 1rem; line-height: 1.6; }
+.guide-intro p:last-child { margin-bottom: 0; }
 .curated-list { list-style: none; margin: 2rem 0 0; padding: 0; }
 .curated-entry { padding: 1.25rem 0; border-top: 1px solid var(--color-rule, #e0d3b6); }
 .curated-entry:first-child { border-top: none; }
