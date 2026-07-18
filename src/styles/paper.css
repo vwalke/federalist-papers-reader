@@ -447,13 +447,40 @@
   letter-spacing: 0.08em;
 }
 
+/* Essay coda: the share colophon and the subscription prompt sit together
+   at the foot of the essay, two notices on one line of the sheet. */
+.essay-coda {
+  display: grid;
+  gap: var(--space-lg);
+  /* The commentary block's bottom rule already closes the section above. */
+  margin-block-start: var(--space-xl);
+}
+
+@media (min-width: 46rem) {
+  .essay-coda {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .essay-coda .essay-share + .essay-share {
+    border-inline-start: 1px solid color-mix(in oklab, var(--color-rule) 60%, transparent);
+  }
+}
+
 /* Share colophon at the foot of the essay: turns readers into distributors. */
 .essay-share {
   position: relative;
   z-index: 1;
-  /* The commentary block's bottom rule already closes the section above. */
-  margin-block-start: var(--space-xl);
   text-align: center;
+}
+
+.essay-share__note {
+  max-inline-size: 34ch;
+  margin: var(--space-2xs) auto 0;
+  color: var(--color-muted-ink);
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.5;
 }
 
 .essay-share__ornament {
@@ -705,8 +732,7 @@
 
 [data-reading-mode='reader'] .essay-flow,
 [data-reading-mode='reader'] .commentary,
-[data-reading-mode='reader'] .essay-share,
-[data-reading-mode='reader'] .subscribe-coupon,
+[data-reading-mode='reader'] .essay-coda,
 [data-reading-mode='reader'] .essay-navigation {
   /* The measure grows with the text so enlarged type keeps ~68 characters. */
   max-inline-size: calc(68ch * var(--reading-scale, 1));
@@ -876,8 +902,7 @@
 @media print {
   .reading-toolbar,
   .paper-wear,
-  .essay-share,
-  .subscribe-coupon {
+  .essay-coda {
     display: none;
   }
 

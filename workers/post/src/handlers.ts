@@ -227,7 +227,12 @@ async function handleWebhook(request: Request, env: Env, db: Db): Promise<Respon
 }
 
 export async function handleRequest(request: Request, env: Env, db: Db, send: Sender): Promise<Response> {
-  const { pathname } = new URL(request.url);
+  const rawPathname = new URL(request.url).pathname;
+  // The site is built with trailingSlash: 'always', so tolerate a trailing
+  // slash on every route rather than 404ing on /api/subscribe/.
+  const pathname = rawPathname.length > 1 && rawPathname.endsWith('/')
+    ? rawPathname.slice(0, -1)
+    : rawPathname;
   const method = request.method;
   if (method === 'POST' && pathname === '/api/subscribe') return handleSubscribe(request, env, db, send);
   if (method === 'GET' && pathname === '/api/confirm') return handleConfirm(request, env, db, send);
