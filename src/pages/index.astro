@@ -48,6 +48,18 @@ const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
       </p>
     </section>
 
+    <section class="home-note" aria-labelledby="new-here-title">
+      <p class="section-kicker">New here?</p>
+      <h2 id="new-here-title">Not sure where to begin?</h2>
+      <p>
+        Start with a short reading path, or jump to the essays that matter most.
+      </p>
+      <p class="home-intro__action">
+        <a class="button-link" href="/guides/where-to-start/">Where to start <span aria-hidden="true">→</span></a>
+        <a href="/guides/most-important/">The most important papers</a>
+      </p>
+    </section>
+
     <IndexLedger papers={papers} />
   </article>
 </BaseLayout>

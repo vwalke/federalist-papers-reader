@@ -33,4 +33,10 @@ describe('guide pages', () => {
     expect(sitemap).toContain('https://federalistreader.org/guides/where-to-start/');
     expect(sitemap).toContain('https://federalistreader.org/guides/the-judiciary/');
   });
+
+  it('surfaces the guides from the homepage', async () => {
+    const home = await read('index.html');
+    expect(home).toContain('href="/guides/where-to-start/"');
+    expect(home).toContain('href="/guides/most-important/"');
+  });
 });
