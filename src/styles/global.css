@@ -197,8 +197,8 @@ a:hover {
   display: grid;
   gap: var(--space-xl);
   margin-block-start: var(--space-2xl);
-  padding-block: var(--space-xl);
-  border-block: 1px solid var(--color-rule);
+  padding-block-end: var(--space-2xl);
+  border-block-end: 1px solid var(--color-rule);
 }
 
 .home-intro__kicker,
@@ -244,30 +244,67 @@ a:hover {
   background: transparent;
 }
 
-.home-note {
+.home-ways {
   margin-block-start: var(--space-2xl);
+  padding-block-end: var(--space-2xl);
+  border-block-end: 1px solid var(--color-rule);
 }
 
-.home-note {
+.home-ways__head h2,
+.index-ledger__heading h2 {
+  margin-block-start: var(--space-xs);
+  font: 400 clamp(1.7rem, 3.2vw, 2.4rem)/1.1 var(--font-display);
+}
+
+.home-ways__grid {
   display: grid;
-  gap: var(--space-md);
-  max-inline-size: 70ch;
+  gap: var(--space-lg);
+  margin-block-start: var(--space-lg);
 }
 
-.home-note h2 {
-  font: 400 clamp(1.6rem, 3vw, 2.25rem)/1.1 var(--font-display);
+.home-ways__option {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
 }
 
-.home-note p {
+.home-ways__option h3 {
+  font: 400 1.35rem/1.15 var(--font-display);
+}
+
+.home-ways__option p {
+  max-inline-size: 52ch;
   font-size: 1.0625rem;
   line-height: 1.65;
 }
 
-.home-note__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm) var(--space-lg);
+.home-ways__action {
+  margin-block-start: var(--space-2xs);
+}
+
+.home-ways__action a {
+  color: var(--color-verdigris);
+  font-style: italic;
+  text-underline-offset: 0.18em;
+}
+
+@media (max-width: 61.99rem) {
+  .home-ways__grid > .home-ways__option + .home-ways__option {
+    padding-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--color-rule);
+  }
+}
+
+@media (min-width: 62rem) {
+  .home-ways__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-xl);
+  }
+
+  .home-ways__grid > .home-ways__option + .home-ways__option {
+    padding-inline-start: var(--space-xl);
+    border-inline-start: 1px solid var(--color-rule);
+  }
 }
 
 .about-lead,
