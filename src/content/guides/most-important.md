@@ -6,6 +6,8 @@ standfirst: "Scholars argue over the ranking, but a few essays turn up on nearly
 order: 2
 kind: guide
 papers:
+  - number: 1
+    why: "Hamilton opens the whole project and sets the stakes: can a people choose good government by reflection, or only stumble into it by accident and force? Start at the beginning."
   - number: 10
     why: "Madison on faction: why a large republic contains it better than a small one. The most cited of them all."
   - number: 51
@@ -28,6 +30,6 @@ There is no official ranking of the Federalist Papers, but read enough of them a
 the same handful keep coming up — the essays where Publius states an idea so
 clearly that we still quote it.
 
-These eight are a good core. Together they cover faction, the shape of the union,
-the presidency, the courts, and the argument over rights. Read them and you have
-the spine of the whole series.
+These nine are a good core. Together they cover the stakes of the project,
+faction, the shape of the union, the presidency, the courts, and the argument
+over rights. Read them and you have the spine of the whole series.

@@ -42,8 +42,12 @@ describe('guides content collection', () => {
     }
   });
 
-  it('gives every guide a papers block with at least one referenced paper and a why', async () => {
-    for (const slug of allSlugs) {
+  it('gives every curated guide a papers block with at least one referenced paper and a why', async () => {
+    // where-to-start is the hub: it routes to the companions instead of
+    // carrying a curated list of its own.
+    const curatedSlugs = allSlugs.filter((slug) => slug !== 'where-to-start');
+
+    for (const slug of curatedSlugs) {
       const fm = frontmatter(await readGuide(slug));
 
       const papersMatch = fm.match(/^papers:\s*\r?\n([\s\S]*)$/m);
@@ -56,5 +60,10 @@ describe('guides content collection', () => {
       const whys = papersBlock.match(/^\s*why:\s*\S/gm) ?? [];
       expect(whys.length, `${slug} pairs a why with its papers`).toBeGreaterThanOrEqual(numbers.length);
     }
+  });
+
+  it('keeps the where-to-start hub free of a curated papers list', async () => {
+    const fm = frontmatter(await readGuide('where-to-start'));
+    expect(fm).not.toMatch(/^papers:/m);
   });
 });

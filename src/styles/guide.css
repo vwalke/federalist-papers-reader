@@ -70,6 +70,12 @@
   margin-block-start: var(--space-md);
 }
 
+/* Primary action beneath the intro on the hub page. */
+.guide-cta {
+  margin-block-start: var(--space-lg);
+  text-align: center;
+}
+
 /* Ruled divider with the printer's diamond, as on the About page. */
 .guide-rule {
   display: grid;
