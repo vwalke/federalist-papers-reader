@@ -451,9 +451,8 @@
 .essay-share {
   position: relative;
   z-index: 1;
+  /* The commentary block's bottom rule already closes the section above. */
   margin-block-start: var(--space-xl);
-  padding-block-start: var(--space-lg);
-  border-block-start: 1px solid color-mix(in oklab, var(--color-rule) 48%, transparent);
   text-align: center;
 }
 
