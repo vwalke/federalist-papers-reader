@@ -28,6 +28,18 @@ describe('tokens', () => {
     expect(await verifyToken(token, 'manage', ENV_SECRET, async () => 'rotated')).toBeNull();
   });
 
+  it('rejects a non-canonical id form', async () => {
+    const token = await signToken(42, 'manage', ENV_SECRET, SUB_SECRET);
+    const padded = '0' + token; // '042.manage.<validSigFor42>'
+    expect(await verifyToken(padded, 'manage', ENV_SECRET, async () => SUB_SECRET)).toBeNull();
+  });
+
+  it('rejects a cross-id replay', async () => {
+    const token = await signToken(42, 'manage', ENV_SECRET, SUB_SECRET);
+    const sigFor42 = token.split('.')[2];
+    expect(await verifyToken(`43.manage.${sigFor42}`, 'manage', ENV_SECRET, async () => SUB_SECRET)).toBeNull();
+  });
+
   it('rejects garbage without throwing', async () => {
     expect(await verifyToken('not-a-token', 'manage', ENV_SECRET, async () => SUB_SECRET)).toBeNull();
     expect(await verifyToken('9.manage', 'manage', ENV_SECRET, async () => null)).toBeNull();
