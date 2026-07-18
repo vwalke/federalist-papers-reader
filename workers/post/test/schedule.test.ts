@@ -19,8 +19,11 @@ describe('papersDueOnDate', () => {
     expect(papersDueOnDate(papers, '2026-10-27')).toEqual([1]);
   });
   it('groups multiple papers sharing a date into one issue', () => {
-    const jan2 = papersDueOnDate(papers, '2027-01-02');
-    expect(jan2.length).toBeGreaterThan(1); // Fed 32 & 33 both ran January 2
+    expect(papersDueOnDate(papers, '2027-01-02')).toEqual([32, 33]); // Fed 32 & 33 both ran January 2
+  });
+  it('routes the McLean papers through their April override dates', () => {
+    expect(papersDueOnDate(papers, '2027-04-05')).toEqual([78]);
+    expect(papersDueOnDate(papers, '2027-05-28')).toEqual([]);
   });
   it('returns nothing between seasons', () => {
     expect(papersDueOnDate(papers, '2026-08-15')).toEqual([]);
