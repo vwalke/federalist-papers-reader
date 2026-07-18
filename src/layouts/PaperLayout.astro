@@ -22,13 +22,55 @@ interface Props {
 
 const { paper, previous, next } = Astro.props;
 const { data } = paper;
+
+const paperURL = Astro.site
+  ? new URL(`/papers/${data.number}/`, Astro.site).href
+  : undefined;
+const imageURL = Astro.site
+  ? new URL(`/social-cards/${data.number}.jpg`, Astro.site).href
+  : undefined;
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `Federalist No. ${data.number}: ${data.topic}`,
+    description: data.indexSummary,
+    author: { '@type': 'Person', name: data.author },
+    datePublished: data.publicationDate,
+    ...(paperURL ? { url: paperURL, mainEntityOfPage: paperURL } : {}),
+    ...(imageURL ? { image: imageURL } : {}),
+    isPartOf: { '@type': 'CreativeWorkSeries', name: 'The Federalist Papers' },
+    publisher: { '@type': 'Organization', name: 'Federalist Reader' }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      Astro.site && {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'The Federalist Papers',
+        item: new URL('/', Astro.site).href
+      },
+      paperURL && {
+        '@type': 'ListItem',
+        position: 2,
+        name: `Federalist No. ${data.number}`,
+        item: paperURL
+      }
+    ].filter(Boolean)
+  }
+];
 ---
 
 <BaseLayout
-  title={`Federalist No. ${data.number}: ${data.title} — Publius`}
+  title={`Federalist No. ${data.number}: ${data.topic} | Federalist Reader`}
   description={data.indexSummary}
   pageClass="essay-page"
   ogImage={`/social-cards/${data.number}.jpg`}
+  ogType="article"
+  jsonLd={structuredData}
   readingMode
 >
   <article class="paper-sheet paper-page" data-paper-number={data.number}>
