@@ -29,4 +29,25 @@ const papers = defineCollection({
   })
 });
 
-export const collections = { papers };
+const guides = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/guides' }),
+  schema: z.object({
+    title: z.string().min(1),
+    metaTitle: z.string().min(1).optional(),
+    description: z.string().min(1),
+    kicker: z.string().min(1),
+    standfirst: z.string().min(1),
+    order: z.number().int().min(1),
+    kind: z.enum(['guide', 'theme']),
+    papers: z
+      .array(
+        z.object({
+          number: z.number().int().min(1).max(85),
+          why: z.string().min(1)
+        })
+      )
+      .min(1)
+  })
+});
+
+export const collections = { papers, guides };
