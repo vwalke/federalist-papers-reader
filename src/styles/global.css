@@ -263,6 +263,13 @@ a:hover {
   line-height: 1.65;
 }
 
+.home-note__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-lg);
+}
+
 .about-lead,
 .about-origin,
 .about-family {
