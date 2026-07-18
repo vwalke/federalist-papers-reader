@@ -19,6 +19,8 @@ interface Props {
   pageClass?: string;
   readingMode?: boolean;
   ogImage?: string;
+  ogType?: string;
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const {
@@ -26,7 +28,9 @@ const {
   description,
   pageClass = '',
   readingMode = false,
-  ogImage = '/social-cards/default.jpg'
+  ogImage = '/social-cards/default.jpg',
+  ogType = 'website',
+  jsonLd
 } = Astro.props;
 const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
 // Social crawlers require an absolute image URL; relative paths are dropped.
@@ -47,7 +51,7 @@ const ogImageURL = Astro.site ? new URL(ogImage, Astro.site).href : ogImage;
     <meta property="og:site_name" content="Federalist Reader" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     {canonicalURL && <meta property="og:url" content={canonicalURL} />}
     <meta property="og:image" content={ogImageURL} />
     <meta property="og:image:type" content="image/jpeg" />
@@ -60,6 +64,7 @@ const ogImageURL = Astro.site ? new URL(ogImage, Astro.site).href : ogImage;
     <meta name="twitter:image" content={ogImageURL} />
     <meta name="twitter:image:alt" content={title} />
     {canonicalURL && <link rel="canonical" href={canonicalURL} />}
+    {jsonLd && <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

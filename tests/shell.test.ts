@@ -7,7 +7,7 @@ describe('static site shell', () => {
     const home = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
     const about = await readFile(new URL('../dist/about/index.html', import.meta.url), 'utf8');
 
-    expect(home).toContain('<title>The Federalist Papers</title>');
+    expect(home).toContain('<title>The Federalist Papers — Full Text and Summaries of All 85 Essays</title>');
     expect(about).toContain('<title>About this edition - The Federalist Papers</title>');
   });
 

@@ -12,6 +12,7 @@ const papers = defineCollection({
   schema: z.object({
     number: z.number().int().min(1).max(85),
     title: z.string().min(1),
+    topic: z.string().min(1),
     author: z.string().min(1),
     authorCertainty: z.enum(['certain', 'joint', 'disputed']),
     publicationKind: z.enum(['newspaper', 'book']),
