@@ -1,14 +1,212 @@
-.guide-lead { margin-bottom: 2rem; }
-.guide-lead__standfirst { font-size: 1.15rem; line-height: 1.5; max-width: 48ch; }
-.guide-intro { max-width: 64ch; }
-.guide-intro p { margin: 0 0 1rem; line-height: 1.6; }
-.guide-intro p:last-child { margin-bottom: 0; }
-.curated-list { list-style: none; margin: 2rem 0 0; padding: 0; }
-.curated-entry { padding: 1.25rem 0; border-top: 1px solid var(--color-rule, #e0d3b6); }
-.curated-entry:first-child { border-top: none; }
-.curated-entry__eyebrow { font-variant: small-caps; letter-spacing: 0.06em; font-size: 0.8rem; color: var(--color-muted-ink, #8a7a5c); margin: 0; }
-.curated-entry__topic { margin: 0.15rem 0 0; font-size: 1.3rem; }
-.curated-entry__why { margin: 0.35rem 0 0; line-height: 1.55; max-width: 60ch; }
-.curated-entry__link { margin: 0.4rem 0 0; font-style: italic; }
-.guide-crosslinks { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-rule, #e0d3b6); }
-.guide-crosslinks ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
+/* Guide pages: composed like a feature page of the gazette. */
+
+/* Lead: centered, like the About page's opening. */
+.guide-lead {
+  max-inline-size: 46rem;
+  margin-block-start: var(--space-2xl);
+  margin-inline: auto;
+  text-align: center;
+}
+
+.guide-lead h1 {
+  margin-block-start: var(--space-sm);
+  margin-inline: auto;
+  max-inline-size: 22ch;
+  font: 400 clamp(2.1rem, 6vw, 4.4rem)/1 var(--font-display);
+  text-wrap: balance;
+}
+
+.guide-lead__standfirst {
+  margin-block-start: var(--space-md);
+  margin-inline: auto;
+  max-inline-size: 42ch;
+  color: var(--color-muted-ink);
+  font-style: italic;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.guide-lead__ornament {
+  position: relative;
+  display: block;
+  inline-size: 3rem;
+  block-size: 0.7rem;
+  margin: var(--space-lg) auto 0;
+}
+
+.guide-lead__ornament::before,
+.guide-lead__ornament::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 1.35rem;
+  border-block-start: 1px solid var(--color-oxblood);
+}
+
+.guide-lead__ornament::before {
+  inset-inline-start: 0;
+  transform: rotate(7deg);
+}
+
+.guide-lead__ornament::after {
+  inset-inline-end: 0;
+  transform: rotate(-7deg);
+}
+
+/* Intro prose: a measured notice column, centered on the sheet. */
+.guide-intro {
+  max-inline-size: 56ch;
+  margin: var(--space-xl) auto 0;
+}
+
+.guide-intro p {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.guide-intro p + p {
+  margin-block-start: var(--space-md);
+}
+
+/* Ruled divider with the printer's diamond, as on the About page. */
+.guide-rule {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-2xl) auto;
+}
+
+.guide-rule::before,
+.guide-rule::after {
+  content: '';
+  block-size: 4px;
+  border-block: 1px solid var(--color-rule);
+}
+
+.guide-rule__mark {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--color-oxblood);
+  transform: rotate(45deg);
+}
+
+/* Curated list: a ledger feature spanning the sheet. */
+.curated-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  column-gap: var(--space-2xl);
+}
+
+.curated-entry {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-md) var(--space-lg);
+  align-items: start;
+  padding-block: var(--space-lg);
+  border-block-start: 1px solid var(--color-rule);
+}
+
+.curated-list > .curated-entry:first-child {
+  border-block-start: none;
+}
+
+.curated-entry__number {
+  color: var(--color-oxblood);
+  font: 400 clamp(2.4rem, 4vw, 3.2rem)/0.9 var(--font-display);
+  font-variant-numeric: oldstyle-nums;
+  min-inline-size: 2ch;
+  text-align: end;
+}
+
+.curated-entry__topic {
+  font: 400 clamp(1.3rem, 2.4vw, 1.6rem)/1.15 var(--font-display);
+  text-wrap: balance;
+}
+
+.curated-entry__meta {
+  margin-block-start: var(--space-2xs);
+  color: var(--color-muted-ink);
+  font: 700 0.72rem/1.35 var(--font-utility);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.curated-entry__why {
+  margin-block-start: var(--space-sm);
+  max-inline-size: 52ch;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.curated-entry__link {
+  margin-block-start: var(--space-sm);
+  font-style: italic;
+}
+
+@media (min-width: 68rem) {
+  .curated-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .curated-list > .curated-entry:nth-child(2) {
+    border-block-start: none;
+  }
+}
+
+/* Crosslinks: a centered closing notice. */
+.guide-crosslinks {
+  margin-block-start: var(--space-xl);
+  text-align: center;
+}
+
+.guide-crosslinks__title {
+  color: var(--color-muted-ink);
+  font: 700 0.72rem/1.3 var(--font-utility);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.guide-crosslinks ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-lg);
+  margin-block-start: var(--space-md);
+  padding: 0;
+  list-style: none;
+}
+
+.guide-crosslinks a {
+  font: 400 1.05rem/1.4 var(--font-display);
+}
+
+/* Guides index: grouped ledger of the companions. */
+.guide-group__title {
+  text-align: center;
+  font: 400 clamp(1.5rem, 3vw, 2.1rem)/1.1 var(--font-display);
+}
+
+.guide-group__note {
+  margin-block-start: var(--space-xs);
+  text-align: center;
+  color: var(--color-muted-ink);
+  font-style: italic;
+}
+
+.guide-group .curated-list {
+  margin-block-start: var(--space-lg);
+}
+
+.guide-group .curated-entry {
+  grid-template-columns: 1fr;
+}
+
+.guide-group .curated-entry__topic a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}

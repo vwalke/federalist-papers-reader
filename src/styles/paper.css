@@ -779,14 +779,28 @@
 }
 
 .essay-theme-link {
-  margin-top: 1.5rem;
+  margin-block-start: var(--space-xl);
+  text-align: center;
+}
+
+.essay-theme-link .section-kicker {
+  color: var(--color-muted-ink);
+  font: 700 0.7rem/1.2 var(--font-reading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .essay-theme-link ul {
   list-style: none;
   padding: 0;
-  margin: 0.35rem 0 0;
+  margin: var(--space-xs) 0 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 1rem;
+  justify-content: center;
+  gap: 0.35rem var(--space-lg);
+}
+
+.essay-theme-link a {
+  font: 400 1.05rem/1.4 var(--font-display);
 }
