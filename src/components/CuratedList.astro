@@ -17,12 +17,17 @@ const resolved = entries
 <ol class="curated-list">
   {resolved.map((entry) => (
     <li class="curated-entry">
-      <p class="curated-entry__eyebrow">Federalist No. {entry.number}</p>
-      <h2 class="curated-entry__topic">{entry.paper!.topic}</h2>
-      <p class="curated-entry__why">{entry.why}</p>
-      <p class="curated-entry__link">
-        <a href={`/papers/${entry.number}/`}>Read No. {entry.number} <span aria-hidden="true">→</span></a>
-      </p>
+      <p class="curated-entry__number" aria-hidden="true">{entry.number}</p>
+      <div class="curated-entry__body">
+        <h2 class="curated-entry__topic">
+          <span class="visually-hidden">Federalist No. {entry.number}: </span>{entry.paper!.topic}
+        </h2>
+        <p class="curated-entry__meta">No. {entry.number} · {entry.paper!.author}</p>
+        <p class="curated-entry__why">{entry.why}</p>
+        <p class="curated-entry__link">
+          <a href={`/papers/${entry.number}/`}>Read the paper <span aria-hidden="true">→</span></a>
+        </p>
+      </div>
     </li>
   ))}
 </ol>
