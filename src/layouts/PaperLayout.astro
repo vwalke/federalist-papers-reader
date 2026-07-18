@@ -8,6 +8,7 @@ import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
 import { getThemeGuidesForPaper } from '../lib/guides';
+import SubscribeCoupon from '../components/SubscribeCoupon.astro';
 import { formatIssueDateline, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
 
@@ -109,6 +110,8 @@ const themeGuides = await getThemeGuidesForPaper(data.number);
     />
 
     <EssayShare number={data.number} />
+
+    <SubscribeCoupon />
 
     <EssayNavigation
       previous={previous ? { number: previous.data.number, title: previous.data.title } : null}

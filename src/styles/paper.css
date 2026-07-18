@@ -511,6 +511,118 @@
   background: color-mix(in oklab, var(--color-rule) 60%, transparent);
 }
 
+/* By Subscription coupon: end-of-paper signup, framed like a clipped
+   newspaper notice. Highest-intent moment—the reader just finished a paper. */
+.subscribe-coupon {
+  position: relative;
+  z-index: 1;
+  margin-block-start: var(--space-xl);
+  padding-block: var(--space-lg);
+  border-block: 3px double var(--color-rule);
+  text-align: center;
+}
+
+.subscribe-coupon__title {
+  margin: 0;
+  font: 400 clamp(1.25rem, 3vw, 1.6rem)/1.15 var(--font-display);
+}
+
+.subscribe-coupon__pitch {
+  max-inline-size: 42ch;
+  margin: var(--space-xs) auto 0;
+  color: var(--color-muted-ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.subscribe-coupon__form {
+  display: grid;
+  gap: var(--space-md);
+  max-inline-size: 26rem;
+  margin: var(--space-lg) auto 0;
+  font-family: var(--font-utility);
+  text-align: start;
+}
+
+.subscribe-coupon__programs {
+  display: grid;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.subscribe-coupon__program {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-sm);
+  border: 1px solid var(--color-rule);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.subscribe-coupon__program input {
+  flex: 0 0 auto;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  accent-color: var(--color-oxblood);
+}
+
+/* Off-screen, not display:none, so bots that skip hidden fields still fill it. */
+.subscribe-coupon__honeypot {
+  position: absolute;
+  left: -9999px;
+}
+
+.subscribe-coupon__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.subscribe-coupon__row input[type='email'] {
+  flex: 1 1 12rem;
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-sm);
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.subscribe-coupon__row button {
+  flex: 0 0 auto;
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-lg);
+  border: 1px solid var(--color-ink);
+  color: var(--color-paper);
+  background: var(--color-ink);
+  font: 700 0.78rem/1.2 var(--font-utility);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 160ms cubic-bezier(0.25, 1, 0.5, 1), background-color 160ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.subscribe-coupon__row button:hover {
+  color: var(--color-ink);
+  background: transparent;
+}
+
+.subscribe-coupon__fine {
+  margin: 0;
+  color: var(--color-muted-ink);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.subscribe-coupon__fine a {
+  color: var(--color-verdigris);
+}
+
 .essay-navigation {
   position: relative;
   z-index: 1;
@@ -589,6 +701,7 @@
 [data-reading-mode='reader'] .essay-flow,
 [data-reading-mode='reader'] .commentary,
 [data-reading-mode='reader'] .essay-share,
+[data-reading-mode='reader'] .subscribe-coupon,
 [data-reading-mode='reader'] .essay-navigation {
   /* The measure grows with the text so enlarged type keeps ~68 characters. */
   max-inline-size: calc(68ch * var(--reading-scale, 1));
@@ -758,7 +871,8 @@
 @media print {
   .reading-toolbar,
   .paper-wear,
-  .essay-share {
+  .essay-share,
+  .subscribe-coupon {
     display: none;
   }
 
