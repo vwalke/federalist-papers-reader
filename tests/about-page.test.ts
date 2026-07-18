@@ -28,7 +28,7 @@ describe('About this edition', () => {
     expect(html).not.toContain('No account, no tracking your reading');
     expect(html).toContain('class="about-colophon"');
     expect(html).toContain('This is a production of');
-    expect(html).toContain('<a href="https://walkeforward.com">WalkeForward, LLC.</a>');
+    expect(html).toContain('<a href="https://walkeforward.com">Walke Forward, LLC.</a>');
 
     const introductionIndex = html.indexOf('class="about-origin__copy"');
     const portraitIndex = html.indexOf('class="about-portrait"');
