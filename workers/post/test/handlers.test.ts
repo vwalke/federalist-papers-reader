@@ -146,6 +146,15 @@ describe('manage', () => {
     expect(db.setStatus).not.toHaveBeenCalled();
   });
 
+  it('rejects actions for an unsubscribed subscriber', async () => {
+    const db = makeStubDb({ getSubscriberById: vi.fn(async () => ({ ...SUB, status: 'unsubscribed' as const })) });
+    const res = await handleRequest(
+      post('/api/manage', { token: await manageToken(), action: 'resume' }), ENV, db, sender);
+    expect(res.status).toBe(400);
+    expect(db.setStatus).not.toHaveBeenCalled();
+    expect(db.setProgram).not.toHaveBeenCalled();
+  });
+
   it('rejects a malformed pause date with 400', async () => {
     const db = makeStubDb();
     const res = await handleRequest(
