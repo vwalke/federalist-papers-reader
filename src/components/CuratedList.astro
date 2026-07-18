@@ -1,6 +1,5 @@
 ---
 import { getCollection } from 'astro:content';
-import { toRomanNumeral } from '../lib/paper-display';
 
 interface Props {
   entries: { number: number; why: string }[];
@@ -19,10 +18,10 @@ const resolved = entries
   {resolved.map((entry) => (
     <li class="curated-entry">
       <p class="curated-entry__eyebrow">Federalist No. {entry.number}</p>
-      <h3 class="curated-entry__topic">{entry.paper!.topic}</h3>
+      <h2 class="curated-entry__topic">{entry.paper!.topic}</h2>
       <p class="curated-entry__why">{entry.why}</p>
       <p class="curated-entry__link">
-        <a href={`/papers/${entry.number}/`}>Read No. {toRomanNumeral(entry.number)} <span aria-hidden="true">→</span></a>
+        <a href={`/papers/${entry.number}/`}>Read No. {entry.number} <span aria-hidden="true">→</span></a>
       </p>
     </li>
   ))}

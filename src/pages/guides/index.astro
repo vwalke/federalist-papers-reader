@@ -24,7 +24,7 @@ const guides = await getOrderedGuides();
     <ol class="curated-list">
       {guides.map((g) => (
         <li class="curated-entry">
-          <h3 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h3>
+          <h2 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h2>
           <p class="curated-entry__why">{g.data.standfirst}</p>
         </li>
       ))}
