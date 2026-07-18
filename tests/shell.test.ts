@@ -51,4 +51,10 @@ describe('static site shell', () => {
     expect(css).toContain('env(safe-area-inset-top)');
     expect(css).toContain('env(safe-area-inset-bottom)');
   });
+
+  it('links the guides from the header nav and footer', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    expect(html).toContain('href="/guides/where-to-start/">Start here</a>');
+    expect(html).toContain('href="/guides/">Guides</a>');
+  });
 });
