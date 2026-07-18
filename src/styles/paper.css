@@ -777,3 +777,16 @@
     font-family: var(--font-reading);
   }
 }
+
+.essay-theme-link {
+  margin-top: 1.5rem;
+}
+
+.essay-theme-link ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.35rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
