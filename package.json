@@ -13,6 +13,7 @@
     "generate:masthead": "node scripts/generate-masthead.mjs",
     "generate:social-cards": "node scripts/generate-social-cards.mjs",
     "generate:x-header": "node scripts/generate-x-header.mjs",
+    "generate:email-content": "node scripts/generate-email-content.mjs",
     "build": "pnpm validate:content && ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "test": "vitest run",
