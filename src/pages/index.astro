@@ -38,17 +38,44 @@ const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
       </p>
     </section>
 
-    <section class="home-note" aria-labelledby="reading-note-title">
-      <p class="section-kicker">How to read this edition</p>
-      <h2 id="reading-note-title">One paper at a time</h2>
-      <p>
-        The essays can feel imposing as a single volume. They are much more companionable at the
-        pace their first readers knew: one argument, one cup of coffee, one conversation at a time.
-        Your reading progress stays privately in this browser—there is no account to create.
-      </p>
-      <p class="home-note__actions">
-        <a class="button-link" href="/guides/where-to-start/">Where to start <span aria-hidden="true">→</span></a>
-      </p>
+    <section class="home-ways" aria-labelledby="reading-note-title">
+      <header class="home-ways__head">
+        <p class="section-kicker">How to read this edition</p>
+        <h2 id="reading-note-title">Three ways to begin</h2>
+      </header>
+      <div class="home-ways__grid">
+        <div class="home-ways__option">
+          <h3>One paper at a time</h3>
+          <p>
+            The essays are most companionable at the pace their first readers knew: one argument,
+            one cup of coffee, one conversation. Your progress stays privately in this
+            browser&mdash;there is no account to create.
+          </p>
+          <p class="home-ways__action">
+            <a href="/#all-papers">Browse the complete collection <span aria-hidden="true">↓</span></a>
+          </p>
+        </div>
+        <div class="home-ways__option">
+          <h3>Follow a companion</h3>
+          <p>
+            Short guides gather the essays everyone cites and trace the questions the series keeps
+            returning to&mdash;faction, the division of power, the presidency, the courts.
+          </p>
+          <p class="home-ways__action">
+            <a href="/guides/where-to-start/">Where to start <span aria-hidden="true">→</span></a>
+          </p>
+        </div>
+        <div class="home-ways__option">
+          <h3>Have it delivered</h3>
+          <p>
+            Publius can call at your address instead&mdash;one paper each Saturday, or each on the
+            very date it first appeared. Confirmed by return post; leave whenever you like.
+          </p>
+          <p class="home-ways__action">
+            <a href="/subscribe/">Subscribe by post <span aria-hidden="true">→</span></a>
+          </p>
+        </div>
+      </div>
     </section>
 
     <IndexLedger papers={papers} />
