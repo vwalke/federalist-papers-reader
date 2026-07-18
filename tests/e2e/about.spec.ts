@@ -12,7 +12,7 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
       return { x, y, width, height };
     };
 
-    const noteBoxes = [...about.querySelectorAll('.about-notes > section')].map((element) => {
+    const columnBoxes = [...about.querySelectorAll('.about-closing__column')].map((element) => {
       const { x, y, width, height } = element.getBoundingClientRect();
       return { x, y, width, height };
     });
@@ -20,7 +20,10 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
     return {
       originDisplay: getComputedStyle(about.querySelector('.about-origin') as Element).display,
       familyDisplay: getComputedStyle(about.querySelector('.about-family') as Element).display,
-      notesDisplay: getComputedStyle(about.querySelector('.about-notes') as Element).display,
+      closingDisplay: getComputedStyle(about.querySelector('.about-closing') as Element).display,
+      columnRuleWidth: getComputedStyle(
+        about.querySelector('.about-closing__column + .about-closing__column') as Element,
+      ).borderInlineStartWidth,
       copy: box('.about-origin__copy'),
       portrait: box('.about-portrait'),
       callout: box('.about-callout'),
@@ -36,14 +39,15 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
       documentsCopy: box('.about-documents__copy'),
       colophon: box('.about-colophon'),
       colophonTextAlign: getComputedStyle(about.querySelector('.about-colophon') as Element).textAlign,
-      noteBoxes,
+      columnBoxes,
       overflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
 
   expect(layout.originDisplay).toBe('grid');
   expect(layout.familyDisplay).toBe('grid');
-  expect(layout.notesDisplay).toBe('grid');
+  expect(layout.closingDisplay).toBe('grid');
+  expect(layout.columnRuleWidth).toBe('1px');
   expect(layout.copy.x).toBeLessThan(layout.portrait.x);
   expect(Math.abs(layout.copy.x - layout.callout.x)).toBeLessThan(2);
   expect(layout.callout.y).toBeGreaterThan(layout.copy.y);
@@ -59,10 +63,11 @@ test('composes the About story as an editorial grid on wide screens', async ({ p
   expect(layout.documentsCaption.y + layout.documentsCaption.height).toBeLessThanOrEqual(
     layout.documentsFigure.y + layout.documentsFigure.height + 1,
   );
-  expect(layout.noteBoxes).toHaveLength(2);
-  expect(Math.abs(layout.noteBoxes[0].y - layout.noteBoxes[1].y)).toBeLessThan(2);
+  expect(layout.columnBoxes).toHaveLength(2);
+  expect(layout.columnBoxes[0].x).toBeLessThan(layout.columnBoxes[1].x);
+  expect(Math.abs(layout.columnBoxes[0].y - layout.columnBoxes[1].y)).toBeLessThan(2);
   expect(layout.colophon.y).toBeGreaterThan(
-    Math.max(...layout.noteBoxes.map(({ y, height }) => y + height)),
+    Math.max(...layout.columnBoxes.map(({ y, height }) => y + height)),
   );
   expect(layout.colophonTextAlign).toBe('center');
   expect(layout.overflow).toBeLessThanOrEqual(0);
@@ -81,7 +86,7 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
       '.about-documents__head',
       '.about-documents__figure',
       '.about-documents__copy',
-      '.about-notes',
+      '.about-closing',
       '.about-colophon'
     ];
     const boxes = selectors.map((selector) => {
@@ -90,13 +95,13 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
       const { x, y, width, height } = element.getBoundingClientRect();
       return { x, y, width, height };
     });
-    const noteYPositions = [...about.querySelectorAll('.about-notes > section')].map(
+    const columnYPositions = [...about.querySelectorAll('.about-closing__column')].map(
       (element) => element.getBoundingClientRect().y
     );
 
     return {
       boxes,
-      noteYPositions,
+      columnYPositions,
       originDisplay: getComputedStyle(about.querySelector('.about-origin') as Element).display,
       documentsDisplay: getComputedStyle(
         about.querySelector('.about-documents') as Element,
@@ -117,8 +122,8 @@ test('keeps the About story linear and roomy on mobile', async ({ page }) => {
   expect(layout.boxes[6].y).toBeLessThan(layout.boxes[7].y);
   expect(layout.boxes[7].y).toBeLessThan(layout.boxes[8].y);
   expect(layout.documentsDisplay).toBe('block');
-  expect(layout.noteYPositions).toHaveLength(2);
-  expect(layout.noteYPositions[0]).toBeLessThan(layout.noteYPositions[1]);
+  expect(layout.columnYPositions).toHaveLength(2);
+  expect(layout.columnYPositions[0]).toBeLessThan(layout.columnYPositions[1]);
   expect(layout.overflow).toBeLessThanOrEqual(0);
 });
 
@@ -130,14 +135,14 @@ test('waits for a comfortable measure before enabling the grids', async ({ page 
     origin: getComputedStyle(about.querySelector('.about-origin') as Element).display,
     family: getComputedStyle(about.querySelector('.about-family') as Element).display,
     documents: getComputedStyle(about.querySelector('.about-documents') as Element).display,
-    notes: getComputedStyle(about.querySelector('.about-notes') as Element).display,
+    closing: getComputedStyle(about.querySelector('.about-closing') as Element).display,
     overflow: document.documentElement.scrollWidth - window.innerWidth
   }));
 
   expect(displays.origin).toBe('block');
   expect(displays.family).toBe('block');
   expect(displays.documents).toBe('block');
-  expect(displays.notes).toBe('block');
+  expect(displays.closing).toBe('block');
   expect(displays.overflow).toBeLessThanOrEqual(0);
 });
 
@@ -147,19 +152,21 @@ test('prints the About page in one column', async ({ page }) => {
   await page.emulateMedia({ media: 'print' });
 
   const printLayout = await page.locator('.about-page').evaluate((about) => {
-    const secondNote = about.querySelector('.about-notes > section:nth-child(2)') as Element;
+    const secondColumn = about.querySelector(
+      '.about-closing__column + .about-closing__column',
+    ) as Element;
     return {
       origin: getComputedStyle(about.querySelector('.about-origin') as Element).display,
       family: getComputedStyle(about.querySelector('.about-family') as Element).display,
       documents: getComputedStyle(about.querySelector('.about-documents') as Element).display,
-      notes: getComputedStyle(about.querySelector('.about-notes') as Element).display,
-      secondNoteDivider: getComputedStyle(secondNote).borderInlineStartWidth
+      closing: getComputedStyle(about.querySelector('.about-closing') as Element).display,
+      secondColumnRule: getComputedStyle(secondColumn).borderInlineStartWidth
     };
   });
 
   expect(printLayout.origin).toBe('block');
   expect(printLayout.family).toBe('block');
   expect(printLayout.documents).toBe('block');
-  expect(printLayout.notes).toBe('block');
-  expect(printLayout.secondNoteDivider).toBe('0px');
+  expect(printLayout.closing).toBe('block');
+  expect(printLayout.secondColumnRule).toBe('0px');
 });
