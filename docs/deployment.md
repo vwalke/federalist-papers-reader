@@ -170,7 +170,7 @@ the worker skips Turnstile verification on subscribe requests rather than
 failing closed.
 
 ```bash
-pnpm deploy
+pnpm run deploy
 ```
 
 Deploys the worker and activates its routes.
@@ -219,19 +219,28 @@ listening, and visitors get a 404.
 
 - **Paper content changes.** If a paper's frontmatter changes, re-run
   `pnpm generate:email-content` from the repo root, commit the regenerated
-  output, and redeploy the worker with `pnpm deploy` from `workers/post/`. The
-  worker reads its own bundled copy of this content, so a Pages deploy alone
-  does not update it.
+  output, and redeploy the worker with `pnpm run deploy` from `workers/post/`.
+  The worker reads its own bundled copy of this content, so a Pages deploy
+  alone does not update it.
 - **Deploys are manual.** The worker is never deployed by the Pages build.
-  Every code or content change requires an explicit `pnpm deploy` from
+  Every code or content change requires an explicit `pnpm run deploy` from
   `workers/post/`.
 - **Watching the cron.** Tail the worker live with `npx wrangler tail` from
   `workers/post/`. A successful daily run logs a `runDaily done` line with the
   date and counts of sent, failed, and retried deliveries.
+- **Alerting.** Set up a Cloudflare notification so a failing cron doesn't
+  fail silently: in the Cloudflare dashboard, go to **Notifications**, add a
+  new notification for the `publius-post` worker's cron/error events, and
+  point it at a free email alert. Without this, a broken daily run just stops
+  sending papers with no signal until a subscriber notices.
 - **Production smoke test.** After any worker deploy, or as part of initial
   setup: subscribe with a personal email address from the live site, confirm
   the confirmation email arrives, click through to confirm, and confirm the
-  welcome email arrives. Check D1 directly if needed:
+  welcome email arrives. Before announcing the worker publicly, also send
+  yourself one paper email and open it in Gmail, Outlook, and Apple Mail to
+  confirm it renders correctly in each, and confirm the message stays under
+  roughly 100KB (Gmail clips messages above that size). Check D1 directly if
+  needed:
 
   ```bash
   npx wrangler d1 execute publius-post --remote --command "SELECT email, status FROM subscribers"
