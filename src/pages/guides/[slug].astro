@@ -1,0 +1,75 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import GazetteMasthead from '../../components/GazetteMasthead.astro';
+import CuratedList from '../../components/CuratedList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getOrderedGuides } from '../../lib/guides';
+import '../../styles/guide.css';
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((guide) => ({ params: { slug: guide.id }, props: { guide } }));
+}
+
+interface Props {
+  guide: CollectionEntry<'guides'>;
+}
+
+const { guide } = Astro.props;
+const { data } = guide;
+const { Content } = await render(guide);
+
+const allGuides = await getOrderedGuides();
+const others = allGuides.filter((g) => g.id !== guide.id);
+
+const pageURL = Astro.site ? new URL(`/guides/${guide.id}/`, Astro.site).href : undefined;
+const itemList = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: data.title,
+  description: data.description,
+  ...(pageURL ? { url: pageURL } : {}),
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: data.papers.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `Federalist No. ${p.number}`,
+      ...(Astro.site ? { url: new URL(`/papers/${p.number}/`, Astro.site).href } : {})
+    }))
+  }
+};
+---
+
+<BaseLayout
+  title={`${data.metaTitle ?? data.title} | Federalist Reader`}
+  description={data.description}
+  pageClass="guide-page"
+  ogType="article"
+  jsonLd={itemList}
+>
+  <article class="paper-sheet guide-page">
+    <GazetteMasthead compact dateLine={data.kicker} />
+
+    <header class="guide-lead">
+      <p class="section-kicker">{data.kicker}</p>
+      <h1>{data.title}</h1>
+      <p class="guide-lead__standfirst">{data.standfirst}</p>
+    </header>
+
+    <div class="guide-intro">
+      <Content />
+    </div>
+
+    <CuratedList entries={data.papers} />
+
+    <nav class="guide-crosslinks" aria-label="More guides">
+      <p class="section-kicker">More guides</p>
+      <ul>
+        {others.map((g) => (
+          <li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </article>
+</BaseLayout>
