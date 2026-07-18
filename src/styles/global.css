@@ -369,17 +369,8 @@ a:hover {
 .about-callout h2 + p,
 .about-callout p + p,
 .about-notes h2 + p,
-.about-contact h2 + p,
 .about-contact p + p {
   margin-block-start: var(--space-md);
-}
-
-.about-contact {
-  max-inline-size: 74rem;
-}
-
-.about-contact__follow {
-  margin-block-start: var(--space-lg);
 }
 
 .about-family__head + .about-family__copy {
