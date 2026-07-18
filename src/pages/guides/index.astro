@@ -1,0 +1,33 @@
+---
+import GazetteMasthead from '../../components/GazetteMasthead.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getOrderedGuides } from '../../lib/guides';
+import '../../styles/guide.css';
+
+const guides = await getOrderedGuides();
+---
+
+<BaseLayout
+  title="Guides to the Federalist Papers | Federalist Reader"
+  description="Short guides into the Federalist Papers: where to start, the most important essays, and the papers on faction, separation of powers, the presidency, and the judiciary."
+  pageClass="guide-page"
+>
+  <article class="paper-sheet guide-page">
+    <GazetteMasthead compact dateLine="Guides" />
+
+    <header class="guide-lead">
+      <p class="section-kicker">Find your way in</p>
+      <h1>Guides to the Federalist Papers</h1>
+      <p class="guide-lead__standfirst">Short paths into eighty-five essays — by where to start and by theme.</p>
+    </header>
+
+    <ol class="curated-list">
+      {guides.map((g) => (
+        <li class="curated-entry">
+          <h3 class="curated-entry__topic"><a href={`/guides/${g.id}/`}>{g.data.title}</a></h3>
+          <p class="curated-entry__why">{g.data.standfirst}</p>
+        </li>
+      ))}
+    </ol>
+  </article>
+</BaseLayout>

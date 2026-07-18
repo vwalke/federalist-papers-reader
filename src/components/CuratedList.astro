@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import { toRomanNumeral } from '../lib/paper-display';
+
+interface Props {
+  entries: { number: number; why: string }[];
+}
+
+const { entries } = Astro.props;
+const papers = await getCollection('papers');
+const byNumber = new Map(papers.map((p) => [p.data.number, p.data]));
+
+const resolved = entries
+  .map((entry) => ({ ...entry, paper: byNumber.get(entry.number) }))
+  .filter((entry) => entry.paper);
+---
+
+<ol class="curated-list">
+  {resolved.map((entry) => (
+    <li class="curated-entry">
+      <p class="curated-entry__eyebrow">Federalist No. {entry.number}</p>
+      <h3 class="curated-entry__topic">{entry.paper!.topic}</h3>
+      <p class="curated-entry__why">{entry.why}</p>
+      <p class="curated-entry__link">
+        <a href={`/papers/${entry.number}/`}>Read No. {toRomanNumeral(entry.number)} <span aria-hidden="true">→</span></a>
+      </p>
+    </li>
+  ))}
+</ol>
