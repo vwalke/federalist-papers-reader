@@ -201,7 +201,9 @@ seconds; during the production smoke test below, confirm
 letting the subscribe form fail.
 
 **Routes sanity check.** In the Cloudflare dashboard, confirm
-`federalistreader.org/api/*` and `federalistreader.org/manage` route to the
+`federalistreader.org/api/*` and `federalistreader.org/manage*` (wildcard —
+exact routes do not match once a query string is attached, and every emailed
+manage link carries `?token=...`) route to the
 `publius-post` worker, and that every other path still serves the Pages site.
 If `www.federalistreader.org` is ever configured to serve the site directly
 instead of redirecting to the apex domain, `/api` posts made from `www` will
