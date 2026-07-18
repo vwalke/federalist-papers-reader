@@ -18,6 +18,9 @@ permissions:
 jobs:
   backup:
     runs-on: ubuntu-latest
+    env:
+      # Hoisted because the secrets context is unavailable in step `if:`.
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
     defaults:
       run:
         working-directory: workers/post
@@ -41,14 +44,14 @@ jobs:
           test "$(wc -c < backup.sql)" -ge 1024
 
       - name: Configure AWS credentials (OIDC role)
-        if: ${{ secrets.AWS_ROLE_ARN != '' }}
+        if: ${{ env.AWS_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Configure AWS credentials (access key)
-        if: ${{ secrets.AWS_ROLE_ARN == '' }}
+        if: ${{ env.AWS_ROLE_ARN == '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
