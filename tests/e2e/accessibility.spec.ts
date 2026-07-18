@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-for (const path of ['/', '/papers/1/', '/about/']) {
+for (const path of ['/', '/papers/1/', '/about/', '/subscribe/']) {
   test(`${path} has no automatically detectable accessibility violations`, async ({ page }) => {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
