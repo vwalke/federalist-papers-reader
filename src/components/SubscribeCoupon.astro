@@ -1,4 +1,10 @@
 ---
+interface Props {
+  /** The fine print links to /subscribe/; pass false there so it doesn't link to itself. */
+  showLearnMore?: boolean;
+}
+
+const { showLearnMore = true } = Astro.props;
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 ---
 
@@ -39,13 +45,19 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     </div>
     {turnstileSiteKey && (
       <>
-        <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-size="invisible"></div>
+        {/* Invisible operation is a widget MODE chosen when the sitekey is created
+            in the Cloudflare dashboard — PUBLIC_TURNSTILE_SITE_KEY must belong to an
+            invisible-mode widget. data-size is only for sizing visible widgets. */}
+        <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>
         <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       </>
     )}
     <p class="subscribe-coupon__fine">
-      Your address is used for these papers and nothing else. Confirmed by return post.
-      <a href="/subscribe/">Learn more.</a>
+      Your address is used for these papers and nothing else. Confirmed by return post.{showLearnMore && (
+        <>
+          {' '}<a href="/subscribe/">Learn more.</a>
+        </>
+      )}
     </p>
   </form>
 </aside>

@@ -593,6 +593,11 @@
   font: inherit;
 }
 
+.subscribe-coupon__row input[type='email']::placeholder {
+  color: var(--color-muted-ink);
+  opacity: 1;
+}
+
 .subscribe-coupon__row button {
   flex: 0 0 auto;
   min-block-size: 2.75rem;
