@@ -4,7 +4,9 @@ compatibility_date = "2026-07-01"
 
 routes = [
   { pattern = "federalistreader.org/api/*", zone_name = "federalistreader.org" },
-  { pattern = "federalistreader.org/manage", zone_name = "federalistreader.org" }
+  # Wildcard, not exact: exact routes fail to match when a query string is
+  # present, and every emailed manage link carries ?token=...
+  { pattern = "federalistreader.org/manage*", zone_name = "federalistreader.org" }
 ]
 
 [triggers]
@@ -13,7 +15,7 @@ crons = ["0 11 * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "publius-post"
-database_id = "REPLACE-IN-TASK-13"   # placeholder until `wrangler d1 create` runs in the deployment task
+database_id = "3aaf5f2e-30d5-4a67-aa57-ad0dcd0a63b6"
 
 [vars]
 SITE_URL = "https://federalistreader.org"
