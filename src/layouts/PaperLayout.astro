@@ -3,6 +3,7 @@ import type { CollectionEntry } from 'astro:content';
 
 import Commentary from '../components/Commentary.astro';
 import EssayNavigation from '../components/EssayNavigation.astro';
+import EssayShare from '../components/EssayShare.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
@@ -61,6 +62,8 @@ const { data } = paper;
       whyItMattered={data.whyItMattered}
       talkItOver={data.talkItOver}
     />
+
+    <EssayShare number={data.number} />
 
     <EssayNavigation
       previous={previous ? { number: previous.data.number, title: previous.data.title } : null}
