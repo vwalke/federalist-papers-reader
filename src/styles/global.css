@@ -265,8 +265,7 @@ a:hover {
 
 .about-lead,
 .about-origin,
-.about-family,
-.about-notes {
+.about-family {
   margin-inline: auto;
 }
 
@@ -344,8 +343,7 @@ a:hover {
 
 .about-origin,
 .about-family,
-.about-documents,
-.about-notes {
+.about-documents {
   max-inline-size: 74rem;
 }
 
@@ -368,7 +366,6 @@ a:hover {
 .about-family__copy p + p,
 .about-callout h2 + p,
 .about-callout p + p,
-.about-notes h2 + p,
 .about-closing h2 + p,
 .about-closing p + p {
   margin-block-start: var(--space-md);
@@ -595,19 +592,6 @@ a:hover {
   text-decoration-thickness: 0.1em;
 }
 
-.about-notes {
-  margin-block-start: 0;
-}
-
-.about-notes > section {
-  padding-block-start: var(--space-xl);
-  border-block-start: 1px solid var(--color-rule);
-}
-
-.about-notes > section + section {
-  margin-block-start: var(--space-xl);
-}
-
 .about-colophon {
   max-inline-size: 74rem;
   margin: var(--space-2xl) auto 0;
@@ -730,31 +714,6 @@ a:hover {
   .about-documents__copy {
     grid-area: copy;
     margin-block-start: 0;
-  }
-
-  .about-notes {
-    --about-column-gap: clamp(var(--space-lg), 3vw, var(--space-xl));
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .about-notes > section {
-    margin: 0;
-    padding-block-start: 0;
-    border-block-start: 0;
-  }
-
-  .about-notes > section + section {
-    margin-block-start: 0;
-  }
-
-  .about-notes > section:first-child {
-    padding-inline-end: var(--about-column-gap);
-  }
-
-  .about-notes > section:nth-child(2) {
-    padding-inline-start: var(--about-column-gap);
-    border-inline-start: 1px solid color-mix(in oklab, var(--color-rule) 62%, transparent);
   }
 
 }
@@ -882,8 +841,7 @@ a:hover {
 
   .about-origin,
   .about-family,
-  .about-documents,
-  .about-notes {
+  .about-documents {
     display: block;
     max-inline-size: none;
   }
@@ -906,14 +864,11 @@ a:hover {
 
   .about-callout,
   .about-family,
-  .about-documents__figure,
-  .about-notes > section {
+  .about-documents__figure {
     break-inside: avoid;
   }
 
-  .about-notes > section,
-  .about-notes > section:first-child,
-  .about-notes > section:nth-child(2) {
+  .about-closing__column > section + section {
     margin-block-start: var(--space-lg);
     padding: var(--space-lg) 0 0;
     border: 0;
