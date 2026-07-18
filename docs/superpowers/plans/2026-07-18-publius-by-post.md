@@ -1698,7 +1698,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     </div>
     {turnstileSiteKey && (
       <>
-        <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-size="invisible"></div>
+        <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       </>
     )}
@@ -1860,7 +1860,7 @@ pnpm deploy
 - [ ] **Step 2: External service setup (operator, in dashboards)**
 
 1. **Resend:** add domain `federalistreader.org`, install the SPF + DKIM DNS records it prints into Cloudflare DNS, wait for Verified. Add a DMARC TXT record: `v=DMARC1; p=quarantine; rua=mailto:vann@walkeonline.com`. Create a webhook to `https://federalistreader.org/api/webhooks/resend` for `email.bounced` + `email.complained`; copy its signing secret into the `RESEND_WEBHOOK_SECRET` secret.
-2. **Turnstile:** create a widget for `federalistreader.org` (invisible mode); put the site key in the Pages env var `PUBLIC_TURNSTILE_SITE_KEY` and the secret in the Worker secret `TURNSTILE_SECRET`.
+2. **Turnstile:** create the widget for `federalistreader.org` in INVISIBLE mode (invisible operation is a property of the widget/sitekey, not a `data-size` embed attribute); put the site key in the Pages env var `PUBLIC_TURNSTILE_SITE_KEY` and the secret in the Worker secret `TURNSTILE_SECRET`. Note implicit-render tokens expire after 300s — verify `data-refresh-expired='auto'` works during the production smoke test.
 3. **Routes sanity:** confirm in the Cloudflare dashboard that `federalistreader.org/api/*` and `/manage` route to `publius-post` and everything else still serves Pages.
 
 - [ ] **Step 3: Production smoke test**

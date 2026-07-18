@@ -896,12 +896,12 @@ a:hover {
   margin-block-end: var(--space-xs);
 }
 
-.subscribe-privacy {
+.about-page .subscribe-privacy {
   max-inline-size: 56rem;
   margin-inline: auto;
   color: var(--color-muted-ink);
-  font-size: 0.95rem !important;
-  line-height: 1.6 !important;
+  font-size: 0.95rem;
+  line-height: 1.6;
   text-align: center;
 }
 
