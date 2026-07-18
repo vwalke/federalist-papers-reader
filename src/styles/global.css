@@ -369,8 +369,60 @@ a:hover {
 .about-callout h2 + p,
 .about-callout p + p,
 .about-notes h2 + p,
-.about-contact p + p {
+.about-closing h2 + p,
+.about-closing p + p {
   margin-block-start: var(--space-md);
+}
+
+/* Closing spread: two newspaper columns. The left stacks the reading notes,
+   the right the contact and follow. Items flow down each column independently,
+   so the two sides need not line up row for row. */
+.about-closing {
+  max-inline-size: 74rem;
+  margin-inline: auto;
+}
+
+.about-closing__column > section + section,
+.about-closing__column + .about-closing__column {
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-xl);
+  border-block-start: 1px solid var(--color-rule);
+}
+
+@media (min-width: 56rem) {
+  .about-closing {
+    --about-column-gap: clamp(var(--space-lg), 3vw, var(--space-xl));
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .about-closing__column:first-child {
+    padding-inline-end: var(--about-column-gap);
+  }
+
+  .about-closing__column + .about-closing__column {
+    margin-block-start: 0;
+    padding-block-start: 0;
+    padding-inline-start: var(--about-column-gap);
+    border-block-start: 0;
+    border-inline-start: 1px solid color-mix(in oklab, var(--color-rule) 62%, transparent);
+  }
+}
+
+@media print {
+  .about-closing {
+    display: block;
+    max-inline-size: none;
+  }
+
+  .about-closing__column + .about-closing__column {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+
+  .about-closing__column > section {
+    break-inside: avoid;
+  }
 }
 
 .about-family__head + .about-family__copy {
