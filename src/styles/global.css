@@ -921,16 +921,23 @@ a:hover {
 }
 
 /* Subscribe pages: full pitch, "check your post", and "confirmed" all share
-   this program-description layout and the about-page typography above. */
+   this program-description layout and the about-page typography above. The
+   columns take the about-closing treatment — a fine center rule and fluid
+   gutter on desktop, ruled stacking on mobile — so the two programs read as
+   one composed spread rather than two competing blocks. */
 .subscribe-programs {
-  display: grid;
-  gap: var(--space-xl);
-  max-inline-size: 60rem;
+  max-inline-size: 66rem;
   margin: var(--space-2xl) auto 0;
 }
 
-.subscribe-programs__program h2 {
-  margin-block-end: var(--space-xs);
+.subscribe-programs__program h2 + p {
+  margin-block-start: var(--space-md);
+}
+
+.subscribe-programs__program + .subscribe-programs__program {
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-xl);
+  border-block-start: 1px solid var(--color-rule);
 }
 
 .about-page .subscribe-privacy {
@@ -945,6 +952,20 @@ a:hover {
 
 @media (min-width: 56rem) {
   .subscribe-programs {
+    --subscribe-column-gap: clamp(var(--space-lg), 3vw, var(--space-xl));
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .subscribe-programs__program:first-child {
+    padding-inline-end: var(--subscribe-column-gap);
+  }
+
+  .subscribe-programs__program + .subscribe-programs__program {
+    margin-block-start: 0;
+    padding-block-start: 0;
+    padding-inline-start: var(--subscribe-column-gap);
+    border-block-start: 0;
+    border-inline-start: 1px solid color-mix(in oklab, var(--color-rule) 62%, transparent);
   }
 }
