@@ -110,7 +110,20 @@
   letter-spacing: 0.04em;
 }
 
+/* The number spans rows 1-3, so an auto-placed status would fall into the
+   narrow number column on row 4 and wrap. Share the date's row instead,
+   pushed to the opposite edge like a ledger line. */
+.index-entry__date {
+  grid-row: 3;
+  grid-column: 2;
+  align-self: baseline;
+}
+
 .index-entry__status {
+  grid-row: 3;
+  grid-column: 2;
+  justify-self: end;
+  align-self: baseline;
   color: var(--color-ink);
 }
 
@@ -165,5 +178,13 @@
 
   .index-entry__number {
     grid-row: auto;
+  }
+
+  .index-entry__date,
+  .index-entry__status {
+    grid-row: auto;
+    grid-column: auto;
+    justify-self: auto;
+    align-self: start;
   }
 }
