@@ -31,6 +31,16 @@ export function papersDueOnDate(
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+export const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+
+const EASTERN_WEEKDAY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' });
+const DOW_BY_SHORT: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+/** The day after `now` on the Eastern calendar — a new subscriber's default send day. */
+export function nextDayDowEastern(now: Date): number {
+  return (DOW_BY_SHORT[EASTERN_WEEKDAY.format(now)] + 1) % 7;
+}
+
 export interface WeeklyState {
   progress_index: number;
   send_dow: number;

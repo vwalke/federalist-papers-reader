@@ -1,6 +1,6 @@
 // workers/post/test/schedule.test.ts
 import { describe, expect, it } from 'vitest';
-import { effectiveMonthDay, papersDueOnDate, weeklyPaperDue } from '../src/schedule';
+import { effectiveMonthDay, nextDayDowEastern, papersDueOnDate, weeklyPaperDue } from '../src/schedule';
 import papers from '../content/papers.json';
 
 describe('effectiveMonthDay', () => {
@@ -33,6 +33,25 @@ describe('papersDueOnDate', () => {
     expect(papersDueOnDate(fake, '2027-02-28')).toEqual([99]); // 2027 is not a leap year
     expect(papersDueOnDate(fake, '2028-02-28')).toEqual([]);   // 2028 is: Feb 29 exists
     expect(papersDueOnDate(fake, '2028-02-29')).toEqual([99]);
+  });
+});
+
+describe('nextDayDowEastern', () => {
+  it('assigns the day after signup', () => {
+    // 2026-07-20T16:00Z is Monday noon Eastern → Tuesday (2)
+    expect(nextDayDowEastern(new Date('2026-07-20T16:00:00Z'))).toBe(2);
+  });
+  it('uses the Eastern calendar day, not UTC', () => {
+    // 2026-07-21T01:00Z is already Tuesday in UTC but still Monday 9pm Eastern → Tuesday (2)
+    expect(nextDayDowEastern(new Date('2026-07-21T01:00:00Z'))).toBe(2);
+  });
+  it('wraps Saturday to Sunday', () => {
+    // 2026-07-18T16:00Z is Saturday noon Eastern → Sunday (0)
+    expect(nextDayDowEastern(new Date('2026-07-18T16:00:00Z'))).toBe(0);
+  });
+  it('respects the DST fall-back boundary', () => {
+    // 2026-11-01T06:30Z: DST ended at 06:00Z, so this is 1:30am EST Sunday → Monday (1)
+    expect(nextDayDowEastern(new Date('2026-11-01T06:30:00Z'))).toBe(1);
   });
 });
 
