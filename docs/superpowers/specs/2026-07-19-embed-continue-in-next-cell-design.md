@@ -32,9 +32,9 @@ becomes the combined action — no new furniture, no added height:
     collection →"; destination line stays "Return to the index".
   A small script sets the label from stored state on load, relabels on the
   `paper-read-change` event (so toggling the toolbar control updates it
-  live), and on click marks the paper read **only while in the unread
-  state** — if the reader deliberately unmarked a paper, plain "Next →"
-  navigation must not silently re-mark it.
+  live), and on click does exactly what the label states: in the unread
+  state it records the paper as read before navigating; in the read state
+  it is plain navigation with no writes.
 - **`EssayColophon.astro`** is deleted, along with its layout usage and all
   `.essay-colophon` CSS (including the reader-measure entry and mobile
   stacking rule). No new CSS is needed: the label span keeps the existing
@@ -48,7 +48,8 @@ becomes the combined action — no new furniture, no added height:
 
 - No separate bottom "mark as read" toggle: the combined Next action covers
   the finish-and-continue flow, and the toolbar toggle covers mark-and-stay.
-- No auto-marking from the read-state "Next →" label (see guard above).
+- No hidden side effects: the cell never does anything its current label
+  does not say.
 
 ## Testing
 
