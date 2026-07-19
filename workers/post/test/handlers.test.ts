@@ -155,6 +155,38 @@ describe('manage', () => {
     expect(db.setProgress).toHaveBeenCalledWith(7, 0);
   });
 
+  it('shows the delivery day and a picker for weekly subscribers', async () => {
+    const db = makeStubDb({ getSubscriberById: vi.fn(async () => ({ ...SUB, status: 'active' as const, send_dow: 2 })) });
+    const res = await handleRequest(
+      new Request(`https://federalistreader.org/manage?token=${await manageToken()}`), ENV, db, sender);
+    const html = await res.text();
+    expect(html).toContain('arriving Tuesdays');
+    expect(html).toContain('<option value="2" selected>Tuesday</option>');
+  });
+
+  it('hides the day picker for calendar subscribers', async () => {
+    const db = makeStubDb({ getSubscriberById: vi.fn(async () => ({ ...SUB, status: 'active' as const, program: 'calendar' as const })) });
+    const res = await handleRequest(
+      new Request(`https://federalistreader.org/manage?token=${await manageToken()}`), ENV, db, sender);
+    expect(await res.text()).not.toContain('name="dow"');
+  });
+
+  it('sets the delivery day', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(
+      post('/api/manage', { token: await manageToken(), action: 'setday', dow: '3' }), ENV, db, sender);
+    expect(res.status).toBe(303);
+    expect(db.setSendDow).toHaveBeenCalledWith(7, 3);
+  });
+
+  it('rejects an out-of-range day with 400', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(
+      post('/api/manage', { token: await manageToken(), action: 'setday', dow: '9' }), ENV, db, sender);
+    expect(res.status).toBe(400);
+    expect(db.setSendDow).not.toHaveBeenCalled();
+  });
+
   it('rejects a POST with an invalid token', async () => {
     const db = makeStubDb();
     const res = await handleRequest(

@@ -122,18 +122,26 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
 
 function managePage(sub: Subscriber, token: string): string {
   const progress = sub.program === 'weekly'
-    ? `Paper ${sub.progress_index} of 85 — The Weekly Course`
+    ? `Paper ${sub.progress_index} of 85 — The Weekly Course, arriving ${DOW_NAMES[sub.send_dow]}s`
     : 'As It Happened — papers arrive on their original dates';
   const status = sub.status === 'paused'
     ? `<p><strong>Paused${sub.paused_until ? ` until ${escapeHtml(sub.paused_until)}` : ''}.</strong></p>` : '';
   const field = `<input type="hidden" name="token" value="${escapeHtml(token)}">`;
+  const dayOptions = DOW_NAMES.map((name, dow) =>
+    `<option value="${dow}"${dow === sub.send_dow ? ' selected' : ''}>${name}</option>`).join('');
+  const dayForm = sub.program === 'weekly'
+    ? `<p><form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="setday">
+<label>Delivery day <select name="dow">${dayOptions}</select></label> <button>Set day</button></form></p>`
+    : '';
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manage subscription — The Federalist</title>
 <style>body{font-family:Georgia,serif;background:#E7DFCE;color:#2A2118;max-width:34rem;margin:2rem auto;padding:0 1rem;}
 form{display:inline}button{font-family:Arial,sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;
 background:#F4EFE2;border:1px solid #2A2118;padding:0.6rem 1rem;margin:0.25rem 0.25rem 0.25rem 0;cursor:pointer}
-button.quit{color:#7B2519}</style></head><body>
+button.quit{color:#7B2519}
+select{font-family:Arial,sans-serif;font-size:0.8rem;padding:0.5rem;background:#F4EFE2;border:1px solid #2A2118}</style></head><body>
 <h1>Your subscription</h1><p>${progress}</p>${status}
+${dayForm}
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="pause"><button>Pause</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="resume"><button>Resume</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="switch"><button>Switch program</button></form>
@@ -166,6 +174,14 @@ async function handleManagePost(request: Request, env: Env, db: Db): Promise<Res
     case 'switch':
       await db.setProgram(sub.id, sub.program === 'weekly' ? 'calendar' : 'weekly', 0); break;
     case 'restart': await db.setProgress(sub.id, 0); break;
+    case 'setday': {
+      const dow = Number(form.get('dow'));
+      if (!Number.isInteger(dow) || dow < 0 || dow > 6) {
+        return page('<h1>That day is not valid.</h1>', 400);
+      }
+      await db.setSendDow(sub.id, dow);
+      break;
+    }
     case 'unsubscribe':
       await db.unsubscribe(sub.id);
       return page('<h1>Unsubscribed.</h1><p>Publius will call no more. You may re-subscribe from the site any time.</p>');
