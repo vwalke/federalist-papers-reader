@@ -432,11 +432,6 @@
   margin-block-start: var(--space-sm);
 }
 
-.commentary__question {
-  padding-inline-start: var(--space-md);
-  border-inline-start: 3px solid var(--color-oxblood);
-}
-
 .commentary__attribution {
   margin-block-start: var(--space-lg);
   padding-block-start: var(--space-sm);

@@ -212,6 +212,7 @@ test('keeps the companion introduction coherent and its details responsive', asy
     const lead = commentary.querySelector('.commentary__lead') as Element;
     const details = commentary.querySelector('.commentary__details') as Element;
     const attribution = commentary.querySelector('.commentary__attribution') as Element;
+    const question = commentary.querySelector('.commentary__question') as Element;
     const sectionRects = [...details.querySelectorAll(':scope > section')].map((section) =>
       section.getBoundingClientRect()
     );
@@ -219,6 +220,7 @@ test('keeps the companion introduction coherent and its details responsive', asy
     const ornamentRect = ornament.getBoundingClientRect();
     const leadRect = lead.getBoundingClientRect();
     const attributionRect = attribution.getBoundingClientRect();
+    const questionStyle = getComputedStyle(question);
 
     return {
       ornamentText: ornament.textContent?.trim() ?? '',
@@ -232,6 +234,8 @@ test('keeps the companion introduction coherent and its details responsive', asy
       sectionYPositions: sectionRects.map(({ y }) => y),
       attributionY: attributionRect.y,
       detailsBottom: Math.max(...sectionRects.map(({ bottom }) => bottom)),
+      questionBorderInlineStart: questionStyle.borderInlineStartWidth,
+      questionPaddingInlineStart: questionStyle.paddingInlineStart,
       overflow: document.documentElement.scrollWidth - window.innerWidth
     };
   });
@@ -245,6 +249,8 @@ test('keeps the companion introduction coherent and its details responsive', asy
   expect(Math.max(...desktop.sectionWidths) / Math.min(...desktop.sectionWidths)).toBeLessThan(1.5);
   expect(Math.max(...desktop.sectionYPositions) - Math.min(...desktop.sectionYPositions)).toBeLessThan(2);
   expect(desktop.attributionY).toBeGreaterThan(desktop.detailsBottom);
+  expect(desktop.questionBorderInlineStart).toBe('0px');
+  expect(desktop.questionPaddingInlineStart).toBe('0px');
   expect(desktop.overflow).toBeLessThanOrEqual(0);
 
   await page.setViewportSize({ width: 390, height: 844 });
