@@ -936,6 +936,7 @@ a:hover {
 .about-page .subscribe-privacy {
   max-inline-size: 56rem;
   margin-inline: auto;
+  margin-block-start: var(--space-xl);
   color: var(--color-muted-ink);
   font-size: 0.95rem;
   line-height: 1.6;
