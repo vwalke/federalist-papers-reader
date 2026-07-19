@@ -27,6 +27,7 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     unsubscribe: vi.fn(), unsubscribeByEmail: vi.fn(), purgeUnsubscribed: vi.fn(async () => {}),
     purgeStalePending: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
+    setSendDow: vi.fn(async () => {}),
     listDeliverable: vi.fn(async () => subscribers.filter((s) => s.status === 'active')),
     autoResume: vi.fn(async () => {}),
     claimDelivery: vi.fn(async (id, paper, date) => {

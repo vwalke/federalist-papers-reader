@@ -4,11 +4,12 @@ import type { Program, Subscriber } from './types';
 export interface Db {
   getSubscriberById(id: number): Promise<Subscriber | null>;
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
-  upsertPending(email: string, program: Program, tokenSecret: string): Promise<Subscriber>;
+  upsertPending(email: string, program: Program, tokenSecret: string, sendDow: number): Promise<Subscriber>;
   activate(id: number, confirmIp: string | null): Promise<void>;
   setStatus(id: number, status: 'active' | 'paused', pausedUntil?: string | null): Promise<void>;
   setProgram(id: number, program: Program, progressIndex: number): Promise<void>;
   setProgress(id: number, progressIndex: number): Promise<void>;
+  setSendDow(id: number, dow: number): Promise<void>;
   unsubscribe(id: number): Promise<void>;
   unsubscribeByEmail(email: string): Promise<void>;
   listDeliverable(): Promise<Subscriber[]>;
@@ -28,16 +29,17 @@ export function makeDb(d1: D1Database): Db {
     getSubscriberById: (id) => one(d1.prepare('SELECT * FROM subscribers WHERE id = ?').bind(id)),
     getSubscriberByEmail: (email) =>
       one(d1.prepare('SELECT * FROM subscribers WHERE email = ?').bind(email.toLowerCase())),
-    async upsertPending(email, program, tokenSecret) {
+    async upsertPending(email, program, tokenSecret, sendDow) {
       const row = await d1.prepare(
-        `INSERT INTO subscribers (email, program, token_secret) VALUES (?, ?, ?)
+        `INSERT INTO subscribers (email, program, token_secret, send_dow) VALUES (?, ?, ?, ?)
          ON CONFLICT(email) DO UPDATE SET
            program = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.program ELSE subscribers.program END,
+           send_dow = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.send_dow ELSE subscribers.send_dow END,
            status = CASE WHEN subscribers.status = 'unsubscribed' THEN 'pending' ELSE subscribers.status END,
            token_secret = CASE WHEN subscribers.status = 'unsubscribed' THEN excluded.token_secret ELSE subscribers.token_secret END,
            unsubscribed_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.unsubscribed_at END
          RETURNING *`
-      ).bind(email.toLowerCase(), program, tokenSecret).first();
+      ).bind(email.toLowerCase(), program, tokenSecret, sendDow).first();
       if (!row) throw new Error('upsertPending returned no row');
       return row as unknown as Subscriber;
     },
@@ -57,6 +59,9 @@ export function makeDb(d1: D1Database): Db {
     async setProgress(id, progressIndex) {
       await d1.prepare('UPDATE subscribers SET progress_index = ? WHERE id = ?')
         .bind(progressIndex, id).run();
+    },
+    async setSendDow(id, dow) {
+      await d1.prepare('UPDATE subscribers SET send_dow = ? WHERE id = ?').bind(dow, id).run();
     },
     async unsubscribe(id) {
       await d1.prepare(

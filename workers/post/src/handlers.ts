@@ -1,6 +1,7 @@
 // workers/post/src/handlers.ts
 import type { Db } from './db';
 import type { Env, Program, Subscriber } from './types';
+import { nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
 import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
 import type { OutboundEmail } from './resend';
@@ -73,7 +74,7 @@ async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender)
   }
 
   const tokenSecret = crypto.randomUUID();
-  const sub = await db.upsertPending(email, program, tokenSecret);
+  const sub = await db.upsertPending(email, program, tokenSecret, nextDayDowEastern(new Date()));
   const ctx = await emailContext(env, sub);
   const confirm = await signToken(sub.id, 'confirm', env.TOKEN_SECRET, sub.token_secret);
   await deliver(env, send, sub, renderConfirmation(`${env.SITE_URL}/api/confirm?token=${confirm}`, ctx), ctx);

@@ -18,6 +18,7 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     setStatus: vi.fn(async () => {}),
     setProgram: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
+    setSendDow: vi.fn(async () => {}),
     unsubscribe: vi.fn(async () => {}),
     unsubscribeByEmail: vi.fn(async () => {}),
     listDeliverable: vi.fn(async () => []),
@@ -61,14 +62,20 @@ async function manageToken(): Promise<string> {
 }
 
 describe('POST /api/subscribe', () => {
-  it('creates a pending subscriber, sends confirmation, redirects', async () => {
-    const db = makeStubDb();
-    const res = await handleRequest(
-      post('/api/subscribe', { email: 'reader@example.com', program: 'weekly' }), ENV, db, sender);
-    expect(res.status).toBe(303);
-    expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/check-inbox/');
-    expect(db.upsertPending).toHaveBeenCalledWith('reader@example.com', 'weekly', expect.any(String));
-    expect(sent[0].subject).toContain('Confirm');
+  it('creates a pending subscriber with a next-day send day, sends confirmation, redirects', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-20T16:00:00Z')); // Monday noon Eastern
+    try {
+      const db = makeStubDb();
+      const res = await handleRequest(
+        post('/api/subscribe', { email: 'reader@example.com', program: 'weekly' }), ENV, db, sender);
+      expect(res.status).toBe(303);
+      expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/check-inbox/');
+      expect(db.upsertPending).toHaveBeenCalledWith('reader@example.com', 'weekly', expect.any(String), 2);
+      expect(sent[0].subject).toContain('Confirm');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('tolerates a trailing slash on the route (trailingSlash: always site)', async () => {
