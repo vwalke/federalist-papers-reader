@@ -650,6 +650,82 @@
   color: var(--color-verdigris);
 }
 
+/* Essay colophon: closing printer's furniture — fleuron, finis line, and the
+   departure actions — joined with the navigation grid as one bordered unit. */
+.essay-colophon {
+  position: relative;
+  z-index: 1;
+  margin-block-start: var(--space-lg);
+  padding: var(--space-lg) var(--space-md);
+  border: 1px solid var(--color-rule);
+  border-block-end: 0;
+  background: var(--color-newsprint);
+  text-align: center;
+}
+
+/* General sibling: Astro can interleave a script element between the two. */
+.essay-colophon ~ .essay-navigation {
+  margin-block-start: 0;
+}
+
+.essay-colophon__ornament {
+  display: block;
+  color: var(--color-oxblood);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.essay-colophon__finis {
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-muted-ink);
+  font: 700 0.7rem/1.2 var(--font-reading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.essay-colophon__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-md);
+  font: 700 0.72rem/1.2 var(--font-reading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.essay-colophon .progress-control {
+  border-color: var(--color-oxblood);
+  color: var(--color-oxblood);
+}
+
+.essay-colophon .progress-control[aria-pressed='true'] {
+  color: var(--color-paper);
+  background: var(--color-oxblood);
+}
+
+.essay-colophon__continue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-block-size: 2.8125rem;
+  padding-inline: var(--space-lg);
+  border: 1px solid var(--color-ink);
+  color: var(--color-paper);
+  background: var(--color-ink);
+  text-decoration: none;
+  transition: color 160ms cubic-bezier(0.25, 1, 0.5, 1), background-color 160ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.essay-colophon__continue:hover {
+  color: var(--color-ink);
+  background: transparent;
+}
+
 .essay-navigation {
   position: relative;
   z-index: 1;
@@ -728,6 +804,7 @@
 [data-reading-mode='reader'] .essay-flow,
 [data-reading-mode='reader'] .commentary,
 [data-reading-mode='reader'] .essay-coda,
+[data-reading-mode='reader'] .essay-colophon,
 [data-reading-mode='reader'] .essay-navigation {
   /* The measure grows with the text so enlarged type keeps ~68 characters. */
   max-inline-size: calc(68ch * var(--reading-scale, 1));
@@ -814,17 +891,23 @@
     display: none;
   }
 
-  .progress-control {
+  /* Only the toolbar's toggle collapses to its check mark; the colophon's
+     keeps the full label since the foot of the sheet has the room. */
+  .reading-toolbar .progress-control {
     inline-size: 2.8125rem;
     padding-inline: 0;
   }
 
-  .progress-control__mark {
+  .reading-toolbar .progress-control__mark {
     margin-inline-end: 0;
   }
 
-  .progress-control [data-progress-label] {
+  .reading-toolbar .progress-control [data-progress-label] {
     display: none;
+  }
+
+  .essay-colophon__actions {
+    flex-direction: column;
   }
 
   .essay-heading {

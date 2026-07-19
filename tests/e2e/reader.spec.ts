@@ -64,16 +64,43 @@ test('switches reading modes and remembers the preference', async ({ page }) => 
 });
 
 test('marks a paper read and keeps that state in this browser', async ({ page }) => {
-  const control = page.locator('[data-progress-control]');
+  const control = page.locator('.reading-toolbar [data-progress-control]');
+  const colophonControl = page.locator('.essay-colophon [data-progress-control]');
+  const continueControl = page.locator('[data-continue-control]');
   await expect(control).toHaveAttribute('aria-pressed', 'false');
   await expect(control).toHaveAttribute('aria-label', 'Mark as read');
+  await expect(continueControl).toContainText('Mark read & continue');
   await control.click();
   await expect(control).toHaveAttribute('aria-pressed', 'true');
   await expect(control).toHaveAttribute('aria-label', 'Marked as read');
   await expect(control).toContainText('Marked as read');
 
+  // Both controls track the same paper, whichever one is toggled.
+  await expect(colophonControl).toHaveAttribute('aria-pressed', 'true');
+  await expect(continueControl).toContainText('Continue to No. 2');
+  await colophonControl.click();
+  await expect(control).toHaveAttribute('aria-pressed', 'false');
+  await expect(continueControl).toContainText('Mark read & continue');
+  await colophonControl.click();
+
   await page.reload();
   await expect(control).toHaveAttribute('aria-pressed', 'true');
+  await page.goto('/');
+  await expect(page.locator('[data-index-paper="1"]')).toHaveAttribute('data-read', 'true');
+  await expect(page.locator('[data-progress-summary]')).toContainText('1 of 85');
+});
+
+test('marks read and moves to the next paper from the colophon', async ({ page }) => {
+  const continueControl = page.locator('[data-continue-control]');
+  await expect(continueControl).toContainText('Mark read & continue');
+  await continueControl.click();
+
+  await expect(page).toHaveURL(/\/papers\/2\/$/);
+  await expect(page.locator('.reading-toolbar [data-progress-control]')).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  );
+  await expect(page.locator('[data-continue-control]')).toContainText('Mark read & continue');
   await page.goto('/');
   await expect(page.locator('[data-index-paper="1"]')).toHaveAttribute('data-read', 'true');
   await expect(page.locator('[data-progress-summary]')).toContainText('1 of 85');

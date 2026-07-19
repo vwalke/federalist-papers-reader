@@ -29,23 +29,32 @@ const { number } = Astro.props;
   }
   const preferences = createPreferences(storage);
 
-  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-progress-control]')) {
-    const number = Number(button.dataset.progressControl);
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-progress-control]')];
+
+  function render(button: HTMLButtonElement, read: boolean) {
+    button.setAttribute('aria-pressed', String(read));
+    const text = read ? 'Marked as read' : 'Mark as read';
+    button.setAttribute('aria-label', text);
     const label = button.querySelector<HTMLElement>('[data-progress-label]');
+    if (label) label.textContent = text;
+  }
 
-    function render(read: boolean) {
-      button.setAttribute('aria-pressed', String(read));
-      const text = read ? 'Marked as read' : 'Mark as read';
-      button.setAttribute('aria-label', text);
-      if (label) label.textContent = text;
+  /* A paper can carry two controls (toolbar and colophon); a change through
+     either one re-renders both and tells the rest of the page. */
+  function applyRead(number: number, read: boolean) {
+    preferences.setPaperRead(number, read);
+    for (const button of buttons) {
+      if (Number(button.dataset.progressControl) === number) render(button, read);
     }
+    document.dispatchEvent(new CustomEvent('paper-read-change', { detail: { number, read } }));
+  }
 
-    render(preferences.isPaperRead(number));
+  for (const button of buttons) {
+    const number = Number(button.dataset.progressControl);
+    render(button, preferences.isPaperRead(number));
     button.hidden = false;
     button.addEventListener('click', () => {
-      const read = button.getAttribute('aria-pressed') !== 'true';
-      preferences.setPaperRead(number, read);
-      render(read);
+      applyRead(number, button.getAttribute('aria-pressed') !== 'true');
     });
   }
 </script>
