@@ -53,6 +53,8 @@ export function weeklyPaperDue(sub: WeeklyState, isoDate: string): number | null
   const today = new Date(`${isoDate}T00:00:00Z`);
   if (today.getUTCDay() !== sub.send_dow) return null;
   const confirmedDay = new Date(`${sub.confirmed_at.slice(0, 10)}T00:00:00Z`);
-  if (today.getTime() - confirmedDay.getTime() < 2 * DAY_MS) return null;
+  // Send only on a calendar day strictly after confirmation: the welcome email
+  // and the first paper never land the same day, but next-day sends work.
+  if (today.getTime() - confirmedDay.getTime() < DAY_MS) return null;
   return sub.progress_index + 1;
 }

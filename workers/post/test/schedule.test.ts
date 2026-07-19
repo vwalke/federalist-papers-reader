@@ -57,11 +57,16 @@ describe('nextDayDowEastern', () => {
 
 describe('weeklyPaperDue', () => {
   const base = { progress_index: 0, send_dow: 6, confirmed_at: '2026-07-16T09:00:00Z' };
-  it('sends the next paper on the send day when 2+ days have passed', () => {
+  it('sends the next paper on the send day when confirmation was an earlier day', () => {
     expect(weeklyPaperDue({ ...base }, '2026-07-18')).toBe(1); // Thu confirm → Sat send
+    expect(weeklyPaperDue({ ...base, confirmed_at: '2026-07-17T22:00:00Z' }, '2026-07-18')).toBe(1); // Fri night → Sat
   });
-  it('waits a week when confirmation was too recent', () => {
-    expect(weeklyPaperDue({ ...base, confirmed_at: '2026-07-17T22:00:00Z' }, '2026-07-18')).toBeNull();
+  it('waits a week when confirmation lands on the send day itself', () => {
+    expect(weeklyPaperDue({ ...base, confirmed_at: '2026-07-18T05:00:00Z' }, '2026-07-18')).toBeNull();
+  });
+  it('honors a non-Saturday send day', () => {
+    expect(weeklyPaperDue({ ...base, send_dow: 2 }, '2026-07-21')).toBe(1); // Tuesday
+    expect(weeklyPaperDue({ ...base, send_dow: 2 }, '2026-07-18')).toBeNull();
   });
   it('does nothing off the send day', () => {
     expect(weeklyPaperDue({ ...base }, '2026-07-19')).toBeNull();
