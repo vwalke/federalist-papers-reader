@@ -109,6 +109,34 @@ test('marks read and moves on from the Next cell', async ({ page }) => {
   await expect(page.locator('[data-progress-summary]')).toContainText('2 of 85');
 });
 
+test('toggles read state from the index ledger', async ({ page }) => {
+  await page.goto('/');
+  const entry = page.locator('[data-index-paper="3"]');
+  const toggle = entry.locator('[data-index-status]');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(toggle).toContainText('Unread');
+  await toggle.click();
+  await expect(entry).toHaveAttribute('data-read', 'true');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(toggle).toHaveAttribute('aria-label', 'Mark No. 3 as unread');
+  await expect(page.locator('[data-progress-summary]')).toContainText('1 of 85');
+
+  // Catch-up flow: with the unread filter active, marking read drops the row.
+  await page.selectOption('select[name="status"]', 'unread');
+  await expect(page.locator('[data-index-count]')).toContainText('84 of 85');
+  const nextEntry = page.locator('[data-index-paper="5"]');
+  await nextEntry.locator('[data-index-status]').click();
+  await expect(nextEntry).toBeHidden();
+  await expect(page.locator('[data-index-count]')).toContainText('83 of 85');
+  await expect(page.locator('[data-progress-summary]')).toContainText('2 of 85');
+
+  // Unmarking works the same from the read view.
+  await page.selectOption('select[name="status"]', 'read');
+  await toggle.click();
+  await expect(entry).toBeHidden();
+  await expect(page.locator('[data-progress-summary]')).toContainText('1 of 85');
+});
+
 test('uses one Gazette column on mobile without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/papers/10/');

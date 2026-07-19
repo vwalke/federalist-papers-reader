@@ -81,10 +81,17 @@ function formatDate(value: string): string {
         </div>
         <p class="index-entry__author">{data.author}</p>
         <p class="index-entry__date"><time datetime={data.publicationDate}>{formatDate(data.publicationDate)}</time></p>
-        <p class="index-entry__status" data-index-status>
+        <button
+          class="index-entry__status"
+          type="button"
+          data-index-status
+          aria-pressed="false"
+          aria-label={`Mark No. ${data.number} as read`}
+          hidden
+        >
           <span class="index-entry__printer-mark" aria-hidden="true">○</span>
           <span data-index-status-label>Unread</span>
-        </p>
+        </button>
       </li>
     ))}
   </ol>
@@ -144,12 +151,18 @@ function formatDate(value: string): string {
       for (const paper of ordered) {
         const element = elements.get(paper.number);
         if (!element) continue;
+        const read = readNumbers.has(paper.number);
         element.hidden = !visibleNumbers.has(paper.number);
-        element.dataset.read = String(readNumbers.has(paper.number));
+        element.dataset.read = String(read);
+        const toggle = element.querySelector<HTMLButtonElement>('[data-index-status]');
         const statusLabel = element.querySelector<HTMLElement>('[data-index-status-label]');
         const mark = element.querySelector<HTMLElement>('.index-entry__printer-mark');
-        if (statusLabel) statusLabel.textContent = readNumbers.has(paper.number) ? 'Read' : 'Unread';
-        if (mark) mark.textContent = readNumbers.has(paper.number) ? '✓' : '○';
+        if (toggle) {
+          toggle.setAttribute('aria-pressed', String(read));
+          toggle.setAttribute('aria-label', `Mark No. ${paper.number} as ${read ? 'unread' : 'read'}`);
+        }
+        if (statusLabel) statusLabel.textContent = read ? 'Read' : 'Unread';
+        if (mark) mark.textContent = read ? '✓' : '○';
         paperList.append(element);
       }
 
@@ -167,6 +180,16 @@ function formatDate(value: string): string {
           link.querySelector('[data-continue-label]')!.textContent = 'Revisit Paper No. 1';
         }
       }
+    }
+
+    for (const [number, element] of elements) {
+      const toggle = element.querySelector<HTMLButtonElement>('[data-index-status]');
+      if (!toggle) continue;
+      toggle.hidden = false;
+      toggle.addEventListener('click', () => {
+        preferences.setPaperRead(number, !preferences.isPaperRead(number));
+        render();
+      });
     }
 
     form.hidden = false;

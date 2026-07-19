@@ -119,12 +119,30 @@
   align-self: baseline;
 }
 
+/* The status line is a toggle: same ledger typography, with padding pulled
+   back by negative margins so the hit target grows without moving the ink. */
 .index-entry__status {
   grid-row: 3;
   grid-column: 2;
   justify-self: end;
   align-self: baseline;
+  margin: calc(var(--space-sm) * -1);
+  padding: var(--space-sm);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--color-ink);
+  cursor: pointer;
+}
+
+.index-entry__status[hidden] {
+  display: none;
+}
+
+.index-entry__status:hover [data-index-status-label] {
+  text-decoration: underline;
+  text-decoration-color: var(--color-verdigris);
+  text-underline-offset: 0.2em;
 }
 
 .index-entry__printer-mark {

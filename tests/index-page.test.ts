@@ -8,6 +8,8 @@ describe('complete paper index', () => {
     const rows = html.match(/data-index-paper=/g) ?? [];
 
     expect(rows).toHaveLength(85);
+    expect(html.match(/data-index-status\s+aria-pressed="false"/g) ?? []).toHaveLength(85);
+    expect(html).toContain('aria-label="Mark No. 85 as read"');
     expect(html).toContain('Search all papers');
     expect(html).toContain('Sort by');
     expect(html).toContain('Alexander Hamilton');
