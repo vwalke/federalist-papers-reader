@@ -50,9 +50,9 @@ describe('paper pages', () => {
     expect(html).not.toContain('>View</span>');
     expect(html).toContain('data-paper-wear="1"');
     expect(html).toContain('href="/papers/2/"');
-    expect(html).toContain('Here ends No. I.');
+    expect(html).not.toContain('essay-colophon');
     expect(html).toContain('data-continue-control="1"');
-    expect(html).toContain('Mark read &amp; continue');
+    expect(html).toContain('Mark read &amp; continue →');
   });
 
   it('renders disputed attribution without duplicated qualification', async () => {
@@ -67,8 +67,8 @@ describe('paper pages', () => {
 
     expect(html).toContain('No. LXXXV.');
     expect(html).toContain('New-York · First collected May 28, 1788');
-    expect(html).toContain('Here ends No. LXXXV.');
-    expect(html).toContain('Mark read &amp; return to the collection');
+    expect(html).toContain('Mark read &amp; finish →');
+    expect(html).toContain('Return to the index');
   });
 
   it('ships a committed social card for every paper plus a shared default', async () => {

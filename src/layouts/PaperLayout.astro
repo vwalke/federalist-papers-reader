@@ -2,7 +2,6 @@
 import type { CollectionEntry } from 'astro:content';
 
 import Commentary from '../components/Commentary.astro';
-import EssayColophon from '../components/EssayColophon.astro';
 import EssayNavigation from '../components/EssayNavigation.astro';
 import EssayShare from '../components/EssayShare.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
@@ -115,12 +114,8 @@ const themeGuides = await getThemeGuidesForPaper(data.number);
       <SubscribePrompt />
     </div>
 
-    <EssayColophon
-      number={data.number}
-      next={next ? { number: next.data.number, title: next.data.title } : null}
-    />
-
     <EssayNavigation
+      number={data.number}
       previous={previous ? { number: previous.data.number, title: previous.data.title } : null}
       next={next ? { number: next.data.number, title: next.data.title } : null}
     />

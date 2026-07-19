@@ -5,11 +5,15 @@ interface PaperLink {
 }
 
 interface Props {
+  number: number;
   previous: PaperLink | null;
   next: PaperLink | null;
 }
 
-const { previous, next } = Astro.props;
+const { number, previous, next } = Astro.props;
+
+const unreadLabel = next ? 'Mark read & continue →' : 'Mark read & finish →';
+const readLabel = next ? 'Next →' : 'The full collection →';
 ---
 
 <nav class="essay-navigation" aria-label="Federalist Paper navigation">
@@ -24,15 +28,53 @@ const { previous, next } = Astro.props;
       <span>Browse all papers</span>
     </a>
   )}
-  {next ? (
-    <a class="essay-navigation__next" href={`/papers/${next.number}/`}>
-      <span class="essay-navigation__label">Next →</span>
-      <span>No. {next.number}: {next.title}</span>
-    </a>
-  ) : (
-    <a class="essay-navigation__next" href="/#all-papers">
-      <span class="essay-navigation__label">The full collection →</span>
-      <span>Return to the index</span>
-    </a>
-  )}
+  <a
+    class="essay-navigation__next"
+    href={next ? `/papers/${next.number}/` : '/#all-papers'}
+    data-continue-control={number}
+    data-unread-label={unreadLabel}
+    data-read-label={readLabel}
+  >
+    <span class="essay-navigation__label" data-continue-label>{unreadLabel}</span>
+    <span>{next ? `No. ${next.number}: ${next.title}` : 'Return to the index'}</span>
+  </a>
 </nav>
+
+<script>
+  import { createPreferences } from '../lib/preferences';
+
+  let storage: Storage | null = null;
+  try {
+    storage = window.localStorage;
+  } catch {
+    // The combined action still marks read for this page view.
+  }
+  const preferences = createPreferences(storage);
+
+  for (const anchor of document.querySelectorAll<HTMLAnchorElement>('[data-continue-control]')) {
+    const number = Number(anchor.dataset.continueControl);
+    const label = anchor.querySelector<HTMLElement>('[data-continue-label]');
+    let read = preferences.isPaperRead(number);
+
+    function render() {
+      const text = read ? anchor.dataset.readLabel : anchor.dataset.unreadLabel;
+      if (label && text) label.textContent = text;
+    }
+
+    render();
+
+    document.addEventListener('paper-read-change', (event) => {
+      const detail = (event as CustomEvent<{ number: number; read: boolean }>).detail;
+      if (detail.number !== number) return;
+      read = detail.read;
+      render();
+    });
+
+    /* Marks only from the unread state: a deliberately unmarked paper must
+       not be re-marked by plain Next navigation. localStorage writes are
+       synchronous, so the mark lands before the page unloads. */
+    anchor.addEventListener('click', () => {
+      if (!read) preferences.setPaperRead(number, true);
+    });
+  }
+</script>
