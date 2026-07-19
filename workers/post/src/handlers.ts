@@ -1,7 +1,7 @@
 // workers/post/src/handlers.ts
 import type { Db } from './db';
 import type { Env, Program, Subscriber } from './types';
-import { nextDayDowEastern } from './schedule';
+import { DOW_NAMES, nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
 import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
 import type { OutboundEmail } from './resend';
@@ -90,11 +90,10 @@ function humanDate(iso: string): string {
   return `${MONTHS[month - 1]} ${day}, ${year}`;
 }
 
+/** Next occurrence of sendDow strictly after fromIso — mirrors weeklyPaperDue's 1-day guard. */
 function nextSendDate(fromIso: string, sendDow: number): string {
   const date = new Date(`${fromIso}T00:00:00Z`);
   do { date.setUTCDate(date.getUTCDate() + 1); } while (date.getUTCDay() !== sendDow);
-  const confirmed = new Date(`${fromIso}T00:00:00Z`);
-  if (date.getTime() - confirmed.getTime() < 2 * 86_400_000) date.setUTCDate(date.getUTCDate() + 7);
   return date.toISOString().slice(0, 10);
 }
 
@@ -116,7 +115,8 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
   const today = new Date().toISOString().slice(0, 10);
   const firstDelivery = sub.program === 'weekly'
     ? humanDate(nextSendDate(today, sub.send_dow)) : 'October 27';
-  await deliver(env, send, sub, renderWelcome(sub.program, firstDelivery, ctx), ctx);
+  await deliver(env, send, sub,
+    renderWelcome(sub.program, firstDelivery, DOW_NAMES[sub.send_dow], ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
 }
 

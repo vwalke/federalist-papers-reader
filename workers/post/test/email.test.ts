@@ -48,16 +48,19 @@ describe('confirmation and welcome', () => {
     expect(mail.subject).toContain('Confirm');
   });
   it('welcome states the first delivery expectation per program', () => {
-    const weekly = renderWelcome('weekly', '2026-07-25', CTX);
-    expect(weekly.html).toContain('2026-07-25');
-    const calendar = renderWelcome('calendar', '2026-10-27', CTX);
+    const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);
+    expect(weekly.html).toContain('Tuesday, July 21, 2026');
+    expect(weekly.html).toContain('each Tuesday');
+    expect(weekly.html).toContain('Change your delivery day');
+    const calendar = renderWelcome('calendar', 'October 27', 'Saturday', CTX);
     expect(calendar.html).toContain('October 27');
+    expect(calendar.html).not.toContain('Change your delivery day');
   });
   it('welcome text carries the delivery date, manage link, and no HTML residue', () => {
-    const weekly = renderWelcome('weekly', '2026-07-25', CTX);
-    expect(weekly.text).toContain('2026-07-25');
+    const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);
+    expect(weekly.text).toContain('Tuesday, July 21, 2026');
     expect(weekly.text).toContain(CTX.manageUrl);
-    const calendar = renderWelcome('calendar', '2026-10-27', CTX);
+    const calendar = renderWelcome('calendar', 'October 27', 'Saturday', CTX);
     expect(calendar.text).toContain('October 27');
     for (const text of [weekly.text, calendar.text]) {
       expect(text).not.toContain('&oelig;');

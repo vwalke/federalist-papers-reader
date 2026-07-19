@@ -82,18 +82,24 @@ export function renderConfirmation(confirmUrl: string, ctx: EmailContext): Rende
 /**
  * @param firstDelivery Human-formatted date for the reader (e.g. "July 25, 2026"),
  *   not an ISO string — it is interpolated verbatim into the email copy.
+ * @param sendDayName Weekday name of the subscriber's send day (weekly program only).
  */
-export function renderWelcome(program: Program, firstDelivery: string, ctx: EmailContext): RenderedEmail {
+export function renderWelcome(
+  program: Program, firstDelivery: string, sendDayName: string, ctx: EmailContext
+): RenderedEmail {
   const body = program === 'weekly'
-    ? `<p style="font-size:15px;line-height:1.6;">Welcome to <strong>The Weekly Course</strong>. Federalist No. 1 arrives Saturday, <strong>${escapeHtml(firstDelivery)}</strong>, and one paper follows each Saturday for eighty-five weeks.</p>`
+    ? `<p style="font-size:15px;line-height:1.6;">Welcome to <strong>The Weekly Course</strong>. Federalist No. 1 arrives <strong>${escapeHtml(sendDayName)}, ${escapeHtml(firstDelivery)}</strong>, and one paper follows each ${escapeHtml(sendDayName)} for eighty-five weeks.</p>`
     : `<p style="font-size:15px;line-height:1.6;">Welcome to <strong>As It Happened</strong>. The season opens <strong>October 27</strong> — Federalist No. 1's own date — and each paper arrives on the anniversary of its first printing, through the season's close on April 26.</p>`;
-  const html = shell(body + `<p style="font-size:14px;color:${MUTED};">Pause, switch, or stop any time from the manage link below.</p>`, ctx);
+  const manageLine = program === 'weekly'
+    ? 'Change your delivery day, pause, switch, or stop any time from the manage link below.'
+    : 'Pause, switch, or stop any time from the manage link below.';
+  const html = shell(body + `<p style="font-size:14px;color:${MUTED};">${manageLine}</p>`, ctx);
   const textBody = program === 'weekly'
-    ? `Welcome to The Weekly Course. Federalist No. 1 arrives Saturday, ${firstDelivery}, and one paper follows each Saturday for eighty-five weeks.`
+    ? `Welcome to The Weekly Course. Federalist No. 1 arrives ${sendDayName}, ${firstDelivery}, and one paper follows each ${sendDayName} for eighty-five weeks.`
     : `Welcome to As It Happened. The season opens October 27 — Federalist No. 1's own date — and each paper arrives on the anniversary of its first printing, through the season's close on April 26.`;
   return {
     subject: 'Welcome — The Federalist by Post',
     html,
-    text: `${textBody}\n\nPause, switch, or stop any time: ${ctx.manageUrl}\nUnsubscribe: ${ctx.unsubscribeUrl}\n${ctx.postalAddress}`
+    text: `${textBody}\n\n${manageLine.replace(' from the manage link below', '')}: ${ctx.manageUrl}\nUnsubscribe: ${ctx.unsubscribeUrl}\n${ctx.postalAddress}`
   };
 }
