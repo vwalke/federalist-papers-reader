@@ -15,17 +15,22 @@ reading program, not another hosting of a public-domain text.
    **Product Hunt** later the same week.
 3. Reddit/teacher outreach kits follow the launch (reuse its copy).
 
-## Timing
+## Timing (revised 2026-07-20: double launch)
 
-- **Show HN:** Tuesday or Wednesday, 8–10am ET. Highest weekday attention;
-  gives a full day to answer comments. (Weekends have less competition but less
-  traffic; this project can compete on a weekday.)
-- **Product Hunt:** launch day begins 12:01am PT. Do it Thursday of the same
-  week so the two don't split attention. Tue–Thu is busiest; Sat/Sun ranks
-  easier but reaches fewer people.
+**Both launches Tuesday, July 21** — Vann is off (Belgian holiday) and travels
+from Thursday, so pairing beats spacing:
+
+- **Product Hunt:** scheduled for 12:01am PT (9:01am CEST). Set up and
+  scheduled the evening before; the "Coming soon" teaser collects notify-me
+  followers overnight. Maker comment at the bell; tend through the morning CEST.
+- **Show HN:** posted ~8:30am ET (~2:30pm CEST); afternoon/evening CEST covers
+  HN's US peak. HN is the heavy conversation lift — PH comment volume for a
+  niche civic product stays modest.
+- Cross-pollination: each thread can mention the other exists (never asking
+  for votes).
 - **Alternative themed date:** October 27 (anniversary of Federalist No. 1;
-  the "As It Happened" season opens). Strong hook but three months away —
-  better used as a *second* X/press moment, not the launch.
+  the "As It Happened" season opens) — reserved as a *second* X/press moment,
+  not the launch.
 
 ## Show HN
 
