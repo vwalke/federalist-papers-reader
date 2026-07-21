@@ -1,6 +1,51 @@
 # Marketing Plan — Beyond X
 
-*Owner: Social/Marketing. Last updated: 2026-07-18.*
+*Owner: Social/Marketing. Last updated: 2026-07-21.*
+
+## The growth thesis (adopted 2026-07-21)
+
+**The behemoth channel is the school year.** AP Government's required-documents
+list includes Federalist 10, 51, 70, and 78 (~350k exam-takers/year, millions
+more in civics). Students currently meet these texts through PDFs and
+databases; we have the most readable edition, free, no logins, no ads (school
+networks care). **Teachers build syllabi in August** — that is the highest-
+leverage four weeks on the calendar. Teacher adoption compounds every semester
+and generates the .edu backlinks that lift every other search query.
+
+**90-day campaign:**
+- **Phase 1 — credibility sweep (→ Aug 1):** outreach-kit emails (2–3/day);
+  Show HN re-run once account karma is built (~2 wks; receipts: PH top-50,
+  subscriber count); r/InternetIsBeautiful after HN; pitch taste-maker
+  newsletters (kottke.org, Dense Discovery, Recomendo, Web Curios — precision
+  audience fit, high-authority backlinks); submit to design showcases
+  (Awwwards, CSS Design Awards).
+- **Phase 2 — back-to-school (August):** ship a **"For teachers" page** (the
+  AP required documents, readable; companion questions as discussion
+  starters; free/no-login stated plainly); LibGuides librarian outreach; OER
+  Commons submission; AP Gov/APUSH teacher communities; X shifts to
+  teacher-hours content late August.
+- **Phase 3 — autumn moments:** **Sept 17 Constitution Day** = the Convention
+  serial's finale (two-month daily arc completing on the holiday;
+  press-pitchable). **Oct 27** = "As It Happened" season opens ("relive the
+  ratification debate in real time"); pitch history podcasts/newsletters
+  early October.
+
+**The ceiling-changing product move: add the Anti-Federalists**, starting with
+**Brutus No. 1 (also AP-required)**. Transforms the site from "a Federalist
+edition" into *the only place to read the ratification debate as a debate* —
+supercharges the teacher pitch, the October story (both voices on their
+original dates), and the most-requested PH feature. Public domain; start with
+one document.
+
+**Success metrics (June 2027):** 10k+ monthly organic readers; 1,000+
+subscribers; default-link status in teacher communities. Long arc: the
+Constitution's 250th (2037) and the papers' own 250th (2037–38) — own the
+category before the biggest civic anniversary of our lifetimes.
+
+**Status notes:** X Premium purchased 2026-07-21 (reply visibility + link
+penalty gone — the two-part posting workaround is no longer required).
+Follow list live in `follow-list.md`. Email/site follow-touchpoints PRD
+handed off 2026-07-21.
 
 The goal for federalistreader.org is **readership and reach**, not conversions
 (nothing is being sold). So the leverage is in **discovery** (people already
