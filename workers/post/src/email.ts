@@ -31,6 +31,7 @@ ${bodyHtml}
 <hr style="border:none;border-top:1px solid rgba(42,33,24,0.28);margin:22px 0 14px;">
 <p style="font-size:11px;color:${MUTED};text-align:center;line-height:1.7;font-family:Arial,sans-serif;">
 ${ctx.progressLine ? escapeHtml(ctx.progressLine) + '<br>' : ''}
+Ongoing commentary on the papers, the founding, and the news they still speak to: <a href="https://x.com/ReadPublius" style="color:${MUTED};">@ReadPublius on X</a><br>
 <a href="${escapeHtml(ctx.manageUrl)}" style="color:${MUTED};">Manage subscription</a> &middot;
 <a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:${MUTED};">Unsubscribe</a><br>
 Federalist Reader &middot; ${escapeHtml(ctx.postalAddress)}

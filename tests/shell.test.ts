@@ -57,4 +57,9 @@ describe('static site shell', () => {
     expect(html).toContain('href="/guides/where-to-start/">Start here</a>');
     expect(html).toContain('href="/guides/">Guides</a>');
   });
+
+  it('links the X account from the footer nav', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    expect(html).toContain('href="https://x.com/ReadPublius">@ReadPublius on X</a>');
+  });
 });

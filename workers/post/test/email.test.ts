@@ -22,6 +22,8 @@ describe('renderPaperIssue', () => {
     expect(mail.html).toContain('Paper 1 of 85');
     expect(mail.html).toContain(CTX.unsubscribeUrl);
     expect(mail.html).toContain(CTX.postalAddress);
+    expect(mail.html).toContain('<a href="https://x.com/ReadPublius"');
+    expect(mail.html).toContain('@ReadPublius on X</a>');
     expect(mail.text).toContain('https://federalistreader.org/papers/1/');
   });
 
@@ -46,6 +48,8 @@ describe('confirmation and welcome', () => {
     const mail = renderConfirmation('https://federalistreader.org/api/confirm?token=C', CTX);
     expect(mail.html).toContain('/api/confirm?token=C');
     expect(mail.subject).toContain('Confirm');
+    expect(mail.html).toContain('<a href="https://x.com/ReadPublius"');
+    expect(mail.html).toContain('@ReadPublius on X</a>');
   });
   it('welcome states the first delivery expectation per program', () => {
     const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);

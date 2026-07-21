@@ -31,5 +31,8 @@ test.describe('subscribe surfaces', () => {
     await expect(page.getByRole('heading', { name: /confirmation/i })).toBeVisible();
     await page.goto('/subscribe/confirmed/');
     await expect(page.getByText(/Confirmed/i)).toBeVisible();
+    const xLink = page.getByRole('main').getByRole('link', { name: '@ReadPublius on X' });
+    await expect(xLink).toBeVisible();
+    await expect(xLink).toHaveAttribute('href', 'https://x.com/ReadPublius');
   });
 });
