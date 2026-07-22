@@ -951,3 +951,22 @@
 .essay-theme-link a {
   font: 400 1.05rem/1.4 var(--font-display);
 }
+
+.essay-printing-link {
+  margin-block-start: var(--space-xl);
+  text-align: center;
+}
+
+.essay-printing-link .section-kicker {
+  color: var(--color-muted-ink);
+  font: 700 0.7rem/1.2 var(--font-reading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.essay-printing-link p {
+  max-inline-size: 48ch;
+  margin: var(--space-xs) auto 0;
+  font: 400 1.05rem/1.5 var(--font-display);
+}

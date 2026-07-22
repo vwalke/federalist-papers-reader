@@ -8,6 +8,7 @@ import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
 import { getThemeGuidesForPaper } from '../lib/guides';
+import { getPrintingForPaper } from '../data/printings';
 import SubscribePrompt from '../components/SubscribePrompt.astro';
 import { formatIssueDateline, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
@@ -66,6 +67,7 @@ const structuredData = [
 ];
 
 const themeGuides = await getThemeGuidesForPaper(data.number);
+const printing = getPrintingForPaper(data.number);
 ---
 
 <BaseLayout
@@ -119,6 +121,16 @@ const themeGuides = await getThemeGuidesForPaper(data.number);
       previous={previous ? { number: previous.data.number, title: previous.data.title } : null}
       next={next ? { number: next.data.number, title: next.data.title } : null}
     />
+
+    {printing && (
+      <aside class="essay-printing-link" aria-label="Original printing">
+        <span class="section-kicker">The original printing</span>
+        <p>
+          One of the newspapers that carried this essay survives—{printing.proseName}.{' '}
+          <a href={`/printings/#federalist-${data.number}`}>See it in the print room</a>.
+        </p>
+      </aside>
+    )}
 
     {themeGuides.length > 0 && (
       <nav class="essay-theme-link" aria-label="Related themes">

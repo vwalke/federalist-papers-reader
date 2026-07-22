@@ -18,6 +18,8 @@ export interface Printing {
   inventory: string;
   paperNumber: number | null;
   newspaper: string;
+  /** Compact name plus date for running prose, e.g. "the New-York Packet of August 15, 1788". */
+  proseName: string;
   imprint: string;
   heading: string;
   caption: string[];
@@ -36,6 +38,7 @@ const sources: PrintingSource[] = [
     inventory: '22899.44',
     paperNumber: 2,
     newspaper: 'The Pennsylvania Journal; and the Weekly Advertiser',
+    proseName: 'the Pennsylvania Journal of November 10, 1787',
     imprint: 'Philadelphia: Thomas Bradford. November 10, 1787.',
     heading: 'Federalist No. 2 reaches Philadelphia',
     caption: [
@@ -57,6 +60,7 @@ const sources: PrintingSource[] = [
     inventory: '21076',
     paperNumber: 85,
     newspaper: 'The New-York Packet',
+    proseName: 'the New-York Packet of August 15, 1788',
     imprint: 'New York: Samuel and John Loudon. August 15, 1788.',
     heading: 'Publius takes his leave',
     caption: [
@@ -78,6 +82,7 @@ const sources: PrintingSource[] = [
     inventory: '25030',
     paperNumber: null,
     newspaper: 'The New-Haven Gazette, and the Connecticut Magazine',
+    proseName: 'the New-Haven Gazette of October 25, 1787',
     imprint: 'New Haven, Connecticut. October 25, 1787.',
     heading: 'Two days before Publius',
     caption: [
@@ -100,6 +105,7 @@ const sources: PrintingSource[] = [
     inventory: '30282',
     paperNumber: null,
     newspaper: 'The Massachusetts Centinel',
+    proseName: 'the Massachusetts Centinel of January 9, 1788',
     imprint: 'Boston: Benjamin Russell. January 9, 1788.',
     heading: 'Massachusetts, mid-debate',
     caption: [
