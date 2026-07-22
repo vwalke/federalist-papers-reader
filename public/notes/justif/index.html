@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>justif 0.4.2 on an 1787 newspaper &#8212; field notes</title>
+<title>justif on an 1787 newspaper &#8212; field notes</title>
 <style>
 @font-face {
   font-family: "IM Fell DW Pica";
@@ -71,15 +70,15 @@ a { color: var(--accent); }
 
 
 <div class="wrap">
-  <p class="eyebrow">Field report &#183; justif 0.4.2 in the wild</p>
+  <p class="eyebrow">Field report &#183; justif in the wild</p>
   <h1>We ran justif on an 1787 newspaper</h1>
-  <p class="dek"><a href="https://federalistreader.org/papers/10">Federalist Reader</a> presents the Federalist Papers as facsimile front pages of the newspapers that first printed them. Its Gazette view reproduces <em>The Independent Journal</em> &#8212; in IM FELL DW Pica, two 356&#8202;px columns, drop caps &#8212; but sets the text ragged-right, which no 1787 compositor would have shipped. We injected <strong>justif 0.4.2</strong> into the live page from the console to see what it would do. It was made for this. One bug report below, with a minimal repro.</p>
+  <p class="dek"><a href="https://federalistreader.org/papers/10">Federalist Reader</a> presents the Federalist Papers as facsimile front pages of the newspapers that first printed them. Its Gazette view reproduces <em>The Independent Journal</em> &#8212; in IM FELL DW Pica, two 356&#8202;px columns, drop caps &#8212; but for its first week it set the text ragged-right, which no 1787 compositor would have shipped. We ran <strong>justif</strong> against the live page to see what it would do. It was made for this &#8212; and within days, justif was setting every essay on the site in production.</p>
 
   <div class="stats">
     <div class="stat"><b>356 px</b><span>real column measure, IM FELL DW Pica 17.63&#8202;px / 24.32&#8202;px &#8212; a hostile, narrow case</span></div>
     <div class="stat"><b>~280 ms</b><span>to enhance all 23 paragraphs of Federalist No.&#8201;10, Chromium, mid-range laptop</span></div>
     <div class="stat"><b>0 hyphens</b><span>needed in the specimen below, where the browser&#8217;s greedy breaker uses two</span></div>
-    <div class="stat"><b>1 bug</b><span>floated <code>::first-letter</code> drop caps overflow the column &#8212; repro below</span></div>
+    <div class="stat"><b>0.5.0</b><span>the justif release now setting every Gazette page on the live site</span></div>
   </div>
 
   <h2>The same passage, three ways</h2>
@@ -89,7 +88,7 @@ a { color: var(--accent); }
     <label class="guide-toggle"><input type="checkbox" checked> Show margin guides</label>
     <div class="panels">
       <div class="panel">
-        <h3>Site today &#8212; ragged right</h3>
+        <h3>Before &#8212; ragged right</h3>
         <p class="sub">text-align: left; hyphens: auto</p>
         <div class="page p-ragged" lang="en">
           <div class="m-guide m-left"></div><div class="m-guide m-right"></div>
@@ -137,31 +136,14 @@ a { color: var(--accent); }
     </div>
     <div>
       <h3><em>It survives contact with a weird site.</em></h3>
-      <p>Two-column facsimile layout, self-hosted revival fonts, small caps, inline italics: everything except the drop cap below Just Worked from a console injection, and selection, find-in-page, and the DOM&#8217;s semantics stayed intact.</p>
+      <p>Two-column facsimile layout, self-hosted revival fonts, small caps, inline italics: everything Just Worked from a console injection, and selection, find-in-page, and the DOM&#8217;s semantics stayed intact. (The drop-cap opener keeps the browser&#8217;s native justification by design, sitting exactly as a compositor would have locked it.)</p>
     </div>
   </div>
 
-  <h2>The bug: floated ::first-letter drop caps</h2>
-  <p class="note">The site&#8217;s opening paragraph uses a pure-CSS drop cap: <code>p::first-letter { float: left; font-size: 70.7px; }</code>. When justif enhances that paragraph, lines are measured at the full column width with no allowance for the float intrusion, so the first lines <b>overflow the column</b> &#8212; on the live site the first line collides with the second column across the gutter. Minimal repro, no site required:</p>
-  <pre>&lt;style&gt;
-  .col { width: 356px; font: 17.6px/24.3px Georgia, serif; }
-  .col p { text-align: justify; }
-  .col p.dropcap::first-letter { float: left; font-size: 70px;
-                                 line-height: 0.8; padding-right: 6px; }
-&lt;/style&gt;
-&lt;div class="col"&gt;
-  &lt;p class="dropcap"&gt;Among the numerous advantages promised by a well
-  constructed Union, none deserves to be more accurately developed than
-  its tendency to break and control the violence of faction.&lt;/p&gt;
-  &lt;p&gt;(same text, no drop cap)&lt;/p&gt;
-&lt;/div&gt;
-&lt;script type="module"&gt;
-  const { justify } = await import("https://cdn.jsdelivr.net/npm/justif@0.4.2/+esm");
-  justify(document.querySelectorAll(".col p"));
-&lt;/script&gt;</pre>
-  <p class="caption">Measured in Chromium: the drop-cap paragraph&#8217;s widest line ends <b>41.6&#8202;px past the column edge</b>; the identical paragraph without the drop cap lands within 0.4&#8202;px. Workaround we used: skip paragraphs with a floated <code>::first-letter</code> and leave them on native <code>text-align: justify</code>, which handles the float fine. Detecting the float and shortening the affected line boxes (or bailing to the native fallback automatically) would make justif drop-in safe for drop caps.</p>
+  <h2>From experiment to production</h2>
+  <p class="note">This page began as a field report sent to justif&#8217;s author during the library&#8217;s Show HN week. Days later, justif 0.5.0 was live and so were we: every essay on <a href="https://federalistreader.org/">federalistreader.org</a> is now set with whole-paragraph justification and hanging punctuation, the way its 1787 originals were set by hand. The big Fell drop caps keep the browser&#8217;s native justification by design. Open any paper and look at the right edge.</p>
 
-  <footer>Method: justif 0.4.2 and the en-US hyphenation module loaded from jsDelivr into the live page at federalistreader.org/papers/10 (Gazette view); engine output serialized verbatim into this page; IM FELL DW Pica embedded from the site&#8217;s own woff2 so the frozen lines re-render exactly. Sent with admiration for the library. July 2026. The complete No.&#8201;10 set all three ways (ragged, native justify, justif): <a href="federalist-10-complete.html">federalist-10-complete.html</a>.</footer>
+  <footer>Method: the frozen specimens above were produced with justif and the en-US hyphenation module loaded from jsDelivr into the live page at federalistreader.org/papers/10 (Gazette view); engine output serialized verbatim into this page; IM FELL DW Pica embedded from the site&#8217;s own woff2 so the frozen lines re-render exactly. Written with admiration for the library, July 2026 &#8212; and adopted in production the same week. The complete No.&#8201;10 set all three ways (ragged, native justify, justif): <a href="federalist-10-complete.html">federalist-10-complete.html</a>.</footer>
 </div>
 
 </body>
