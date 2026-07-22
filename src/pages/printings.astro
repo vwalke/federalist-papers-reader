@@ -1,7 +1,7 @@
 ---
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { printingImagePath, printings } from '../data/printings';
+import { formatPaperNumbers, printingAnchor, printingImagePath, printings } from '../data/printings';
 import '../styles/guide.css';
 
 const description =
@@ -16,10 +16,9 @@ const jsonLd = {
   ...(pageURL ? { url: pageURL, mainEntityOfPage: pageURL } : {})
 };
 
-const federalistPrintings = printings.filter((printing) => printing.paperNumber !== null);
-const contextPrintings = printings.filter((printing) => printing.paperNumber === null);
-const entryId = (printing: (typeof printings)[number]) =>
-  printing.paperNumber !== null ? `federalist-${printing.paperNumber}` : printing.slug;
+const federalistPrintings = printings.filter((printing) => printing.paperNumbers.length > 0);
+const contextPrintings = printings.filter((printing) => printing.paperNumbers.length === 0);
+const entryId = printingAnchor;
 ---
 
 <BaseLayout
@@ -58,7 +57,7 @@ const entryId = (printing: (typeof printings)[number]) =>
         <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
         <section class="printing" id={entryId(printing)} aria-labelledby={`${entryId(printing)}-title`}>
           <header class="printing__head">
-            <p class="section-kicker">Federalist No. {printing.paperNumber}</p>
+            <p class="section-kicker">Federalist {formatPaperNumbers(printing)}</p>
             <h2 id={`${entryId(printing)}-title`} class="printing__paper">{printing.newspaper}</h2>
             <p class="printing__imprint">{printing.imprint}</p>
           </header>
@@ -86,9 +85,7 @@ const entryId = (printing: (typeof printings)[number]) =>
                       decoding="async"
                     />
                   </picture>
-                  <span class="printing__sheet-label" aria-hidden="true">
-                    {page.page === 1 ? 'Front page' : `Page ${page.page}`}
-                  </span>
+                  <span class="printing__sheet-label" aria-hidden="true">{page.label}</span>
                 </a>
               </li>
             ))}
@@ -101,17 +98,17 @@ const entryId = (printing: (typeof printings)[number]) =>
           {printing.excerpt && (
             <blockquote class="printing__excerpt">
               <p>“{printing.excerpt}”</p>
-              <cite>Publius, Federalist No. {printing.paperNumber}</cite>
+              <cite>Publius, Federalist No. {printing.excerptFrom ?? printing.paperNumbers[0]}</cite>
             </blockquote>
           )}
           <p class="printing__actions">
-            <a class="button-link" href={`/papers/${printing.paperNumber}/`}>
-              Read No. {printing.paperNumber} <span aria-hidden="true">→</span>
-            </a>
+            {printing.paperNumbers.map((number) => (
+              <a class="button-link" href={`/papers/${number}/`}>
+                Read No. {number} <span aria-hidden="true">→</span>
+              </a>
+            ))}
           </p>
-          {printing.rubenstein && (
-            <p class="printing__credit">Collection of David M. Rubenstein.</p>
-          )}
+          {printing.credit && <p class="printing__credit">{printing.credit}</p>}
         </section>
       </>
     ))}
@@ -161,9 +158,7 @@ const entryId = (printing: (typeof printings)[number]) =>
                       decoding="async"
                     />
                   </picture>
-                  <span class="printing__sheet-label" aria-hidden="true">
-                    {page.page === 1 ? 'Front page' : `Page ${page.page}`}
-                  </span>
+                  <span class="printing__sheet-label" aria-hidden="true">{page.label}</span>
                 </a>
               </li>
             ))}

@@ -1,4 +1,50 @@
 {
+  "federalist-1-pennsylvania-journal": [
+    {
+      "page": 1,
+      "thumb": {
+        "w": 640,
+        "h": 1006
+      },
+      "large": {
+        "w": 2000,
+        "h": 3142
+      }
+    },
+    {
+      "page": 2,
+      "thumb": {
+        "w": 640,
+        "h": 1010
+      },
+      "large": {
+        "w": 2000,
+        "h": 3157
+      }
+    },
+    {
+      "page": 3,
+      "thumb": {
+        "w": 640,
+        "h": 1012
+      },
+      "large": {
+        "w": 2000,
+        "h": 3163
+      }
+    },
+    {
+      "page": 4,
+      "thumb": {
+        "w": 640,
+        "h": 999
+      },
+      "large": {
+        "w": 2000,
+        "h": 3120
+      }
+    }
+  ],
   "federalist-2-pennsylvania-journal": [
     {
       "page": 1,
@@ -178,6 +224,43 @@
       "large": {
         "w": 2000,
         "h": 2374
+      }
+    }
+  ],
+  "federalist-7-8-new-york-packet": [
+    {
+      "page": 1,
+      "thumb": {
+        "w": 640,
+        "h": 808
+      },
+      "large": {
+        "w": 2000,
+        "h": 2525
+      }
+    }
+  ],
+  "federalist-13-massachusetts-centinel": [
+    {
+      "page": 1,
+      "thumb": {
+        "w": 640,
+        "h": 948
+      },
+      "large": {
+        "w": 2000,
+        "h": 2961
+      }
+    },
+    {
+      "page": 2,
+      "thumb": {
+        "w": 640,
+        "h": 948
+      },
+      "large": {
+        "w": 2000,
+        "h": 2961
       }
     }
   ],

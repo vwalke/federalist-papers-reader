@@ -12,13 +12,25 @@ const ROOT = new URL('../', import.meta.url);
 const OUT_DIR = new URL('public/images/printings/', ROOT);
 const MANIFEST_PATH = new URL('src/data/printings-images.json', ROOT);
 
-const SOURCE_ROOT =
-  process.env.PRINTINGS_SOURCE_DIR ?? join(homedir(), 'Downloads', 'z Federalist Nw');
+// Seth Kaller's scans arrived in two WeTransfer batches; each set names its batch.
+const SOURCE_ROOTS = {
+  wt1: process.env.PRINTINGS_SOURCE_DIR ?? join(homedir(), 'Downloads', 'z Federalist Nw'),
+  wt2:
+    process.env.PRINTINGS_SOURCE_DIR_WT2 ??
+    join(homedir(), 'Downloads', 'wetransfer_federalist-wt2_2026-07-22_2102')
+};
 
 const THUMB_WIDTH = 640;
 const LARGE_WIDTH = 2000;
 
 const SETS = [
+  {
+    slug: 'federalist-1-pennsylvania-journal',
+    batch: 'wt2',
+    dir: '',
+    file: (page) => `27488 p${page}.jpg`,
+    pages: 4
+  },
   {
     slug: 'federalist-2-pennsylvania-journal',
     dir: '22899.44',
@@ -40,6 +52,22 @@ const SETS = [
     pages: 8,
     // Interior spreads were scanned sideways, alternating direction by leaf.
     rotate: { 2: 270, 3: 90, 4: 270, 5: 90, 6: 270, 7: 90 }
+  },
+  {
+    slug: 'federalist-7-8-new-york-packet',
+    batch: 'wt2',
+    dir: '',
+    file: () => '26169 detail.jpg',
+    pages: 1
+  },
+  {
+    slug: 'federalist-13-massachusetts-centinel',
+    batch: 'wt2',
+    dir: '',
+    file: (page) => `26566 p${page}.jpg`,
+    pages: 2,
+    // Both leaves were scanned sideways, same direction.
+    rotate: { 1: 270, 2: 270 }
   },
   {
     slug: 'massachusetts-centinel-1788',
@@ -94,14 +122,16 @@ async function derive(source, rotation, cropRight, width, outputBase) {
   return { w: jpegInfo.width, h: jpegInfo.height };
 }
 
-if (!(await exists(SOURCE_ROOT))) {
-  console.error(
-    `Source scans not found at ${SOURCE_ROOT}.\n` +
-      'Set PRINTINGS_SOURCE_DIR to the folder holding the Kaller scan sets ' +
-      '(22899.44, 21076, 25030, 30282). Committed derivatives remain valid; ' +
-      'this script is only needed to regenerate them.'
-  );
-  process.exit(1);
+for (const [batch, root] of Object.entries(SOURCE_ROOTS)) {
+  if (!(await exists(root))) {
+    console.error(
+      `Source scans for batch ${batch} not found at ${root}.\n` +
+        'Set PRINTINGS_SOURCE_DIR (batch wt1) / PRINTINGS_SOURCE_DIR_WT2 (batch wt2) to the ' +
+        'folders holding the Kaller scans. Committed derivatives remain valid; this script ' +
+        'is only needed to regenerate them.'
+    );
+    process.exit(1);
+  }
 }
 
 const manifest = {};
@@ -112,7 +142,7 @@ for (const set of SETS) {
   manifest[set.slug] = [];
 
   for (let page = 1; page <= set.pages; page += 1) {
-    const source = join(SOURCE_ROOT, set.dir, set.file(page));
+    const source = join(SOURCE_ROOTS[set.batch ?? 'wt1'], set.dir, set.file(page));
     if (!(await exists(source))) {
       console.error(`Missing source scan: ${source}`);
       process.exit(1);

@@ -8,7 +8,7 @@ import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
 import { getThemeGuidesForPaper } from '../lib/guides';
-import { getPrintingForPaper } from '../data/printings';
+import { getPrintingForPaper, printingAnchor } from '../data/printings';
 import SubscribePrompt from '../components/SubscribePrompt.astro';
 import { formatIssueDateline, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
@@ -127,7 +127,7 @@ const printing = getPrintingForPaper(data.number);
         <span class="section-kicker">The original printing</span>
         <p>
           One of the newspapers that carried this essay survives—{printing.proseName}.{' '}
-          <a href={`/printings/#federalist-${data.number}`}>See it in the print room</a>.
+          <a href={`/printings/#${printingAnchor(printing)}`}>See it in the print room</a>.
         </p>
       </aside>
     )}
