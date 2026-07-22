@@ -22,6 +22,7 @@ export interface Printing {
   proseName: string;
   imprint: string;
   heading: string;
+  /** Paragraphs; may carry inline HTML (rendered with set:html — authored constants only). */
   caption: string[];
   excerpt?: string;
   pages: PrintingPageImage[];
@@ -86,10 +87,11 @@ const sources: PrintingSource[] = [
     imprint: 'New Haven, Connecticut. October 25, 1787.',
     heading: 'Two days before Publius',
     caption: [
-      'The stage being set. This Connecticut magazine of October 25, 1787 prints Congress’s resolution transmitting the new Constitution to the states and Connecticut’s call for a ratifying convention—together with the letter from Roger Sherman and Oliver Ellsworth reporting the Philadelphia convention’s work to Governor Huntington. Federalist No. 1 would not appear in New York until two days later.'
+      'The stage being set. This Connecticut magazine of October 25, 1787 prints Congress’s resolution transmitting the new Constitution to the states and Connecticut’s call for a ratifying convention—together with the letter from Roger Sherman and Oliver Ellsworth reporting the Philadelphia convention’s work to Governor Huntington. Federalist No. 1 would not appear in New York until two days later.',
+      'Look closely at the front page: the resolution goes out over the name of Charles Thomson, the Continental Congress’s only secretary—set by the New Haven compositor as “Charles Thompson,” a misspelling he endured all his life. He is the same Charles Thomson of <a href="/about/">the family thread on our About page</a>, attesting here, in type, to the very act that set the whole ratification debate in motion.'
     ],
     pageAlts: [
-      'Front page of the New-Haven Gazette and Connecticut Magazine of October 25, 1787, printing Congress’s resolution transmitting the Constitution to the states',
+      'Front page of the New-Haven Gazette and Connecticut Magazine of October 25, 1787, printing Congress’s resolution transmitting the Constitution to the states over the name of Secretary Charles Thomson, misspelled Thompson',
       'Page two of the New-Haven Gazette of October 25, 1787',
       'Page three of the New-Haven Gazette of October 25, 1787',
       'Page four of the New-Haven Gazette of October 25, 1787',

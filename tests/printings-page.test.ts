@@ -40,6 +40,12 @@ describe('The print room', () => {
     expect(html).toContain('href="/papers/2/"');
     expect(html).toContain('href="/papers/85/"');
 
+    // The family tie-in: Charles Thomson attests the Gazette's front page,
+    // misspelled by the compositor, linked back to the About story.
+    expect(html).toContain('“Charles Thompson,”');
+    expect(html).toContain('the Continental Congress’s only secretary');
+    expect(html).toContain('<a href="/about/">the family thread on our About page</a>');
+
     // Image discipline: dimensions, alt text, AVIF sources, lazy interior pages.
     expect(html).toContain(
       'src="/images/printings/federalist-2-pennsylvania-journal/page-1-thumb.jpg"'

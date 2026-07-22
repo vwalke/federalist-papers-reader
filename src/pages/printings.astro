@@ -96,7 +96,7 @@ const entryId = (printing: (typeof printings)[number]) =>
 
           <h3 class="printing__heading">{printing.heading}</h3>
           <div class="printing__caption">
-            {printing.caption.map((paragraph) => <p>{paragraph}</p>)}
+            {printing.caption.map((paragraph) => <p set:html={paragraph} />)}
           </div>
           {printing.excerpt && (
             <blockquote class="printing__excerpt">
@@ -170,7 +170,7 @@ const entryId = (printing: (typeof printings)[number]) =>
           </ul>
           <h4 class="printing__heading printing__heading--context">{printing.heading}</h4>
           <div class="printing__caption">
-            {printing.caption.map((paragraph) => <p>{paragraph}</p>)}
+            {printing.caption.map((paragraph) => <p set:html={paragraph} />)}
           </div>
         </section>
       ))}
