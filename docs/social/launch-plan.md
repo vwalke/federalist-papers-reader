@@ -1,5 +1,19 @@
 # Show HN + Product Hunt Launch Plan
 
+## Results (running)
+
+- **Product Hunt, 2026-07-21: #39 product of the day** — 16 points, 9
+  comments, zero launch army. Comment thread was high-quality (typography,
+  authorship stylometry, two roadmap-adopted feature ideas). Receipt line for
+  outreach/HN: "top-40 product of the day on Product Hunt."
+- Quotable testimonials from the thread:
+  - "the period typography actually makes these feel like i am reading a 1787
+    paper rather than a modern website"
+  - "Love that the notes are short enough to stay out of the way"
+- Show HN: blocked 2026-07-21 by the new-account Show HN restriction; karma
+  building underway (Justif thread); re-run planned ~early August with PH
+  receipt + subscriber count in the maker comment.
+
 *Drafted 2026-07-18. Status: awaiting Vann's go + date pick.*
 
 The pitch is the subscription: **read all 85 papers the way New Yorkers did —

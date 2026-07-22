@@ -27,6 +27,7 @@ export function initEssayJustify(): void {
 
   let generation = 0;
   let controllers: JustifyController[] = [];
+  let hyphensSuppressed: HTMLElement[] = [];
   let debounce: number | undefined;
 
   const inGazette = () => document.documentElement.dataset.readingMode !== 'reader';
@@ -44,6 +45,8 @@ export function initEssayJustify(): void {
     generation += 1;
     for (const controller of controllers) controller.destroy();
     controllers = [];
+    for (const p of hyphensSuppressed) p.style.removeProperty('hyphens');
+    hyphensSuppressed = [];
   }
 
   async function refresh(): Promise<void> {
@@ -56,6 +59,13 @@ export function initEssayJustify(): void {
       const paragraphs = [...essayBody.querySelectorAll<HTMLElement>(':scope > p')];
       const eligible = selectJustifiable(describe(paragraphs)).map((i) => paragraphs[i]);
       if (eligible.length === 0) break;
+      // justif brings its own TeX hyphenation; the baseline's hyphens: auto
+      // must go first or 0.5.0 sets drop-cap first lines at full measure
+      // instead of wrapping the float (reported upstream). clear() restores.
+      for (const p of eligible) {
+        p.style.hyphens = 'manual';
+        hyphensSuppressed.push(p);
+      }
       const controller = justify(eligible, {
         hyphenate: hyphenateEnUS,
         // This module re-plans fragmentation on every width change; justif's

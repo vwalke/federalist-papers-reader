@@ -1,7 +1,22 @@
 # Gazette justif justification
 
 **Date:** 2026-07-22
-**Status:** Approved
+**Status:** Approved (amended same day for justif 0.5.0)
+
+## Amendment: justif 0.5.0
+
+Upstream fixed the floated `::first-letter` bug (justif e1fb682, v0.5.0),
+so the drop-cap opener is now enhanced too and its exclusion was removed
+from the planner. Two notes:
+
+- 0.5.0's drop-cap support fails when the paragraph has CSS
+  `hyphens: auto`: the first lines are set at the full measure and clear
+  below the float instead of wrapping it (single-variable repro; reported
+  upstream). Since justif supplies its own TeX hyphenation, the module now
+  sets `hyphens: manual` inline on paragraphs it enhances and removes it
+  on teardown. The `hyphens: auto` baseline is unchanged for native-only
+  rendering.
+- The multicol fragmentation exclusion remains; 0.5.0 does not address it.
 
 ## Goal
 
