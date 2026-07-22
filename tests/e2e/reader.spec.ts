@@ -366,6 +366,65 @@ test('scales the reading text from the toolbar slider and remembers it', async (
   expect(await sizeOf()).toBeCloseTo(largest, 1);
 });
 
+test('justifies Gazette columns with justif and tears down for Reader', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/papers/10/');
+
+  // Enhancement lands after document.fonts.ready; locators auto-wait.
+  const enhanced = page.locator('.essay-body > p[data-justif]');
+  await expect(enhanced.first()).toBeAttached();
+  const counts = await page.locator('.essay-body').evaluate((body) => {
+    const paragraphs = [...body.querySelectorAll(':scope > p')];
+    return {
+      total: paragraphs.length,
+      enhanced: paragraphs.filter((p) => p.hasAttribute('data-justif')).length,
+      dropCapEnhanced: paragraphs[0]?.hasAttribute('data-justif') ?? true,
+      dropCapAlign: paragraphs[0] ? getComputedStyle(paragraphs[0]).textAlign : '',
+      signatureAlign: (() => {
+        const signature = body.querySelector('.essay-signature');
+        return signature ? getComputedStyle(signature).textAlign : '';
+      })(),
+      unenhancedAligns: [
+        ...new Set(
+          paragraphs
+            .filter((p) => !p.hasAttribute('data-justif') && !p.classList.contains('essay-signature'))
+            .map((p) => getComputedStyle(p).textAlign)
+        )
+      ]
+    };
+  });
+  // Most paragraphs are enhanced; the drop cap and any column-break
+  // straddlers stay on the native justify baseline.
+  expect(counts.enhanced).toBeGreaterThan(counts.total / 2);
+  expect(counts.dropCapEnhanced).toBe(false);
+  expect(counts.dropCapAlign).toBe('justify');
+  expect(counts.unenhancedAligns.every((align) => align === 'justify')).toBe(true);
+  expect(['end', 'right']).toContain(counts.signatureAlign);
+
+  // Reader mode reads ragged right: the enhancement is fully torn down.
+  await page.getByRole('button', { name: 'Reader' }).click();
+  await expect(enhanced).toHaveCount(0);
+  const readerAlign = await page
+    .locator('.essay-body > p')
+    .first()
+    .evaluate((p) => getComputedStyle(p).textAlign);
+  expect(['left', 'start']).toContain(readerAlign);
+
+  // Back to Gazette re-plans and re-applies.
+  await page.getByRole('button', { name: 'Gazette' }).click();
+  await expect(enhanced.first()).toBeAttached();
+
+  // The text-size slider changes the measure; enhancement must follow.
+  const slider = page.getByRole('slider', { name: 'Text size' });
+  await slider.fill('3');
+  await expect(enhanced.first()).toBeAttached();
+  const scaledSize = await page
+    .locator('.essay-body > p[data-justif]')
+    .first()
+    .evaluate((p) => Number.parseFloat(getComputedStyle(p).fontSize));
+  expect(scaledSize).toBeGreaterThan(19);
+});
+
 test('renders varied archival wear without clipping the sheet', async ({ page }) => {
   await page.goto('/papers/1/');
 

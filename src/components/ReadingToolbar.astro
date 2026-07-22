@@ -66,6 +66,8 @@ const { number } = Astro.props;
     }
     applyPeriodSpellings(mode);
     preferences.setReadingMode(mode);
+    // After the spelling swaps, so listeners measure the current text.
+    document.dispatchEvent(new CustomEvent('publius:reading-changed', { detail: { mode } }));
   }
 
   const initialMode = root.dataset.readingMode === 'reader' ? 'reader' : 'gazette';
@@ -82,6 +84,7 @@ const { number } = Astro.props;
     root.style.setProperty('--reading-scale', String(scale));
     scaleSlider?.setAttribute('aria-valuetext', SCALE_LABELS[stepIndex] ?? SCALE_LABELS[0]);
     preferences.setTextScale(scale);
+    document.dispatchEvent(new CustomEvent('publius:reading-changed', { detail: { scale } }));
   }
 
   if (scaleSlider) {

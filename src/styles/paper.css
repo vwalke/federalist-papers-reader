@@ -350,6 +350,15 @@
   font-family: var(--font-period-body);
 }
 
+/* 1787 columns were composed flush. This native baseline covers no-JS
+   visitors and the paragraphs essay-justify.ts plans out (drop cap,
+   column-break straddlers); justif overrides it per paragraph with
+   whole-paragraph Knuth–Plass breaks. The signature keeps its end
+   alignment — this selector would otherwise outweigh .essay-signature. */
+[data-reading-mode='gazette'] .essay-body p:not(.essay-signature) {
+  text-align: justify;
+}
+
 .essay-body p {
   margin: 0 0 0.78em;
   orphans: 3;
