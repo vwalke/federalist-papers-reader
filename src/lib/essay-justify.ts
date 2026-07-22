@@ -8,7 +8,7 @@
  * selectJustifiable. Reader mode never justifies: uniform word spacing
  * reads better, so switching modes tears the enhancement down.
  */
-import { justify, type JustifyController } from 'justif';
+import { justify, unjustify, type JustifyController } from 'justif';
 import { hyphenateEnUS } from 'justif/hyphenate/en-us';
 
 import { selectJustifiable, type ParagraphInfo } from './essay-justify-plan';
@@ -24,6 +24,11 @@ export function initEssayJustify(): void {
   if (!flowEl || !bodyEl || typeof ResizeObserver === 'undefined') return;
   const flow: HTMLElement = flowEl;
   const essayBody: HTMLElement = bodyEl;
+
+  // Idempotence: a second instance (dev HMR, double include) must not
+  // fight the first over the same paragraphs.
+  if (essayBody.hasAttribute('data-essay-justify')) return;
+  essayBody.setAttribute('data-essay-justify', '');
 
   let generation = 0;
   let controllers: JustifyController[] = [];
@@ -45,8 +50,28 @@ export function initEssayJustify(): void {
     generation += 1;
     for (const controller of controllers) controller.destroy();
     controllers = [];
+    // Sweep enhancements this instance does not own (a stale instance,
+    // a bfcache restore) so clear() always leaves a pristine baseline.
+    const stray = essayBody.querySelectorAll(':scope > p[data-justif]');
+    if (stray.length > 0) unjustify(stray);
     for (const p of hyphensSuppressed) p.style.removeProperty('hyphens');
     hyphensSuppressed = [];
+  }
+
+  /** Layout truth beats planning: any enhanced paragraph whose lines run
+   * wider than its own column fragment was measured against a stale
+   * layout (e.g. justif's async font-settle re-layout moving a column
+   * break mid-pass). Restore it to the native justify baseline. */
+  function revertOverflowing(): void {
+    const broken = [...essayBody.querySelectorAll<HTMLElement>(':scope > p[data-justif]')].filter(
+      (p) => {
+        const fragmentWidth = p.getClientRects()[0]?.width ?? p.getBoundingClientRect().width;
+        return [...p.querySelectorAll<HTMLElement>('.justif-seg')].some(
+          (seg) => seg.getBoundingClientRect().width > fragmentWidth + 8
+        );
+      }
+    );
+    if (broken.length > 0) unjustify(broken);
   }
 
   async function refresh(): Promise<void> {
@@ -75,7 +100,12 @@ export function initEssayJustify(): void {
       controllers.push(controller);
       await controller.ready;
       if (gen !== generation) return;
+      // Let the settled layout paint before the next pass re-measures
+      // fragmentation; mid-relayout rects misclassify straddlers.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      if (gen !== generation) return;
     }
+    revertOverflowing();
   }
 
   function scheduleRefresh(): void {
