@@ -37,6 +37,10 @@ function buildWith(environment) {
   }
 }
 
+// Static snapshots copied verbatim from public/ can't receive the
+// env-conditional beacon, so they sit outside the per-page guarantee.
+const STATIC_SNAPSHOT_DIRS = [new URL('notes/', DIST).href];
+
 async function findHtmlFiles(directory) {
   const files = [];
 
@@ -44,6 +48,9 @@ async function findHtmlFiles(directory) {
     const url = new URL(entry.name, directory);
 
     if (entry.isDirectory()) {
+      if (STATIC_SNAPSHOT_DIRS.includes(`${url.href}/`)) {
+        continue;
+      }
       url.pathname += '/';
       files.push(...(await findHtmlFiles(url)));
     } else if (entry.isFile() && entry.name.endsWith('.html')) {
