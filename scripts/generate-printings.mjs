@@ -23,7 +23,9 @@ const SETS = [
     slug: 'federalist-2-pennsylvania-journal',
     dir: '22899.44',
     file: (page) => `22899.44_post_p${page}.jpg`,
-    pages: 4
+    pages: 4,
+    // Calibration targets ride the right edge of the outer-face shots only.
+    cropRight: { 1: 0.08, 4: 0.08 }
   },
   {
     slug: 'federalist-85-new-york-packet',
@@ -45,7 +47,7 @@ const SETS = [
     file: (page) => `30282 p${String(page).padStart(2, '0')}.jpg`,
     pages: 4,
     // The 30282 scans include a color calibration target along the right edge.
-    cropRight: 0.09
+    cropRight: { 1: 0.09, 2: 0.09, 3: 0.09, 4: 0.09 }
   }
 ];
 
@@ -126,7 +128,13 @@ for (const set of SETS) {
         const metadata = await sharp(`${outputBase}.jpg`).metadata();
         entry[variant] = { w: metadata.width, h: metadata.height };
       } else {
-        entry[variant] = await derive(source, set.rotate?.[page], set.cropRight, width, outputBase);
+        entry[variant] = await derive(
+          source,
+          set.rotate?.[page],
+          set.cropRight?.[page],
+          width,
+          outputBase
+        );
         console.log(`${set.slug} page ${page} ${variant}: ${entry[variant].w}×${entry[variant].h}`);
       }
     }
