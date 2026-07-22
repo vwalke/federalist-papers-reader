@@ -375,20 +375,11 @@ test('justifies Gazette columns with justif and tears down for Reader', async ({
   await expect(enhanced.first()).toBeAttached();
   const counts = await page.locator('.essay-body').evaluate((body) => {
     const paragraphs = [...body.querySelectorAll(':scope > p')];
-    const dropCap = paragraphs[0];
-    const dropCapRect = dropCap?.getBoundingClientRect();
-    const firstSeg = dropCap?.querySelector('.justif-seg');
-    const firstSegRect = firstSeg?.getBoundingClientRect();
     return {
       total: paragraphs.length,
       enhanced: paragraphs.filter((p) => p.hasAttribute('data-justif')).length,
-      dropCapEnhanced: dropCap?.hasAttribute('data-justif') ?? false,
-      // justif 0.5.0 recreates the floated cap; the first line must wrap
-      // beside it, not clear below it (the hyphens: auto interaction).
-      dropCapFirstLineIndent:
-        firstSegRect && dropCapRect ? firstSegRect.left - dropCapRect.left : -1,
-      dropCapFirstLineTop:
-        firstSegRect && dropCapRect ? firstSegRect.top - dropCapRect.top : -1,
+      dropCapEnhanced: paragraphs[0]?.hasAttribute('data-justif') ?? true,
+      dropCapAlign: paragraphs[0] ? getComputedStyle(paragraphs[0]).textAlign : '',
       signatureAlign: (() => {
         const signature = body.querySelector('.essay-signature');
         return signature ? getComputedStyle(signature).textAlign : '';
@@ -402,12 +393,12 @@ test('justifies Gazette columns with justif and tears down for Reader', async ({
       ]
     };
   });
-  // Most paragraphs are enhanced, including the drop-cap opener since
-  // justif 0.5.0; any column-break straddlers stay on the native baseline.
+  // Most paragraphs are enhanced; the drop cap (justif 0.5.0 still
+  // mis-renders float-boundary hyphens) and any column-break straddlers
+  // stay on the native justify baseline.
   expect(counts.enhanced).toBeGreaterThan(counts.total / 2);
-  expect(counts.dropCapEnhanced).toBe(true);
-  expect(counts.dropCapFirstLineIndent).toBeGreaterThan(30);
-  expect(counts.dropCapFirstLineTop).toBeLessThan(10);
+  expect(counts.dropCapEnhanced).toBe(false);
+  expect(counts.dropCapAlign).toBe('justify');
   expect(counts.unenhancedAligns.every((align) => align === 'justify')).toBe(true);
   expect(['end', 'right']).toContain(counts.signatureAlign);
 

@@ -5,17 +5,22 @@
 
 ## Amendment: justif 0.5.0
 
-Upstream fixed the floated `::first-letter` bug (justif e1fb682, v0.5.0),
-so the drop-cap opener is now enhanced too and its exclusion was removed
-from the planner. Two notes:
+Upstream fixed the floated `::first-letter` bug (justif e1fb682, v0.5.0)
+and the drop-cap opener was briefly enhanced. Two further defects
+surfaced, so **the drop-cap exclusion is back** and the opener stays on
+native justify (which handles the float correctly):
 
-- 0.5.0's drop-cap support fails when the paragraph has CSS
-  `hyphens: auto`: the first lines are set at the full measure and clear
-  below the float instead of wrapping it (single-variable repro; reported
-  upstream). Since justif supplies its own TeX hyphenation, the module now
-  sets `hyphens: manual` inline on paragraphs it enhances and removes it
-  on teardown. The `hyphens: auto` baseline is unchanged for native-only
-  rendering.
+- CSS `hyphens: auto` defeats 0.5.0's drop-cap support entirely: first
+  lines set at the full measure and clear below the float
+  (single-variable repro; reported upstream). Worked around by setting
+  `hyphens: manual` inline on paragraphs the module enhances — kept, since
+  justif supplies its own hyphenation and this isolates it from CSS
+  hyphenation generally.
+- Even with that workaround, a line that hyphenates at the float boundary
+  is measured beside the float but rendered below it, leaving a ragged
+  right gap (No. 2: "ques-" line set 290 px wide in a 367 px column,
+  placed at full-left below the "W"; No. 10 showed the same with "ten-").
+  Reported upstream; revisit the exclusion on the next justif release.
 - The multicol fragmentation exclusion remains; 0.5.0 does not address it.
 
 ## Goal

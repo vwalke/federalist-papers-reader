@@ -7,9 +7,9 @@ function paragraph(overrides: Partial<ParagraphInfo> & { index: number }): Parag
 }
 
 describe('selectJustifiable', () => {
-  it('includes the drop-cap opener (justif 0.5.0 supports floated ::first-letter)', () => {
+  it('excludes the drop-cap opener (justif 0.5.0 still mis-renders float-boundary hyphens)', () => {
     const paras = [paragraph({ index: 0 }), paragraph({ index: 1 })];
-    expect(selectJustifiable(paras)).toEqual([0, 1]);
+    expect(selectJustifiable(paras)).toEqual([1]);
   });
 
   it('excludes the PUBLIUS signature', () => {
@@ -18,7 +18,7 @@ describe('selectJustifiable', () => {
       paragraph({ index: 1 }),
       paragraph({ index: 2, isSignature: true }),
     ];
-    expect(selectJustifiable(paras)).toEqual([0, 1]);
+    expect(selectJustifiable(paras)).toEqual([1]);
   });
 
   it('excludes paragraphs fragmented across a column break', () => {
@@ -27,7 +27,7 @@ describe('selectJustifiable', () => {
       paragraph({ index: 1, fragmentCount: 2 }),
       paragraph({ index: 2 }),
     ];
-    expect(selectJustifiable(paras)).toEqual([0, 2]);
+    expect(selectJustifiable(paras)).toEqual([2]);
   });
 
   it('excludes paragraphs enhanced by an earlier pass', () => {
@@ -36,18 +36,18 @@ describe('selectJustifiable', () => {
       paragraph({ index: 1, enhanced: true }),
       paragraph({ index: 2 }),
     ];
-    expect(selectJustifiable(paras)).toEqual([0, 2]);
+    expect(selectJustifiable(paras)).toEqual([2]);
   });
 
   it('selects a formerly straddling paragraph once it fits one column', () => {
     const before = [
-      paragraph({ index: 0, enhanced: true }),
+      paragraph({ index: 0 }),
       paragraph({ index: 1, fragmentCount: 2 }),
       paragraph({ index: 2, enhanced: true }),
     ];
     expect(selectJustifiable(before)).toEqual([]);
     const secondPass = [
-      paragraph({ index: 0, enhanced: true }),
+      paragraph({ index: 0 }),
       paragraph({ index: 1, fragmentCount: 1 }),
       paragraph({ index: 2, enhanced: true }),
     ];
