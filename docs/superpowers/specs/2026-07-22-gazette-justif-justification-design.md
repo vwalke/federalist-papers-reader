@@ -12,7 +12,7 @@ native justify (which handles the float correctly):
 
 - CSS `hyphens: auto` defeats 0.5.0's drop-cap support entirely: first
   lines set at the full measure and clear below the float
-  (single-variable repro; reported upstream). Worked around by setting
+  (single-variable repro; lyallcooper/justif#4). Worked around by setting
   `hyphens: manual` inline on paragraphs the module enhances — kept, since
   justif supplies its own hyphenation and this isolates it from CSS
   hyphenation generally.
@@ -20,7 +20,7 @@ native justify (which handles the float correctly):
   is measured beside the float but rendered below it, leaving a ragged
   right gap (No. 2: "ques-" line set 290 px wide in a 367 px column,
   placed at full-left below the "W"; No. 10 showed the same with "ten-").
-  Reported upstream; revisit the exclusion on the next justif release.
+  Reported as lyallcooper/justif#5; revisit the exclusion when it's fixed.
 - The multicol fragmentation exclusion remains; 0.5.0 does not address it.
 
 ## Goal
