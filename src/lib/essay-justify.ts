@@ -66,8 +66,12 @@ export function initEssayJustify(): void {
     const broken = [...essayBody.querySelectorAll<HTMLElement>(':scope > p[data-justif]')].filter(
       (p) => {
         const fragmentWidth = p.getClientRects()[0]?.width ?? p.getBoundingClientRect().width;
+        // Hanging punctuation legitimately protrudes ~0.35em past the
+        // measure and grows with the text-size slider; a real
+        // mis-measure overshoots by half a column or more.
+        const tolerance = Number.parseFloat(getComputedStyle(p).fontSize) * 0.6;
         return [...p.querySelectorAll<HTMLElement>('.justif-seg')].some(
-          (seg) => seg.getBoundingClientRect().width > fragmentWidth + 8
+          (seg) => seg.getBoundingClientRect().width > fragmentWidth + tolerance
         );
       }
     );
