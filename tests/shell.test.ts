@@ -62,4 +62,19 @@ describe('static site shell', () => {
     const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
     expect(html).toContain('href="https://x.com/ReadPublius">@ReadPublius on X</a>');
   });
+
+  it('links the colophon from the footer nav', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    expect(html).toContain('href="/colophon/">Colophon</a>');
+  });
+
+  it('publishes the colophon with its title, canonical URL, and sitemap entry', async () => {
+    const colophon = await readFile(new URL('../dist/colophon/index.html', import.meta.url), 'utf8');
+    const sitemap = await readFile(new URL('../dist/sitemap.xml', import.meta.url), 'utf8');
+
+    expect(colophon).toContain('<title>Colophon — How This Edition Is Made | Federalist Reader</title>');
+    expect(colophon).toContain('rel="canonical" href="https://federalistreader.org/colophon/"');
+    expect(colophon).toContain('href="/notes/justif/"');
+    expect(sitemap).toContain('<loc>https://federalistreader.org/colophon/</loc>');
+  });
 });

@@ -1,0 +1,190 @@
+---
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/guide.css';
+
+const description =
+  'A maker’s note on how this edition is set: the Fell and Caslon types, the newspaper columns, Knuth–Plass justification, and the quiet wear on every sheet.';
+
+const pageURL = Astro.site ? new URL('/colophon/', Astro.site).href : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Colophon — How This Edition Is Made',
+  description,
+  ...(pageURL ? { url: pageURL, mainEntityOfPage: pageURL } : {})
+};
+---
+
+<BaseLayout
+  title="Colophon — How This Edition Is Made | Federalist Reader"
+  description={description}
+  pageClass="colophon-page"
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <article class="paper-sheet colophon-page">
+    <GazetteMasthead compact dateLine="A note on the making" />
+
+    <header class="guide-lead">
+      <p class="section-kicker">Colophon</p>
+      <h1>How this edition is made</h1>
+      <p class="guide-lead__standfirst">
+        A maker’s note on the types, the columns, and the wear—the staging that serves the
+        reading.
+      </p>
+      <span class="guide-lead__ornament" aria-hidden="true"></span>
+    </header>
+
+    <section class="colophon-section" aria-labelledby="voices-heading">
+      <h2 id="voices-heading">The two voices</h2>
+      <p>
+        Two families of type share this site, and the line between them is the closest thing the
+        edition has to a law. IM Fell English sets the Gazette’s paper titles and recipient lines;
+        IM Fell DW Pica carries the essay text. Everything modern—the companion notes, the
+        guides, Reader mode—speaks in Libre Caslon Display and Libre Caslon Text. Fell speaks
+        only when the historical document does.
+      </p>
+      <p>
+        An honest admission belongs here: a 1787 New York paper would most likely have been set in
+        Caslon. The Fell types are seventeenth-century Oxford—a century earlier and an ocean away
+        from Publius. But their worn, irregular letterforms carry the feel of hand-set metal better
+        than anything cleaner I tried, and I chose the feeling over the footnote.
+      </p>
+      <p>
+        The costume stops where reading suffers. There is no long s in this edition—no{' '}
+        <i lang="en" translate="no">Congreſs</i> to decipher—because readability outranks period
+        dress. What stayed: the ligatures the Fell fonts genuinely carry, and the œ in the heading
+        every essay runs under,{' '}
+        <span class="colophon-fell" aria-hidden="true">The Fœderalist.</span>
+        <span class="visually-hidden">The Federalist.</span>{' '}
+        Reader mode sets both aside for modern spellings, and screen readers always hear the modern
+        words.
+      </p>
+    </section>
+
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
+    <section class="colophon-section" aria-labelledby="newspaper-heading">
+      <h2 id="newspaper-heading">Set like a newspaper</h2>
+      <p>
+        The sheet is composed the way its models were. A masthead lockup crowns each page, its
+        dateline set between fine double rules. The text runs in real newspaper columns—one on a
+        phone, up to three on a wide screen, never more than each column can carry legibly—divided
+        by hairline rules.
+      </p>
+      <p>
+        Each essay opens with a single drop cap, the only one it gets. There is no byline above the
+        text, because the originals carried none; at the foot of the final column, Publius signs
+        flush right, letterspaced, as in the first printings.
+      </p>
+    </section>
+
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
+    <section class="colophon-section" aria-labelledby="justified-heading">
+      <h2 id="justified-heading">Justified, at last</h2>
+      <p>
+        Until July of 2026 these sheets were set ragged right—an edge no 1787 compositor would
+        have tolerated. Hand-set newsprint was justified; the Gazette wasn’t, and it bothered me.
+      </p>
+      <p>
+        The columns are justified now, with Knuth–Plass line breaking—the algorithm Donald Knuth
+        and Michael Plass published in 1981, and the one TeX has used ever since. It came by way
+        of <a href="https://github.com/lyallcooper/justif">justif</a>, Lyall Cooper’s library,
+        which surfaced in{' '}
+        <a href="https://news.ycombinator.com/item?id=48946738">a Show HN thread</a> in mid-July;
+        within the week it was running here. Where a browser justifies one line at a
+        time and stretches whatever comes up short, justif considers the whole paragraph at once,
+        so the spacing stays even and the rivers drain away.
+      </p>
+      <p>
+        The first trials turned up one bug—a drop cap made justif overflow its column—and the
+        fix shipped in justif 0.5.0. That whole exchange, with before-and-after comparisons at the
+        Gazette’s exact column measure, is in the <a href="/notes/justif/">field notes</a>. Reader
+        mode stays ragged left on purpose: for modern reading, even word spacing is kinder than a
+        flush margin.
+      </p>
+    </section>
+
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
+    <section class="colophon-section" aria-labelledby="size-heading">
+      <h2 id="size-heading">Reading at your size</h2>
+      <p>
+        Beside the Gazette-or-Reader toggle sits a five-step text-size control. It drives a single
+        value, <code>--reading-scale</code>, which multiplies the essay and companion prose. The
+        column measures scale with it, so enlarged text reflows into fewer, wider columns rather
+        than cramped narrow ones. Mastheads, headings, and rules never scale: the furniture holds
+        still while the reading grows. The choice is remembered in your browser and applied before
+        the page first paints.
+      </p>
+    </section>
+
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
+    <section class="colophon-section" aria-labelledby="wear-heading">
+      <h2 id="wear-heading">The wear</h2>
+      <p>
+        Every sheet is worn, and no two are worn alike. When the site is built, each paper’s
+        number seeds a stable material fingerprint: deckled edges with small nicks, softened
+        corners, a single lifted corner on roughly two sheets in three, and a warm tea-tan browning
+        at the perimeter that ages the corners hardest. Each paper always looks like
+        itself—revisit No. 10 in a year and its dog-ear will not have moved.
+      </p>
+      <p>
+        The restraint matters more than the distress. No stains, no burns, no damage theater: the
+        sheets read as carefully preserved, not neglected. Wear never touches the text, and it
+        withdraws entirely in Reader mode, in print, and for readers who ask for high contrast or
+        reduced transparency.
+      </p>
+    </section>
+
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
+    <section class="colophon-section" aria-labelledby="for-heading">
+      <h2 id="for-heading">What it’s all for</h2>
+      <p>
+        All of this staging serves the reading, never the other way around. The words are the
+        authors’ own, following the{' '}
+        <a href="https://www.gutenberg.org/files/1404/1404-h/1404-h.htm">Project Gutenberg text</a>
+        {' '}that the{' '}
+        <a href="https://guides.loc.gov/federalist-papers/full-text">Library of Congress’s full-text guide</a>
+        {' '}itself relies on. The notes stay short, and the whole edition is free—no accounts, no
+        advertising. The story behind the project is on the <a href="/about/">About page</a>.
+      </p>
+      <p class="guide-cta">
+        <a class="button-link" href="/papers/1/">Begin with Paper No. 1 <span aria-hidden="true">→</span></a>
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .colophon-section {
+    max-inline-size: 56ch;
+    margin: var(--space-xl) auto 0;
+  }
+
+  .colophon-section h2 {
+    text-align: center;
+    font: 400 clamp(1.5rem, 3vw, 2.1rem) / 1.1 var(--font-display);
+  }
+
+  .colophon-section p {
+    margin-block-start: var(--space-md);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .colophon-fell {
+    font-family: var(--font-period-display);
+    font-variant-ligatures: common-ligatures historical-ligatures;
+  }
+
+  .colophon-section code {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 0.88em;
+  }
+</style>

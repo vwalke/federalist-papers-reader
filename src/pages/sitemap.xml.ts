@@ -18,6 +18,7 @@ export async function GET(context: APIContext): Promise<Response> {
   const paths = [
     '/',
     '/about/',
+    '/colophon/',
     '/guides/',
     ...guides.map((guide) => `/guides/${guide.id}/`),
     '/subscribe/',
