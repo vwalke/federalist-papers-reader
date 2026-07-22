@@ -119,6 +119,26 @@ Dist-reading vitest suites, per repo convention:
 - Cross-link assertions: `papers/2` and `papers/85` link to the print room; `papers/1` does
   not; footer nav and sitemap include `/printings/`.
 
+## Update — Seth's corrections and second batch (2026-07-22)
+
+Seth's corrected table and a second WeTransfer resolved the open questions:
+
+| Item | Fed No. | Credit | Status |
+|---|---|---|---|
+| 27488 | 1 | Rubenstein | *Pennsylvania Journal*, Nov 7 1787 (issue 2215 — the issue before the Fed 2 issue), Fed 1 on the front page; 4 scans, added |
+| 22899.44 | 2 | Rubenstein | unchanged |
+| 26169 | 7 & 8 | Rubenstein | *New-York Packet*, Nov 20 1787 — first printing of No. 8; only a detail image survives; added with "Detail" label |
+| 26566 | 13 | at the Peoria Riverfront Museum | 2 scans (of 4 pp.) added; credit line "Now at the Peoria Riverfront Museum." |
+| 25693 | 51 | Rubenstein | still no scans received (marked WT 2 but absent) — still excluded |
+| 24053 | 84 | — | listed as WT 1 but never received — not built |
+| 24854 | 85 | Rubenstein | inventory corrected from 21076; Rubenstein confirmed |
+| 30282 | — | — | confirmed "No Federalist issue" — stays a context item |
+
+Data model changes: `paperNumber` → `paperNumbers: number[]` (the 7 & 8 pair), boolean
+`rubenstein` → free-text `credit`, per-page `label` ("Detail"), helpers `printingAnchor`
+(`federalist-7-8`) and `formatPaperNumbers` ("Nos. 7 & 8"). The generator gained a second
+source root (`PRINTINGS_SOURCE_DIR_WT2`, default the wetransfer folder).
+
 ## Out of scope
 
 - Federalist 13 and 51 entries (await scans — no placeholders).
