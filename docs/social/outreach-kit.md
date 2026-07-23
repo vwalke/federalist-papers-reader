@@ -9,8 +9,11 @@ Ground rules for every send:
 - **One follow-up after ~2 weeks, then let it rest.**
 - The site is free, non-partisan, no ads, nothing for sale — say so early; it is
   the reason institutions can say yes without a procurement meeting.
-- After launch: "recently on the front page of Hacker News / Product Hunt" is a
-  legitimate credibility line for org emails. Use sparingly.
+- **The credibility line (since 2026-07-23):** *"It was recently featured on
+  kottke.org."* One clause, dropped late in the email — never in the opening,
+  never stacked with other credits. It answers "is this a real thing?" without
+  bragging. Product Hunt (#39 of the day) is a weaker backup; use only where
+  kottke wouldn't land (e.g. a maker/startup audience).
 
 ## Template A — academics & historians
 
@@ -38,7 +41,8 @@ Ground rules for every send:
 >
 > Two invitations: if you spot an error in my editorial notes, I would genuinely
 > welcome the correction. And if the site would be useful to your students, it
-> is theirs to use freely.
+> is theirs to use freely — it is free, ad-free, and was recently featured on
+> kottke.org.
 >
 > Best regards, Vann Walke · federalistreader.org
 
@@ -60,6 +64,9 @@ Ground rules for every send:
 > It began as a family reading project with my mother and it sells nothing: no
 > ads, no accounts, no fees. I built it because the existing options were
 > scanned databases and walls of text.
+>
+> It was recently featured on kottke.org, which is how I know it lands with
+> readers outside my own family.
 >
 > If it would be useful to your visitors, members, or education programs, it is
 > yours to link or share. And if you have feedback from a curatorial or
@@ -87,7 +94,8 @@ Ground rules for every send:
 > with a fall semester.
 >
 > If it's useful, share it freely. If your students find errors, I'll fix them
-> and thank you.
+> and thank you. (It's a family project, not a company — free, no ads, nothing
+> to sign up for; it was recently featured on kottke.org.)
 >
 > Best, Vann Walke · federalistreader.org
 
@@ -126,6 +134,11 @@ per the site's non-partisan positioning. When in doubt, skip.
 
 ## Sequencing
 
+0. **Since the kottke feature (2026-07-23):** secondary pickup from other link
+   blogs is likely — check before pitching an outlet in case they already ran
+   it. Also worth a periodic check of hn.algolia.com for "federalistreader":
+   a third-party HN submission beats our own Show HN, and if one lands well we
+   skip ours entirely rather than post a dupe.
 1. Launch week (now): LetterJoy + professor sent. Pause until launch settles.
 2. Post-launch (Wed–Fri, travel permitting): 2–3 org emails/day from the
    target list, personalized. No blast days.
