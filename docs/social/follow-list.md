@@ -6,29 +6,48 @@ Rule of thumb: skim every profile for 5 seconds anyway — follow the account,
 not the name. Skip anything that reads as partisan advocacy regardless of
 category; following is low-risk but the follow list is still brand surface.*
 
-## Status (verified from @ReadPublius/following, 2026-07-23)
+## Status (from the account's own following list, 2026-07-23)
 
-**Followed ✅** — jbf1755 · agordonreed · MichaelHattem · MountVernon ·
-TJMonticello (Monticello) · AmRevMuseum · USNatArchives · NYHistory ·
-America250 · icivics · mylifeonmystyle (Shawn) · BFWorldPodcast (the
-Liz-Covart connection, since @lizcovart left X) · Mark_Rush (thread
-relationship) · REV250BOS (Revolution250) · TeachingUSHist · UniofOxford ·
-and the con-law reading room: rgoodlaw · jedshug · jacklgoldsmith · lsolum ·
-Vermeullarmine.
+*(An earlier scrape of the following list was unreliable — X virtualizes it.
+This section is from Vann's verified copy-paste. To check any single account,
+open its profile: a "Following" button = already followed.)*
 
-**Still to follow — do these next (high value, low-hanging):**
-- **@librarycongress** — our literal source institution; authoritative, huge.
-- **@JamesMadisonMtp** — Madison's Montpelier. He's a Publius; near-certain
-  follow-back. Surprising gap.
-- **@GilderLehrman** — the K-12 teacher network; central to the August push.
-- **@ConstitutionCtr** — National Constitution Center (non-partisan flagship).
-- **@SHEARites** — Society for Historians of the Early American Republic.
-- **@MassHist** (Adams papers) · **@OIEAHC** (Omohundro; produces Ben
-  Franklin's World).
+**Followed ✅**
+- Historians/scholars: jbf1755 · agordonreed · MichaelHattem · Akhil_Reed_Amar ·
+  rgoodlaw · jedshug · jacklgoldsmith · lsolum · Vermeullarmine · RandyEBarnett ·
+  damonroot · Mark_Rush
+- Archives/museums/civic: librarycongress · USNatArchives · NYHistory ·
+  AmRevMuseum · TJMonticello · MountVernon · SHEARites · OIEAHC · ConstitutionCtr ·
+  GilderLehrman · ConSource · icivics · America250 · REV250BOS · UniofOxford
+- Serial-history & relationship: 250YearsAgoLive · sethkaller (Print Room scans) ·
+  mylifeonmystyle (Shawn) · TeachingUSHist · BFWorldPodcast · ConversationUS
+- Think tanks / advocacy: IJ · reason · BrookingsInst · AEI · CatoInstitute · FedSoc
 
-**Note on @lizcovart:** left X (handle no longer resolves). Reach her via
-@BFWorldPodcast (done), lizcovart.com, or Bluesky — not X. No impostor
-followed; all clear.
+**Open follows worth doing:**
+- **@JMMontpelier** — Madison's Montpelier (his home; corrected handle).
+- **@MassHist** — Massachusetts Historical Society (Adams papers).
+
+**@lizcovart:** left X. Reached via @BFWorldPodcast (done); else lizcovart.com /
+Bluesky. No impostor followed — all clear.
+
+## Following-list positioning (decided 2026-07-23)
+
+The account's brand DNA is the founders' **classical liberalism** (see
+PRODUCT.md), so following classical-liberal *scholars and institutions* is on
+brand. The risk is only that a cluster of *advocacy think tanks* leaning one
+direction reads, to an outside auditor, as a partisan tell — regardless of the
+orgs' actual philosophy. Rule going forward:
+
+- **Scholars, archives, museums, civic-education, and primary-source orgs:**
+  follow freely across the spectrum. These carry the non-partisan signal and
+  should always outnumber the advocacy follows.
+- **Advocacy / policy think tanks:** if followed at all, keep the range
+  *visibly* balanced — no lean legible from the list. The classical-liberal
+  shops currently followed (Cato, AEI, FedSoc, IJ, Reason) are balanced only
+  partly (Brookings). **Pending Vann's call:** add the direct counterparts
+  (@ACSLaw — the progressive answer to FedSoc; @BrennanCenter) so "we read
+  everyone" is unmistakable, OR drop the advocacy tier and let scholarship
+  carry it. Until decided, don't add more one-directional advocacy orgs.
 
 Then work the "Institutions," "Historic sites," "Podcasts," and "Civic
 education" sections below as ongoing daily follows (5–10/day).
