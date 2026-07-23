@@ -7,14 +7,19 @@ function paragraph(overrides: Partial<ParagraphInfo> & { index: number }): Parag
 }
 
 describe('selectJustifiable', () => {
-  it('excludes the drop-cap opener (justif 0.5.0 still mis-renders float-boundary hyphens)', () => {
+  it('enhances the drop-cap opener (justif 0.5.1 fixed the float-boundary bugs)', () => {
     const paras = [paragraph({ index: 0 }), paragraph({ index: 1 })];
+    expect(selectJustifiable(paras)).toEqual([0, 1]);
+  });
+
+  it('excludes a drop-cap opener that straddles a column break', () => {
+    const paras = [paragraph({ index: 0, fragmentCount: 2 }), paragraph({ index: 1 })];
     expect(selectJustifiable(paras)).toEqual([1]);
   });
 
   it('excludes the PUBLIUS signature', () => {
     const paras = [
-      paragraph({ index: 0 }),
+      paragraph({ index: 0, enhanced: true }),
       paragraph({ index: 1 }),
       paragraph({ index: 2, isSignature: true }),
     ];
@@ -23,7 +28,7 @@ describe('selectJustifiable', () => {
 
   it('excludes paragraphs fragmented across a column break', () => {
     const paras = [
-      paragraph({ index: 0 }),
+      paragraph({ index: 0, enhanced: true }),
       paragraph({ index: 1, fragmentCount: 2 }),
       paragraph({ index: 2 }),
     ];
@@ -32,7 +37,7 @@ describe('selectJustifiable', () => {
 
   it('excludes paragraphs enhanced by an earlier pass', () => {
     const paras = [
-      paragraph({ index: 0 }),
+      paragraph({ index: 0, enhanced: true }),
       paragraph({ index: 1, enhanced: true }),
       paragraph({ index: 2 }),
     ];
@@ -41,13 +46,13 @@ describe('selectJustifiable', () => {
 
   it('selects a formerly straddling paragraph once it fits one column', () => {
     const before = [
-      paragraph({ index: 0 }),
+      paragraph({ index: 0, enhanced: true }),
       paragraph({ index: 1, fragmentCount: 2 }),
       paragraph({ index: 2, enhanced: true }),
     ];
     expect(selectJustifiable(before)).toEqual([]);
     const secondPass = [
-      paragraph({ index: 0 }),
+      paragraph({ index: 0, enhanced: true }),
       paragraph({ index: 1, fragmentCount: 1 }),
       paragraph({ index: 2, enhanced: true }),
     ];

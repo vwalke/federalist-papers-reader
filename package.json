@@ -31,7 +31,7 @@
     "@fontsource/libre-caslon-display": "5.2.7",
     "@fontsource/libre-caslon-text": "5.2.7",
     "astro": "7.0.7",
-    "justif": "0.5.0",
+    "justif": "0.5.1",
     "yaml": "2.9.0"
   },
   "devDependencies": {

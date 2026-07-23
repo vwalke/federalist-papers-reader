@@ -3,15 +3,16 @@
  * imports so it can be unit-tested in isolation.
  *
  * justif mis-measures paragraphs fragmented across a CSS multicol column
- * break, and its 0.5.0 drop-cap support still mis-renders lines that
- * hyphenate at the float boundary (measured beside the float, rendered
- * below it — reported upstream). Both shapes keep native CSS
- * justification; see
+ * break, so those keep native CSS justification. The drop-cap opener is
+ * enhanced again as of justif 0.5.1, which fixed the two residual
+ * drop-cap bugs (hyphens: auto defeating the float, and float-boundary
+ * hyphens rendering below the float — lyallcooper/justif#4 and #5). See
  * docs/superpowers/specs/2026-07-22-gazette-justif-justification-design.md.
  */
 
 export interface ParagraphInfo {
-  /** Position within .essay-body's direct <p> children. */
+  /** Position within .essay-body's direct <p> children. Index 0 is the
+   * drop-cap opener, enhanced again as of justif 0.5.1. */
   index: number;
   /** The PUBLIUS signature line keeps its text-align: end. */
   isSignature: boolean;
@@ -24,8 +25,6 @@ export interface ParagraphInfo {
 /** Indexes of paragraphs justif may safely enhance this pass. */
 export function selectJustifiable(paragraphs: readonly ParagraphInfo[]): number[] {
   return paragraphs
-    .filter(
-      (p) => p.index > 0 && !p.isSignature && !p.enhanced && p.fragmentCount <= 1
-    )
+    .filter((p) => !p.isSignature && !p.enhanced && p.fragmentCount <= 1)
     .map((p) => p.index);
 }

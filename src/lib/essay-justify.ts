@@ -89,8 +89,9 @@ export function initEssayJustify(): void {
       const eligible = selectJustifiable(describe(paragraphs)).map((i) => paragraphs[i]);
       if (eligible.length === 0) break;
       // justif brings its own TeX hyphenation; the baseline's hyphens: auto
-      // must go first or 0.5.0 sets drop-cap first lines at full measure
-      // instead of wrapping the float (reported upstream). clear() restores.
+      // must go first or the drop-cap first line sets at full measure
+      // instead of wrapping the float (the isolation for justif#4, fixed in
+      // 0.5.1 but cheap to keep as belt-and-braces). clear() restores.
       for (const p of eligible) {
         p.style.hyphens = 'manual';
         hyphensSuppressed.push(p);
