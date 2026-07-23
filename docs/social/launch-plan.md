@@ -2,6 +2,12 @@
 
 ## Results (running)
 
+- **kottke.org, 2026-07-23** — front page, top of site: "An online edition of
+  all 85 of the Federalist Papers, presented as they were originally
+  serialized in newspapers, with [an] eye on good typography and readability."
+  Highest-authority link to date; the pitch's serial + typography framing
+  survived verbatim. Receipt line: "featured on kottke.org."
+
 - **Product Hunt, 2026-07-21: #39 product of the day** — 16 points, 9
   comments, zero launch army. Comment thread was high-quality (typography,
   authorship stylometry, two roadmap-adopted feature ideas). Receipt line for
