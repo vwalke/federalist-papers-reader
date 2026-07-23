@@ -1,0 +1,242 @@
+---
+import { getCollection } from 'astro:content';
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/guide.css';
+
+// The Federalist essays on the AP U.S. Government required-documents list,
+// each with a one-line classroom hook. Topic and author come from the papers
+// collection so the ledger never drifts from the edition itself.
+const required = [
+  {
+    number: 10,
+    hook: 'Why liberty produces faction, and why a large republic is the remedy — the argument the rest of the course keeps citing.'
+  },
+  {
+    number: 51,
+    hook: 'Ambition made to counteract ambition — and “if men were angels,” in its original context.'
+  },
+  {
+    number: 70,
+    hook: 'Hamilton’s case for a single, energetic executive: speed, secrecy, and one person to hold accountable.'
+  },
+  {
+    number: 78,
+    hook: 'Lifetime tenure, the “least dangerous” branch, and judicial review argued before Marbury existed.'
+  }
+];
+
+const papers = await getCollection('papers');
+const byNumber = new Map(papers.map((p) => [p.data.number, p.data]));
+const ledger = required.map((entry) => ({ ...entry, paper: byNumber.get(entry.number)! }));
+
+const questionExample = byNumber.get(10)!.talkItOver;
+
+const pageURL = Astro.site ? new URL('/teachers/', Astro.site).href : undefined;
+const description =
+  'The Federalist Papers for students: the AP Gov required documents — Federalist Nos. 10, 51, 70, and 78 — full text with plain-English notes and discussion questions. Free, no logins, no ads.';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'For Teachers — The Federalist Papers, Readable',
+  description,
+  ...(pageURL ? { url: pageURL, mainEntityOfPage: pageURL } : {}),
+  audience: {
+    '@type': 'EducationalAudience',
+    educationalRole: 'teacher'
+  },
+  isPartOf: {
+    '@type': 'WebSite',
+    name: 'Federalist Reader',
+    ...(Astro.site ? { url: Astro.site.href } : {})
+  }
+};
+---
+
+<BaseLayout
+  title="For Teachers — The Federalist Papers, Readable | Federalist Reader"
+  description={description}
+  pageClass="guide-page"
+  jsonLd={jsonLd}
+>
+  <article class="paper-sheet guide-page">
+    <GazetteMasthead compact dateLine="A note for the classroom" />
+
+    <header class="guide-lead">
+      <p class="section-kicker">For teachers</p>
+      <h1>The papers, ready for class.</h1>
+      <p class="guide-lead__standfirst">
+        The AP-required Federalist essays, full text, one click each — with discussion questions
+        built in.
+      </p>
+      <span class="guide-lead__ornament" aria-hidden="true"></span>
+    </header>
+
+    <div class="guide-intro">
+      <p>
+        Every Federalist essay on the AP U.S. Government required list is here in full — free,
+        readable, no logins, no ads. It works on school networks, library desktops, and the phones
+        students actually read on.
+      </p>
+    </div>
+
+    <section class="guide-group" aria-labelledby="required-title">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-group__title" id="required-title">The required documents, one click each</h2>
+      <p class="guide-group__note">
+        Four of the AP U.S. Government required foundational documents are Federalist essays. All
+        four are below, complete, with companion notes.
+      </p>
+      <ol class="curated-list teachers-required">
+        {ledger.map((entry) => (
+          <li class="curated-entry">
+            <p class="curated-entry__number" aria-hidden="true">{entry.number}</p>
+            <div class="curated-entry__body">
+              <h3 class="curated-entry__topic">
+                <span class="visually-hidden">Federalist No. {entry.number}: </span>{entry.paper.topic}
+              </h3>
+              <p class="curated-entry__meta">No. {entry.number} · {entry.paper.author}</p>
+              <p class="curated-entry__why">{entry.hook}</p>
+              <p class="curated-entry__link">
+                <a href={`/papers/${entry.number}/`}>Read the paper <span aria-hidden="true">→</span></a>
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="teachers-brutus">
+        The required list pairs these four with <strong>Brutus No. 1</strong>, the Anti-Federalist
+        opening argument. It is not part of this edition yet, so for now:{' '}
+        <a href="https://teachingamericanhistory.org/document/brutus-i/">
+          read Brutus No. 1 at Teaching American History <span aria-hidden="true">↗</span>
+        </a>.
+      </p>
+    </section>
+
+    <section class="guide-group" aria-labelledby="reading-title">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-group__title" id="reading-title">Built for reading, not scrolling</h2>
+      <ol class="curated-list teachers-features">
+        <li class="curated-entry">
+          <div class="curated-entry__body">
+            <h3 class="curated-entry__topic">The original words, with a companion beside them</h3>
+            <p class="curated-entry__why">
+              Each paper keeps its complete original text and adds a short plain-English note: the
+              argument in a nutshell, its key moves, and one discussion question — sized to work as
+              a bell-ringer.
+            </p>
+          </div>
+        </li>
+        <li class="curated-entry">
+          <div class="curated-entry__body">
+            <h3 class="curated-entry__topic">A clean Reader mode</h3>
+            <p class="curated-entry__why">
+              One comfortable column in modern type, with five text sizes. The 1780s newspaper
+              setting is one tap away when you want the period in the room.
+            </p>
+          </div>
+        </li>
+        <li class="curated-entry">
+          <div class="curated-entry__body">
+            <h3 class="curated-entry__topic">Nothing to manage</h3>
+            <p class="curated-entry__why">
+              Reading progress stays on the student’s own device. No accounts to create, no
+              passwords to reset, nothing for the district to unblock.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="guide-group" aria-labelledby="questions-title">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-group__title" id="questions-title">Discussion questions included</h2>
+      <div class="guide-intro">
+        <p>
+          Every paper’s companion note ends with one question under the heading “Talk it over” —
+          not a comprehension check, but a genuine open question the essay raises for the present
+          day. From the companion to No. 10:
+        </p>
+      </div>
+      <blockquote class="teachers-question">
+        <p>“{questionExample}”</p>
+      </blockquote>
+    </section>
+
+    <section class="guide-group" aria-labelledby="free-title">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <h2 class="guide-group__title" id="free-title">Free means free</h2>
+      <div class="guide-intro">
+        <p>
+          No ads, no cost, no accounts, no tracking beyond cookieless analytics — and the whole
+          site is <a href="https://github.com/vwalke/federalist-papers-reader">open source</a>.
+          It began as a family reading project, and that story is on{' '}
+          <a href="/about/">the About page</a>.
+        </p>
+        <p>
+          And if the papers hook you personally, they’re{' '}
+          <a href="/subscribe/">available by email</a> — one a week, or each on its original
+          1787–88 publication date.
+        </p>
+      </div>
+    </section>
+
+    <footer class="teachers-close">
+      <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+      <p>
+        If this is useful, share it with a colleague. Corrections and suggestions:{' '}
+        <a href="mailto:publius@federalistreader.org">publius@federalistreader.org</a>.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  /* The required-documents ledger keeps its numeral column even inside a
+     guide group, which otherwise flattens entries to a single column. */
+  ol.teachers-required .curated-entry {
+    grid-template-columns: auto 1fr;
+  }
+
+  /* The feature notes read as a single notices column, narrower than the
+     required-documents ledger, and never split into two columns. */
+  ol.curated-list.teachers-features {
+    max-inline-size: 56ch;
+    margin-inline: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .teachers-brutus {
+    max-inline-size: 56ch;
+    margin: var(--space-lg) auto 0;
+    padding-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--color-rule);
+    text-align: center;
+    font-style: italic;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  .teachers-question {
+    max-inline-size: 44ch;
+    margin: var(--space-lg) auto 0;
+    text-align: center;
+  }
+
+  .teachers-question p {
+    font: 400 clamp(1.3rem, 2.6vw, 1.7rem)/1.35 var(--font-display);
+    text-wrap: balance;
+  }
+
+  .teachers-close {
+    margin-block-start: var(--space-xl);
+    text-align: center;
+  }
+
+  .teachers-close p {
+    max-inline-size: 44ch;
+    margin-inline: auto;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+</style>

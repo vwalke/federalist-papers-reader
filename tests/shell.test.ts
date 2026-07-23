@@ -58,6 +58,27 @@ describe('static site shell', () => {
     expect(html).toContain('href="/guides/">Guides</a>');
   });
 
+  it('links the For Teachers page from the footer nav', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    expect(html).toContain('href="/teachers/">For teachers</a>');
+  });
+
+  it('publishes the For Teachers page with its title, canonical URL, and sitemap entry', async () => {
+    const teachers = await readFile(new URL('../dist/teachers/index.html', import.meta.url), 'utf8');
+    const sitemap = await readFile(new URL('../dist/sitemap.xml', import.meta.url), 'utf8');
+
+    expect(teachers).toContain(
+      '<title>For Teachers — The Federalist Papers, Readable | Federalist Reader</title>',
+    );
+    expect(teachers).toContain('rel="canonical" href="https://federalistreader.org/teachers/"');
+    expect(teachers).toContain('href="/papers/10/"');
+    expect(teachers).toContain('href="/papers/51/"');
+    expect(teachers).toContain('href="/papers/70/"');
+    expect(teachers).toContain('href="/papers/78/"');
+    expect(teachers).toContain('https://teachingamericanhistory.org/document/brutus-i/');
+    expect(sitemap).toContain('<loc>https://federalistreader.org/teachers/</loc>');
+  });
+
   it('links the X account from the footer nav', async () => {
     const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
     expect(html).toContain('href="https://x.com/ReadPublius">@ReadPublius on X</a>');

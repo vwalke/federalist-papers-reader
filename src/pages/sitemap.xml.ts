@@ -22,6 +22,7 @@ export async function GET(context: APIContext): Promise<Response> {
     '/printings/',
     '/guides/',
     ...guides.map((guide) => `/guides/${guide.id}/`),
+    '/teachers/',
     '/subscribe/',
     ...papers.map((paper) => `/papers/${paper.data.number}/`)
   ];
