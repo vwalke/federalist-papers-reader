@@ -6,6 +6,33 @@ Rule of thumb: skim every profile for 5 seconds anyway — follow the account,
 not the name. Skip anything that reads as partisan advocacy regardless of
 category; following is low-risk but the follow list is still brand surface.*
 
+## Status (verified from @ReadPublius/following, 2026-07-23)
+
+**Followed ✅** — jbf1755 · agordonreed · MichaelHattem · MountVernon ·
+TJMonticello (Monticello) · AmRevMuseum · USNatArchives · NYHistory ·
+America250 · icivics · mylifeonmystyle (Shawn) · BFWorldPodcast (the
+Liz-Covart connection, since @lizcovart left X) · Mark_Rush (thread
+relationship) · REV250BOS (Revolution250) · TeachingUSHist · UniofOxford ·
+and the con-law reading room: rgoodlaw · jedshug · jacklgoldsmith · lsolum ·
+Vermeullarmine.
+
+**Still to follow — do these next (high value, low-hanging):**
+- **@librarycongress** — our literal source institution; authoritative, huge.
+- **@JamesMadisonMtp** — Madison's Montpelier. He's a Publius; near-certain
+  follow-back. Surprising gap.
+- **@GilderLehrman** — the K-12 teacher network; central to the August push.
+- **@ConstitutionCtr** — National Constitution Center (non-partisan flagship).
+- **@SHEARites** — Society for Historians of the Early American Republic.
+- **@MassHist** (Adams papers) · **@OIEAHC** (Omohundro; produces Ben
+  Franklin's World).
+
+**Note on @lizcovart:** left X (handle no longer resolves). Reach her via
+@BFWorldPodcast (done), lizcovart.com, or Bluesky — not X. No impostor
+followed; all clear.
+
+Then work the "Institutions," "Historic sites," "Podcasts," and "Civic
+education" sections below as ongoing daily follows (5–10/day).
+
 ## Day 1 — the priority twenty (highest follow-back + relevance)
 
 | Handle | Who |
