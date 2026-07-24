@@ -72,7 +72,7 @@ function document(title: string, content: string): string {
       padding: .65rem 1rem;
       color: var(--paper);
       background: var(--ink);
-      font: 700 .78rem/1.2 Arial, sans-serif;
+      font: 700 .78rem/1.2 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       transform: translateY(-180%);
     }
     .skip:focus { transform: translateY(0); }
@@ -100,7 +100,7 @@ function document(title: string, content: string): string {
       border-bottom: 4px double var(--ink);
     }
     .kicker, .updated, .stat__label, thead, .refresh, .note {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     .kicker {
       margin-bottom: .3rem;

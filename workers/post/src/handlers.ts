@@ -5,6 +5,7 @@ import { DOW_NAMES, nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
 import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
 import type { OutboundEmail } from './resend';
+import { renderDashboard, renderDashboardError } from './dashboard';
 
 export type Sender = (apiKey: string, mail: OutboundEmail) => Promise<string>;
 
@@ -18,6 +19,38 @@ function page(html: string, status = 200, noStore = false): Response {
   const headers: Record<string, string> = { 'Content-Type': 'text/html; charset=utf-8' };
   if (noStore) headers['Cache-Control'] = 'no-store';
   return new Response(html, { status, headers });
+}
+
+const DASHBOARD_HEADERS: Record<string, string> = {
+  'Content-Type': 'text/html; charset=utf-8',
+  'Cache-Control': 'private, no-store',
+  'X-Robots-Tag': 'noindex, nofollow, noarchive',
+  'Referrer-Policy': 'no-referrer'
+};
+
+function dashboardPage(html: string, status = 200, extraHeaders: Record<string, string> = {}): Response {
+  return new Response(html, {
+    status,
+    headers: { ...DASHBOARD_HEADERS, ...extraHeaders }
+  });
+}
+
+async function handleDashboard(request: Request, db: Db): Promise<Response> {
+  if (request.method !== 'GET') {
+    return dashboardPage(renderDashboardError(
+      'That request is not supported',
+      'Open this page normally to see the current figures.'
+    ), 405, { Allow: 'GET' });
+  }
+  try {
+    const [stats, weeklyDays] = await Promise.all([
+      db.getSubscriberStats(),
+      db.getWeeklyDayStats()
+    ]);
+    return dashboardPage(renderDashboard(stats, weeklyDays, new Date()));
+  } catch {
+    return dashboardPage(renderDashboardError(), 500);
+  }
 }
 
 async function emailContext(env: Env, sub: Subscriber): Promise<EmailContext> {
@@ -251,6 +284,7 @@ export async function handleRequest(request: Request, env: Env, db: Db, send: Se
     ? rawPathname.slice(0, -1)
     : rawPathname;
   const method = request.method;
+  if (pathname === '/post-office') return handleDashboard(request, db);
   if (method === 'POST' && pathname === '/api/subscribe') return handleSubscribe(request, env, db, send);
   if (method === 'GET' && pathname === '/api/confirm') return handleConfirm(request, env, db, send);
   if (method === 'GET' && pathname === '/manage') return handleManageGet(request, env, db);
