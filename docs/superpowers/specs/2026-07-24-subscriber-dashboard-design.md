@@ -26,7 +26,9 @@ can query aggregate statistics without adding a public data API or copying
 subscriber data into the static Astro site.
 
 A Cloudflare Access self-hosted application will protect
-`federalistreader.org/post-office/*`. Access will use Cloudflare as the
+`federalistreader.org/post-office*`. The suffix wildcard deliberately covers
+both `/post-office` and `/post-office/`; Cloudflare's `/post-office/*` form
+does not cover the parent path. Access will use Cloudflare as the
 identity provider, allow only members of the current Cloudflare account, and
 issue a one-month session. Cloudflare Access is the authentication boundary;
 the dashboard is deployed only after that boundary is configured.
@@ -86,7 +88,9 @@ No JSON endpoint or browser-side fetch is introduced.
 The Worker route configuration adds
 `federalistreader.org/post-office*`. All existing `/api/*` and `/manage*`
 behavior remains unchanged, and every other site path continues to resolve to
-Cloudflare Pages.
+Cloudflare Pages. The Wrangler configuration explicitly disables the
+Worker's `workers.dev` hostname and preview URLs so neither can bypass the
+custom-domain Access application.
 
 ## Interface
 
@@ -164,15 +168,16 @@ Production verification will confirm that:
 Deployment is intentionally ordered:
 
 1. In Cloudflare Zero Trust, create a self-hosted Access application for
-   `federalistreader.org/post-office/*`.
+   `federalistreader.org/post-office*`.
 2. Use Cloudflare as the login method.
 3. Add an Allow policy whose selector is **Cloudflare Account Member** for the
    current account.
 4. Set the application or policy session duration to one month.
 5. Verify Access intercepts the path before the Worker route exists.
-6. Deploy `publius-post` manually with Wrangler, following the repository's
+6. Confirm Wrangler has `workers_dev = false` and `preview_urls = false`.
+7. Deploy `publius-post` manually with Wrangler, following the repository's
    existing Worker deployment process.
-7. Perform the production checks above.
+8. Perform the production checks above.
 
 The one-time Access setup, deployment order, and smoke test will be added to
 `docs/deployment.md`. No D1 migration, Astro deployment, navigation change, or
