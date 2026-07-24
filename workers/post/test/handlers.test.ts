@@ -11,6 +11,10 @@ const SUB: Subscriber = {
 
 function makeStubDb(overrides: Partial<Db> = {}): Db {
   return {
+    getSubscriberStats: vi.fn(async () => ({
+      active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0
+    })),
+    getWeeklyDayStats: vi.fn(async () => []),
     getSubscriberById: vi.fn(async () => SUB),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(async () => SUB),

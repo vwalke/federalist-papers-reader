@@ -1,7 +1,37 @@
 // workers/post/src/db.ts
 import type { Program, Subscriber } from './types';
 
+export interface SubscriberStats {
+  active: number;
+  pending: number;
+  gone: number;
+  weekly: number;
+  asItHappened: number;
+}
+
+export interface WeeklyDayStats {
+  sendDow: number;
+  active: number;
+  pending: number;
+}
+
+interface SubscriberStatsRow {
+  active: number;
+  pending: number;
+  gone: number;
+  weekly: number;
+  as_it_happened: number;
+}
+
+interface WeeklyDayStatsRow {
+  send_dow: number;
+  active: number;
+  pending: number;
+}
+
 export interface Db {
+  getSubscriberStats(): Promise<SubscriberStats>;
+  getWeeklyDayStats(): Promise<WeeklyDayStats[]>;
   getSubscriberById(id: number): Promise<Subscriber | null>;
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
   upsertPending(email: string, program: Program, tokenSecret: string, sendDow: number): Promise<Subscriber>;
@@ -26,6 +56,37 @@ export interface Db {
 export function makeDb(d1: D1Database): Db {
   const one = async (stmt: D1PreparedStatement) => ((await stmt.first()) as Subscriber | null) ?? null;
   return {
+    async getSubscriberStats() {
+      const row = await d1.prepare(`SELECT
+        COUNT(*) FILTER (WHERE status = 'active') AS active,
+        COUNT(*) FILTER (WHERE status = 'pending') AS pending,
+        COUNT(*) FILTER (WHERE status NOT IN ('active','pending')) AS gone,
+        COUNT(*) FILTER (WHERE program = 'weekly' AND status = 'active') AS weekly,
+        COUNT(*) FILTER (WHERE program = 'calendar' AND status = 'active') AS as_it_happened
+        FROM subscribers`).first<SubscriberStatsRow>();
+      if (!row) throw new Error('subscriber stats returned no row');
+      return {
+        active: Number(row.active),
+        pending: Number(row.pending),
+        gone: Number(row.gone),
+        weekly: Number(row.weekly),
+        asItHappened: Number(row.as_it_happened)
+      };
+    },
+    async getWeeklyDayStats() {
+      const { results } = await d1.prepare(`SELECT send_dow,
+        COUNT(*) FILTER (WHERE status = 'active') AS active,
+        COUNT(*) FILTER (WHERE status = 'pending') AS pending
+        FROM subscribers
+        WHERE program = 'weekly'
+        GROUP BY send_dow
+        ORDER BY send_dow`).all<WeeklyDayStatsRow>();
+      return results.map((row) => ({
+        sendDow: Number(row.send_dow),
+        active: Number(row.active),
+        pending: Number(row.pending)
+      }));
+    },
     getSubscriberById: (id) => one(d1.prepare('SELECT * FROM subscribers WHERE id = ?').bind(id)),
     getSubscriberByEmail: (email) =>
       one(d1.prepare('SELECT * FROM subscribers WHERE email = ?').bind(email.toLowerCase())),
