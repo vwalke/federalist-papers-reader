@@ -13,9 +13,6 @@ import { hyphenateEnUS } from 'justif/hyphenate/en-us';
 
 import { selectJustifiable, type ParagraphInfo } from './essay-justify-plan';
 
-/** A second pass catches paragraphs that stop straddling a column break
- * after the first pass shortens the flow. More passes buy nothing. */
-const PASSES = 2;
 const REFRESH_DEBOUNCE_MS = 150;
 
 export function initEssayJustify(): void {
@@ -41,7 +38,6 @@ export function initEssayJustify(): void {
     return paragraphs.map((p, index) => ({
       index,
       isSignature: p.classList.contains('essay-signature'),
-      fragmentCount: p.getClientRects().length,
       enhanced: p.hasAttribute('data-justif'),
     }));
   }
@@ -58,10 +54,10 @@ export function initEssayJustify(): void {
     hyphensSuppressed = [];
   }
 
-  /** Layout truth beats planning: any enhanced paragraph whose lines run
-   * wider than its own column fragment was measured against a stale
-   * layout (e.g. justif's async font-settle re-layout moving a column
-   * break mid-pass). Restore it to the native justify baseline. */
+  /** Defensive net: justif 0.6 measures each column fragment on its own,
+   * so lines should never exceed their fragment, but if one ever does
+   * (an unforeseen mis-measure), restore that paragraph to the native
+   * justify baseline rather than let it overflow the column. */
   function revertOverflowing(): void {
     const broken = [...essayBody.querySelectorAll<HTMLElement>(':scope > p[data-justif]')].filter(
       (p) => {
@@ -84,32 +80,26 @@ export function initEssayJustify(): void {
     const gen = generation;
     await document.fonts.ready;
     if (gen !== generation) return;
-    for (let pass = 0; pass < PASSES; pass += 1) {
-      const paragraphs = [...essayBody.querySelectorAll<HTMLElement>(':scope > p')];
-      const eligible = selectJustifiable(describe(paragraphs)).map((i) => paragraphs[i]);
-      if (eligible.length === 0) break;
-      // justif brings its own TeX hyphenation; the baseline's hyphens: auto
-      // must go first or the drop-cap first line sets at full measure
-      // instead of wrapping the float (the isolation for justif#4, fixed in
-      // 0.5.1 but cheap to keep as belt-and-braces). clear() restores.
-      for (const p of eligible) {
-        p.style.hyphens = 'manual';
-        hyphensSuppressed.push(p);
-      }
-      const controller = justify(eligible, {
-        hyphenate: hyphenateEnUS,
-        // This module re-plans fragmentation on every width change; justif's
-        // own observer would re-layout straddling paragraphs it mis-measures.
-        observeResize: false,
-      });
-      controllers.push(controller);
-      await controller.ready;
-      if (gen !== generation) return;
-      // Let the settled layout paint before the next pass re-measures
-      // fragmentation; mid-relayout rects misclassify straddlers.
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      if (gen !== generation) return;
+    const paragraphs = [...essayBody.querySelectorAll<HTMLElement>(':scope > p')];
+    const eligible = selectJustifiable(describe(paragraphs)).map((i) => paragraphs[i]);
+    if (eligible.length === 0) return;
+    // justif brings its own TeX hyphenation; the baseline's hyphens: auto
+    // must go first or the drop-cap first line sets at full measure
+    // instead of wrapping the float (the isolation for justif#4, fixed in
+    // 0.5.1 but cheap to keep as belt-and-braces). clear() restores.
+    for (const p of eligible) {
+      p.style.hyphens = 'manual';
+      hyphensSuppressed.push(p);
     }
+    // This module fully rebuilds on every width change (clear + refresh),
+    // so justif's own resize observer would only duplicate that work.
+    const controller = justify(eligible, { hyphenate: hyphenateEnUS, observeResize: false });
+    controllers.push(controller);
+    await controller.ready;
+    if (gen !== generation) return;
+    // Let the settled layout paint before the defensive overflow sweep.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    if (gen !== generation) return;
     revertOverflowing();
   }
 

@@ -3,36 +3,27 @@ import { describe, expect, it } from 'vitest';
 import { selectJustifiable, type ParagraphInfo } from '../src/lib/essay-justify-plan';
 
 function paragraph(overrides: Partial<ParagraphInfo> & { index: number }): ParagraphInfo {
-  return { isSignature: false, fragmentCount: 1, enhanced: false, ...overrides };
+  return { isSignature: false, enhanced: false, ...overrides };
 }
 
 describe('selectJustifiable', () => {
-  it('enhances the drop-cap opener (justif 0.5.1 fixed the float-boundary bugs)', () => {
+  it('enhances every essay paragraph, drop-cap opener included', () => {
     const paras = [paragraph({ index: 0 }), paragraph({ index: 1 })];
     expect(selectJustifiable(paras)).toEqual([0, 1]);
   });
 
-  it('excludes a drop-cap opener that straddles a column break', () => {
-    const paras = [paragraph({ index: 0, fragmentCount: 2 }), paragraph({ index: 1 })];
-    expect(selectJustifiable(paras)).toEqual([1]);
+  it('enhances a column-straddling paragraph (justif 0.6 measures it per column)', () => {
+    const paras = [paragraph({ index: 0 }), paragraph({ index: 1 }), paragraph({ index: 2 })];
+    expect(selectJustifiable(paras)).toEqual([0, 1, 2]);
   });
 
   it('excludes the PUBLIUS signature', () => {
     const paras = [
-      paragraph({ index: 0, enhanced: true }),
+      paragraph({ index: 0 }),
       paragraph({ index: 1 }),
       paragraph({ index: 2, isSignature: true }),
     ];
-    expect(selectJustifiable(paras)).toEqual([1]);
-  });
-
-  it('excludes paragraphs fragmented across a column break', () => {
-    const paras = [
-      paragraph({ index: 0, enhanced: true }),
-      paragraph({ index: 1, fragmentCount: 2 }),
-      paragraph({ index: 2 }),
-    ];
-    expect(selectJustifiable(paras)).toEqual([2]);
+    expect(selectJustifiable(paras)).toEqual([0, 1]);
   });
 
   it('excludes paragraphs enhanced by an earlier pass', () => {
@@ -42,21 +33,6 @@ describe('selectJustifiable', () => {
       paragraph({ index: 2 }),
     ];
     expect(selectJustifiable(paras)).toEqual([2]);
-  });
-
-  it('selects a formerly straddling paragraph once it fits one column', () => {
-    const before = [
-      paragraph({ index: 0, enhanced: true }),
-      paragraph({ index: 1, fragmentCount: 2 }),
-      paragraph({ index: 2, enhanced: true }),
-    ];
-    expect(selectJustifiable(before)).toEqual([]);
-    const secondPass = [
-      paragraph({ index: 0, enhanced: true }),
-      paragraph({ index: 1, fragmentCount: 1 }),
-      paragraph({ index: 2, enhanced: true }),
-    ];
-    expect(selectJustifiable(secondPass)).toEqual([1]);
   });
 
   it('returns no indexes for an empty essay', () => {
