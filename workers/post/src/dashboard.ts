@@ -211,7 +211,7 @@ function document(title: string, content: string): string {
     .email-quota { stroke: var(--ink); stroke-dasharray: 4 4; }
     .email-chart text {
       fill: var(--muted);
-      font: 10px ui-sans-serif, system-ui, sans-serif;
+      font: 13px ui-sans-serif, system-ui, sans-serif;
     }
     .email-values { margin-top: .75rem; }
     .email-values summary {
@@ -325,17 +325,20 @@ function renderEmailBars(activity: EmailActivity): string {
     return `<g><title>${shortDate(day.date)}: ${day.count} sent</title><rect class="email-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${height.toFixed(2)}"></rect></g>`;
   }).join('');
   const labels = activity.days.map((day, index) => {
-    if (index !== 0 && index !== activity.days.length - 1 && index % 7 !== 0) return '';
+    const isEndpoint = index === 0 || index === activity.days.length - 1;
+    const isWeekly = index % 7 === 0 && index < activity.days.length - 2;
+    if (!isEndpoint && !isWeekly) return '';
     const x = plotLeft + index * slot + slot / 2;
-    return `<text x="${x.toFixed(2)}" y="207" text-anchor="middle">${shortDate(day.date)}</text>`;
+    return `<text class="email-axis-label" x="${x.toFixed(2)}" y="207" text-anchor="middle">${shortDate(day.date)}</text>`;
   }).join('');
+  const quotaLabelY = quotaY < plotTop + 16 ? quotaY + 15 : quotaY - 4;
 
   return `<svg class="email-chart" viewBox="0 0 600 220" role="img" aria-labelledby="email-chart-title email-chart-desc">
         <title id="email-chart-title">Sent emails by Eastern date</title>
         <desc id="email-chart-desc">Daily sent-email totals for the most recent 30 days, grouped in Eastern Time.</desc>
         <line class="email-rule" x1="${plotLeft}" y1="${plotBottom}" x2="${plotLeft + plotWidth}" y2="${plotBottom}" vector-effect="non-scaling-stroke"></line>
         <line class="email-quota" data-value="100" x1="${plotLeft}" y1="${quotaY.toFixed(2)}" x2="${plotLeft + plotWidth}" y2="${quotaY.toFixed(2)}" vector-effect="non-scaling-stroke"></line>
-        <text x="${plotLeft}" y="${Math.max(10, quotaY - 4).toFixed(2)}">100-send reference</text>
+        <text x="${plotLeft}" y="${quotaLabelY.toFixed(2)}">100-send reference</text>
         ${bars}${labels}
       </svg>`;
 }

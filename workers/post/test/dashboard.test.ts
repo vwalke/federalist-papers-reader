@@ -82,6 +82,7 @@ describe('subscriber dashboard renderer', () => {
     expect(html).toMatch(/<svg[\s\S]*<title[^>]*>Sent emails by Eastern date<\/title>/);
     expect(html).toMatch(/<desc[^>]*>[\s\S]*30 days[\s\S]*<\/desc>/);
     expect(html.match(/class="email-bar"/g)).toHaveLength(30);
+    expect(html.match(/class="email-axis-label"/g)).toHaveLength(5);
     expect(html).toContain('data-value="100"');
     expect(html).toContain('<th scope="row"><time datetime="2026-06-26">Jun 26</time></th>');
     expect(html).toContain('<th scope="row"><time datetime="2026-07-25">Jul 25</time></th>');
