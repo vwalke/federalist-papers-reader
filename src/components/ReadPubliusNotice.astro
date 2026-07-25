@@ -1,3 +1,13 @@
+<script is:inline>
+  try {
+    if (localStorage.getItem('publius:x-promo-dismissed') === '1') {
+      document.documentElement.dataset.readpubliusDismissed = '';
+    }
+  } catch {
+    // The notice remains available when storage access is blocked.
+  }
+</script>
+
 <aside
   class="readpublius-notice"
   aria-labelledby="readpublius-notice-title"
@@ -27,3 +37,20 @@
     <span aria-hidden="true">×</span>
   </button>
 </aside>
+
+<script>
+  const notice = document.querySelector<HTMLElement>('[data-readpublius-notice]');
+  const dismiss = notice?.querySelector<HTMLButtonElement>('[data-readpublius-dismiss]');
+
+  if (notice && dismiss) {
+    dismiss.addEventListener('click', () => {
+      document.documentElement.dataset.readpubliusDismissed = '';
+      try {
+        window.localStorage.setItem('publius:x-promo-dismissed', '1');
+      } catch {
+        // The document marker still dismisses the notice for this page.
+      }
+    });
+    dismiss.hidden = false;
+  }
+</script>

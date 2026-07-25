@@ -18,6 +18,15 @@ test('core reading and navigation remain when JavaScript is disabled', async ({ 
 
   await page.goto('/');
   await expect(page.locator('[data-index-paper]')).toHaveCount(85);
+  await expect(
+    page.getByRole('complementary', { name: 'From the public square' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Follow @ReadPublius on X' }),
+  ).toHaveAttribute('href', 'https://x.com/ReadPublius');
+  await expect(
+    page.getByRole('button', { name: 'Dismiss ReadPublius notice' }),
+  ).toHaveCount(0);
   await context.close();
 });
 
