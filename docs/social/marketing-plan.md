@@ -17,8 +17,19 @@ and generates the .edu backlinks that lift every other search query.
   Show HN re-run once account karma is built (~2 wks; receipts: PH top-50,
   subscriber count); r/InternetIsBeautiful after HN; pitch taste-maker
   newsletters (kottke.org, Dense Discovery, Recomendo, Web Curios — precision
-  audience fit, high-authority backlinks); submit to design showcases
-  (Awwwards, CSS Design Awards).
+  audience fit, high-authority backlinks — **kottke.org featured us
+  2026-07-23**); submit to design showcases (Awwwards, CSS Design Awards).
+
+  *Design-showcase status:*
+  - **Fonts In Use — SUBMITTED 2026-07-24.** In their editorial queue; publishes
+    on their schedule. Images + captions in `~/Desktop/federalist-social/
+    fontsinuse/` (a-gazette-top, c2-column-detail [hanging-punctuation guide],
+    g-home, f-companion).
+  - **Typewolf — PENDING, scheduled ~Aug 8+.** Submission is by replying to
+    Jeremiah Shoaf's email newsletter (subscribed 2026-07-24). Deliberately
+    waiting ~2 weeks so it isn't a reply to the very first issue (reads as
+    subscribe-only-to-pitch). Reuse the same 4 images + one-line pitch; lead
+    with a-gazette-top.
 - **Phase 2 — back-to-school (August):** ship a **"For teachers" page** (the
   AP required documents, readable; companion questions as discussion
   starters; free/no-login stated plainly); LibGuides librarian outreach; OER
