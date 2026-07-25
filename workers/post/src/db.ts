@@ -1,5 +1,12 @@
 // workers/post/src/db.ts
 import type { Program, Subscriber } from './types';
+import {
+  summarizeEmailActivity,
+  type EmailActivity,
+  type EmailSendRow
+} from './email-activity';
+
+export type { EmailActivity } from './email-activity';
 
 export interface SubscriberStats {
   active: number;
@@ -32,6 +39,9 @@ interface WeeklyDayStatsRow {
 export interface Db {
   getSubscriberStats(): Promise<SubscriberStats>;
   getWeeklyDayStats(): Promise<WeeklyDayStats[]>;
+  recordEmailSend(providerMessageId: string, sentAt: string, recipientCount: number): Promise<void>;
+  getEmailActivity(now: Date): Promise<EmailActivity>;
+  purgeEmailSends(olderThanDays: number): Promise<void>;
   getSubscriberById(id: number): Promise<Subscriber | null>;
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
   upsertPending(email: string, program: Program, tokenSecret: string, sendDow: number): Promise<Subscriber>;
@@ -86,6 +96,29 @@ export function makeDb(d1: D1Database): Db {
         active: Number(row.active),
         pending: Number(row.pending)
       }));
+    },
+    async recordEmailSend(providerMessageId, sentAt, recipientCount) {
+      await d1.prepare(
+        `INSERT INTO email_sends (provider_message_id, sent_at, recipient_count)
+         VALUES (?, ?, ?)
+         ON CONFLICT(provider_message_id) DO UPDATE SET
+           sent_at = excluded.sent_at,
+           recipient_count = excluded.recipient_count`
+      ).bind(providerMessageId, sentAt, recipientCount).run();
+    },
+    async getEmailActivity(now) {
+      const cutoff = new Date(now.getTime() - 31 * 86_400_000).toISOString();
+      const { results } = await d1.prepare(
+        `SELECT sent_at, recipient_count
+         FROM email_sends
+         WHERE sent_at >= ?
+         ORDER BY sent_at`
+      ).bind(cutoff).all<EmailSendRow>();
+      return summarizeEmailActivity(results, now);
+    },
+    async purgeEmailSends(olderThanDays) {
+      const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
+      await d1.prepare('DELETE FROM email_sends WHERE sent_at < ?').bind(cutoff).run();
     },
     getSubscriberById: (id) => one(d1.prepare('SELECT * FROM subscribers WHERE id = ?').bind(id)),
     getSubscriberByEmail: (email) =>

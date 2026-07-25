@@ -67,3 +67,85 @@ describe('subscriber statistics queries', () => {
       .rejects.toThrow('subscriber stats returned no row');
   });
 });
+
+describe('email activity queries', () => {
+  it('upserts aggregate send data by provider message ID', async () => {
+    const calls: Array<{ sql: string; bind: unknown[] }> = [];
+    const d1 = {
+      prepare: vi.fn((sql: string) => ({
+        bind: vi.fn((...bind: unknown[]) => ({
+          run: vi.fn(async () => {
+            calls.push({ sql, bind });
+          })
+        }))
+      }))
+    } as unknown as D1Database;
+
+    await makeDb(d1).recordEmailSend(
+      '56761188-7520-42d8-8898-ff6fc54ce618',
+      '2026-07-25T12:00:00.000Z',
+      3
+    );
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].sql).toContain('ON CONFLICT(provider_message_id) DO UPDATE');
+    expect(calls[0].bind).toEqual([
+      '56761188-7520-42d8-8898-ff6fc54ce618',
+      '2026-07-25T12:00:00.000Z',
+      3
+    ]);
+  });
+
+  it('queries aggregate rows with a bound cutoff and summarizes them', async () => {
+    const calls: Array<{ sql: string; bind: unknown[] }> = [];
+    const d1 = {
+      prepare: vi.fn((sql: string) => ({
+        bind: vi.fn((...bind: unknown[]) => ({
+          all: vi.fn(async () => {
+            calls.push({ sql, bind });
+            return {
+              results: [
+                { sent_at: '2026-07-25T12:00:00.000Z', recipient_count: 2 },
+                { sent_at: '2026-07-25T13:00:00.000Z', recipient_count: 1 }
+              ]
+            };
+          })
+        }))
+      }))
+    } as unknown as D1Database;
+
+    const result = await makeDb(d1)
+      .getEmailActivity(new Date('2026-07-25T14:00:00.000Z'));
+
+    expect(result.last24Hours).toBe(3);
+    expect(result.days).toHaveLength(30);
+    expect(calls[0].sql).toContain('SELECT sent_at, recipient_count');
+    expect(calls[0].bind).toEqual(['2026-06-24T14:00:00.000Z']);
+  });
+
+  it('purges old rows using a bound ISO cutoff', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-25T14:00:00.000Z'));
+    const calls: Array<{ sql: string; bind: unknown[] }> = [];
+    const d1 = {
+      prepare: vi.fn((sql: string) => ({
+        bind: vi.fn((...bind: unknown[]) => ({
+          run: vi.fn(async () => {
+            calls.push({ sql, bind });
+          })
+        }))
+      }))
+    } as unknown as D1Database;
+
+    try {
+      await makeDb(d1).purgeEmailSends(45);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(calls).toEqual([{
+      sql: 'DELETE FROM email_sends WHERE sent_at < ?',
+      bind: ['2026-06-10T14:00:00.000Z']
+    }]);
+  });
+});
