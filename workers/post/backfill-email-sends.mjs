@@ -74,7 +74,7 @@ VALUES (${sqlString(row.id)}, ${sqlString(row.createdAt)}, ${row.recipientCount}
 ON CONFLICT(provider_message_id) DO UPDATE SET
   sent_at = excluded.sent_at,
   recipient_count = excluded.recipient_count;`);
-  return `BEGIN;\n${statements.join('\n')}\nCOMMIT;\n`;
+  return `${statements.join('\n')}\n`;
 }
 
 async function executeRemoteSql(sql) {

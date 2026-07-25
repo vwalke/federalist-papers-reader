@@ -66,7 +66,7 @@ describe('sent-email history backfill', () => {
       recipientCount: 3
     }]);
 
-    expect(sql).toContain('BEGIN;');
+    expect(sql).not.toMatch(/\b(?:BEGIN|COMMIT|SAVEPOINT)\b/i);
     expect(sql).toContain('ON CONFLICT(provider_message_id) DO UPDATE');
     expect(sql).toContain("'56761188-7520-42d8-8898-ff6fc54ce618'");
     expect(sql).toContain("'2026-07-25T12:00:00.000Z'");
