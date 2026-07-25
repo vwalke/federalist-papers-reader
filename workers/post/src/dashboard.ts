@@ -13,7 +13,7 @@
  * newspaper world for an Operate surface; shaped directly because the content
  * and single action are precisely specified.
  */
-import type { SubscriberStats, WeeklyDayStats } from './db';
+import type { EmailActivity, SubscriberStats, WeeklyDayStats } from './db';
 import { DOW_NAMES } from './schedule';
 
 export interface DashboardDay {
@@ -99,7 +99,8 @@ function document(title: string, content: string): string {
       padding-bottom: 1rem;
       border-bottom: 4px double var(--ink);
     }
-    .kicker, .updated, .stat__label, thead, .refresh, .note {
+    .kicker, .updated, .stat__label, thead, .refresh, .note,
+    .email-summary, .email-values summary {
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     .kicker {
@@ -174,6 +175,54 @@ function document(title: string, content: string): string {
       border-block: 1px solid var(--ink);
       background: rgb(244 239 226 / 38%);
     }
+    .email-summary {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .85rem 0 .55rem;
+      font-size: .72rem;
+    }
+    .email-summary strong {
+      color: var(--ink);
+      font: 400 2rem/1 Georgia, "Times New Roman", serif;
+    }
+    .quota-meter {
+      height: .55rem;
+      overflow: hidden;
+      border: 1px solid var(--ink);
+      background: rgb(244 239 226 / 38%);
+    }
+    .quota-meter span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+    .email-chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin-top: 1rem;
+      overflow: visible;
+      color: var(--ink);
+    }
+    .email-bar { fill: var(--accent); }
+    .email-rule { stroke: var(--rule); }
+    .email-quota { stroke: var(--ink); stroke-dasharray: 4 4; }
+    .email-chart text {
+      fill: var(--muted);
+      font: 10px ui-sans-serif, system-ui, sans-serif;
+    }
+    .email-values { margin-top: .75rem; }
+    .email-values summary {
+      min-height: 44px;
+      padding-block: .7rem;
+      cursor: pointer;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -235,6 +284,9 @@ function document(title: string, content: string): string {
       main { background-image: none; box-shadow: none; }
       .kicker, .updated, .stat__label, .note, thead th { color: CanvasText; }
       .refresh { color: ButtonText; background: ButtonFace; }
+      .email-bar, .quota-meter span { fill: CanvasText; background: CanvasText; }
+      .email-chart text { fill: CanvasText; }
+      .email-rule, .email-quota { stroke: CanvasText; }
     }
     @media (prefers-reduced-transparency: reduce) {
       main { background-image: none; }
@@ -248,9 +300,85 @@ function document(title: string, content: string): string {
 </html>`;
 }
 
+function shortDate(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date(`${isoDate}T12:00:00.000Z`));
+}
+
+function renderEmailBars(activity: EmailActivity): string {
+  const plotLeft = 30;
+  const plotTop = 12;
+  const plotWidth = 550;
+  const plotHeight = 170;
+  const plotBottom = plotTop + plotHeight;
+  const chartMax = Math.max(100, ...activity.days.map((day) => day.count), 1);
+  const slot = plotWidth / Math.max(activity.days.length, 1);
+  const barWidth = Math.max(2, slot * .62);
+  const quotaY = plotBottom - (100 / chartMax) * plotHeight;
+  const bars = activity.days.map((day, index) => {
+    const height = (day.count / chartMax) * plotHeight;
+    const x = plotLeft + index * slot + (slot - barWidth) / 2;
+    const y = plotBottom - height;
+    return `<g><title>${shortDate(day.date)}: ${day.count} sent</title><rect class="email-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${height.toFixed(2)}"></rect></g>`;
+  }).join('');
+  const labels = activity.days.map((day, index) => {
+    if (index !== 0 && index !== activity.days.length - 1 && index % 7 !== 0) return '';
+    const x = plotLeft + index * slot + slot / 2;
+    return `<text x="${x.toFixed(2)}" y="207" text-anchor="middle">${shortDate(day.date)}</text>`;
+  }).join('');
+
+  return `<svg class="email-chart" viewBox="0 0 600 220" role="img" aria-labelledby="email-chart-title email-chart-desc">
+        <title id="email-chart-title">Sent emails by Eastern date</title>
+        <desc id="email-chart-desc">Daily sent-email totals for the most recent 30 days, grouped in Eastern Time.</desc>
+        <line class="email-rule" x1="${plotLeft}" y1="${plotBottom}" x2="${plotLeft + plotWidth}" y2="${plotBottom}" vector-effect="non-scaling-stroke"></line>
+        <line class="email-quota" data-value="100" x1="${plotLeft}" y1="${quotaY.toFixed(2)}" x2="${plotLeft + plotWidth}" y2="${quotaY.toFixed(2)}" vector-effect="non-scaling-stroke"></line>
+        <text x="${plotLeft}" y="${Math.max(10, quotaY - 4).toFixed(2)}">100-send reference</text>
+        ${bars}${labels}
+      </svg>`;
+}
+
+function renderEmailActivity(activity: EmailActivity | null): string {
+  if (!activity) {
+    return `<section aria-labelledby="email-heading">
+      <h2 id="email-heading">Sent mail</h2>
+      <p class="note">Email activity temporarily unavailable. Subscriber figures above are current.</p>
+    </section>`;
+  }
+  const usage = Math.min(100, Math.max(0, activity.last24Hours));
+  const rows = activity.days.map((day) => `<tr>
+          <th scope="row"><time datetime="${day.date}">${shortDate(day.date)}</time></th>
+          <td>${day.count}</td>
+        </tr>`).join('');
+
+  return `<section aria-labelledby="email-heading">
+      <h2 id="email-heading">Sent mail</h2>
+      <div class="email-summary">
+        <span>Last 24 hours<br><strong>${activity.last24Hours}</strong> of 100 sent</span>
+        <span>Eastern Time</span>
+      </div>
+      <div class="quota-meter" role="meter" aria-label="Emails sent in the last 24 hours" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${usage}">
+        <span style="width:${usage}%"></span>
+      </div>
+      ${renderEmailBars(activity)}
+      <details class="email-values">
+        <summary>Exact daily values</summary>
+        <div class="table-wrap"><table>
+          <caption>Emails sent by Eastern date</caption>
+          <thead><tr><th scope="col">Date</th><th scope="col">Sent</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </details>
+      <p class="note">The 100-send line is a reference. Resend’s daily allowance may also include inbound email.</p>
+    </section>`;
+}
+
 export function renderDashboard(
   stats: SubscriberStats,
   weeklyRows: WeeklyDayStats[],
+  emailActivity: EmailActivity | null,
   refreshedAt: Date
 ): string {
   const days = normalizeWeeklyDays(weeklyRows);
@@ -296,6 +424,7 @@ export function renderDashboard(
         </table>
       </div>
     </section>
+    ${renderEmailActivity(emailActivity)}
     <a class="refresh" href="/post-office/">Refresh counts</a>`);
 }
 

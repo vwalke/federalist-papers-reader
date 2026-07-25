@@ -1,5 +1,5 @@
 // workers/post/src/handlers.ts
-import type { Db } from './db';
+import type { Db, EmailActivity } from './db';
 import type { Env, Program, Subscriber } from './types';
 import { DOW_NAMES, nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
@@ -46,7 +46,19 @@ async function handleDashboard(request: Request, db: Db): Promise<Response> {
       db.getSubscriberStats(),
       db.getWeeklyDayStats()
     ]);
-    return dashboardPage(renderDashboard(stats, weeklyDays, new Date()));
+    const refreshedAt = new Date();
+    let emailActivity: EmailActivity | null = null;
+    try {
+      emailActivity = await db.getEmailActivity(refreshedAt);
+    } catch {
+      console.error('dashboard email activity unavailable');
+    }
+    return dashboardPage(renderDashboard(
+      stats,
+      weeklyDays,
+      emailActivity,
+      refreshedAt
+    ));
   } catch {
     return dashboardPage(renderDashboardError(), 500);
   }

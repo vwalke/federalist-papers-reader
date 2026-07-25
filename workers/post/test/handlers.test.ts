@@ -77,7 +77,11 @@ describe('operator dashboard', () => {
       getWeeklyDayStats: vi.fn(async () => [
         { sendDow: 0, active: 1, pending: 0 },
         { sendDow: 5, active: 10, pending: 1 }
-      ])
+      ]),
+      getEmailActivity: vi.fn(async () => ({
+        last24Hours: 2,
+        days: [{ date: '2026-07-25', count: 2 }]
+      }))
     });
     const res = await handleRequest(
       new Request(`https://federalistreader.org${path}`), ENV, db, sender);
@@ -90,6 +94,8 @@ describe('operator dashboard', () => {
     expect(html).toContain('Post Office');
     expect(html).toContain('<span class="stat__value">34</span>');
     expect(html).toContain('<th scope="row">Friday</th>');
+    expect(html).toContain('Sent mail');
+    expect(db.getEmailActivity).toHaveBeenCalledWith(expect.any(Date));
     expect(html).not.toContain(SUB.email);
   });
 
@@ -124,6 +130,30 @@ describe('operator dashboard', () => {
     expect(html).toContain('The figures could not be loaded');
     expect(html).not.toContain('D1_ERROR');
     expect(html).not.toContain('SELECT email');
+  });
+
+  it('keeps core figures available when only email activity fails', async () => {
+    const db = makeStubDb({
+      getSubscriberStats: vi.fn(async () => ({
+        active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13
+      })),
+      getWeeklyDayStats: vi.fn(async () => [
+        { sendDow: 5, active: 10, pending: 1 }
+      ]),
+      getEmailActivity: vi.fn(async () => {
+        throw new Error('D1_ERROR: private@example.com');
+      })
+    });
+
+    const res = await handleRequest(
+      new Request('https://federalistreader.org/post-office/'), ENV, db, sender);
+    const html = await res.text();
+
+    expect(res.status).toBe(200);
+    expect(html).toContain('<span class="stat__value">34</span>');
+    expect(html).toContain('<th scope="row">Friday</th>');
+    expect(html).toContain('Email activity temporarily unavailable');
+    expect(html).not.toMatch(/D1_ERROR|private@example\.com/);
   });
 });
 
