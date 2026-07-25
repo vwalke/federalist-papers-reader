@@ -213,8 +213,10 @@ v=DMARC1; p=quarantine; rua=mailto:vann@walkeonline.com
 
 In Resend, create a webhook pointed at
 `https://federalistreader.org/api/webhooks/resend`, subscribed to the
-`email.bounced` and `email.complained` events. Copy its signing secret into
-the `RESEND_WEBHOOK_SECRET` worker secret above.
+`email.sent`, `email.bounced`, and `email.complained` events. Copy its signing
+secret into the `RESEND_WEBHOOK_SECRET` worker secret above. Keep one webhook
+endpoint with all three events so its signing secret and retry behavior remain
+consistent.
 
 **Turnstile.** Create a widget for `federalistreader.org` in **invisible**
 mode (this is a property of the sitekey itself, not a `data-size` attribute on
@@ -247,6 +249,9 @@ listening, and visitors get a 404.
 For dashboard changes, reverse that dependency: the Cloudflare Access
 application and account-member Allow policy must be live and intercepting
 `/post-office*` **before** a worker deploy activates that route.
+
+Apply every pending D1 migration with `pnpm migrate:remote` before deploying
+Worker code that reads or writes the new schema.
 
 ### Ongoing operations
 
@@ -296,7 +301,35 @@ application and account-member Allow policy must be live and intercepting
   the response includes `Cache-Control: private, no-store`,
   `X-Robots-Tag: noindex, nofollow, noarchive`, and
   `Referrer-Policy: no-referrer`. Never use individual subscriber rows or email
-  addresses to validate this page.
+  addresses to validate this page. For the sent-mail panel, confirm the rolling
+  count is numeric, the graph has 30 vertical bars grouped in Eastern Time,
+  the 100-send reference is visible, the exact-value disclosure contains 30
+  dates including zero days, and no address, subject, provider ID, or message
+  body appears.
+
+### One-time sent-email history backfill
+
+After migration `0003_email_sends.sql` and the matching Worker are deployed,
+populate the graph with Resend's retained history. Create a temporary
+full-access Resend API key, then run from `workers/post/`:
+
+```bash
+read -s "RESEND_API_KEY?Temporary full-access Resend key: "
+export RESEND_API_KEY
+pnpm run backfill:email-sends
+unset RESEND_API_KEY
+```
+
+The script pages through retained sent-email records and writes only provider
+IDs, UTC timestamps, and aggregate recipient counts to D1. It does not write
+or print recipients, senders, subjects, bodies, or complete API records.
+Re-running it is safe because provider IDs are upserted. After verifying the
+aggregate dashboard totals, revoke the temporary key immediately.
+
+The rolling count covers the exact previous 24 hours. The daily chart uses
+`America/New_York`, so Eastern Standard and Daylight Saving Time boundaries
+are handled automatically. Its 100-send line is a reference rather than an
+exact remaining-quota calculation because Resend can count inbound mail too.
 
 ### Costs
 
