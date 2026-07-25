@@ -11,6 +11,10 @@ const SUB: Subscriber = {
 
 function makeStubDb(overrides: Partial<Db> = {}): Db {
   return {
+    getSubscriberStats: vi.fn(async () => ({
+      active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0
+    })),
+    getWeeklyDayStats: vi.fn(async () => []),
     getSubscriberById: vi.fn(async () => SUB),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(async () => SUB),
@@ -60,6 +64,65 @@ async function manageToken(): Promise<string> {
   const { signToken } = await import('../src/tokens');
   return signToken(7, 'manage', ENV.TOKEN_SECRET, SUB.token_secret);
 }
+
+describe('operator dashboard', () => {
+  it.each(['/post-office', '/post-office/'])('renders aggregate counts at %s', async (path) => {
+    const db = makeStubDb({
+      getSubscriberStats: vi.fn(async () => ({
+        active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13
+      })),
+      getWeeklyDayStats: vi.fn(async () => [
+        { sendDow: 0, active: 1, pending: 0 },
+        { sendDow: 5, active: 10, pending: 1 }
+      ])
+    });
+    const res = await handleRequest(
+      new Request(`https://federalistreader.org${path}`), ENV, db, sender);
+    const html = await res.text();
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow, noarchive');
+    expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
+    expect(html).toContain('Post Office');
+    expect(html).toContain('<span class="stat__value">34</span>');
+    expect(html).toContain('<th scope="row">Friday</th>');
+    expect(html).not.toContain(SUB.email);
+  });
+
+  it('rejects non-GET methods without querying D1', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(new Request(
+      'https://federalistreader.org/post-office/',
+      { method: 'POST' }
+    ), ENV, db, sender);
+
+    expect(res.status).toBe(405);
+    expect(res.headers.get('Allow')).toBe('GET');
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow, noarchive');
+    expect(db.getSubscriberStats).not.toHaveBeenCalled();
+    expect(db.getWeeklyDayStats).not.toHaveBeenCalled();
+  });
+
+  it('returns a private generic error when a statistics query fails', async () => {
+    const db = makeStubDb({
+      getSubscriberStats: vi.fn(async () => {
+        throw new Error('D1_ERROR: SELECT email FROM subscribers');
+      })
+    });
+    const res = await handleRequest(
+      new Request('https://federalistreader.org/post-office/'), ENV, db, sender);
+    const html = await res.text();
+
+    expect(res.status).toBe(500);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+    expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow, noarchive');
+    expect(html).toContain('The figures could not be loaded');
+    expect(html).not.toContain('D1_ERROR');
+    expect(html).not.toContain('SELECT email');
+  });
+});
 
 describe('POST /api/subscribe', () => {
   it('creates a pending subscriber with a next-day send day, sends confirmation, redirects', async () => {

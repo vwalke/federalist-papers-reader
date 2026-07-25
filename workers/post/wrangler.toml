@@ -1,12 +1,16 @@
 name = "publius-post"
 main = "src/index.ts"
 compatibility_date = "2026-07-01"
+workers_dev = false
+preview_urls = false
 
 routes = [
   { pattern = "federalistreader.org/api/*", zone_name = "federalistreader.org" },
   # Wildcard, not exact: exact routes fail to match when a query string is
   # present, and every emailed manage link carries ?token=...
-  { pattern = "federalistreader.org/manage*", zone_name = "federalistreader.org" }
+  { pattern = "federalistreader.org/manage*", zone_name = "federalistreader.org" },
+  # Cloudflare Access must protect /post-office* before this route is deployed.
+  { pattern = "federalistreader.org/post-office*", zone_name = "federalistreader.org" }
 ]
 
 [triggers]

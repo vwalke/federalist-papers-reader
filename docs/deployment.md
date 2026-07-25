@@ -1,9 +1,10 @@
 # Deploying Federalist Reader with Cloudflare Pages
 
-Federalist Reader is a fully static Astro site: generated HTML, self-hosted
-fonts, CSS, and small browser scripts. It needs no server, database, account
-system, or runtime API. Cloudflare Pages serves the site from GitHub with HTTPS,
-a global CDN, and automatic deployments whenever `main` changes.
+Federalist Reader's public reading experience is a fully static Astro site:
+generated HTML, self-hosted fonts, CSS, and small browser scripts. Cloudflare
+Pages serves it from GitHub with HTTPS, a global CDN, and automatic deployments
+whenever `main` changes. The separately deployed Publius by Post worker provides
+the subscription API, subscriber management, and a private operator dashboard.
 
 The production site is:
 
@@ -173,9 +174,34 @@ failing closed.
 pnpm run deploy
 ```
 
-Deploys the worker and activates its routes.
+Deploys the worker and activates its routes. Before the first deploy whose
+configuration includes `post-office*`, complete the Cloudflare Access setup
+below and verify that Access intercepts the path.
 
 ### External dashboard setup
+
+**Subscriber dashboard (Cloudflare Access).** The aggregate-only operator
+dashboard lives at `https://federalistreader.org/post-office/`. Configure its
+Access boundary before deploying the matching Worker route:
+
+1. In Cloudflare, open **Zero Trust → Access controls → Applications** and add
+   a **Self-hosted** application.
+2. Set the public hostname to `federalistreader.org` and the path to
+   `post-office*`. The suffix wildcard deliberately protects both the parent
+   path and its slash form; `post-office/*` does not protect the parent path.
+3. Select **Cloudflare** as the login method.
+4. Add an **Allow** policy for **Cloudflare account member**, limited to the
+   current Cloudflare account. Do not use an Everyone policy or an unrestricted
+   login-method rule.
+5. Set the application session duration to **1 month**.
+6. Save the application, then open the URL in a private browser and confirm
+   Cloudflare Access intercepts it. A Pages 404 after successful authentication
+   is expected until the Worker route is deployed.
+
+The unlinked URL and robots directives reduce discovery; Cloudflare Access is
+the actual security boundary. Keep `workers_dev = false` and
+`preview_urls = false` in `wrangler.toml` so the dashboard cannot be reached
+through alternate Worker hostnames that bypass the Access application.
 
 **Resend.** Add the domain `federalistreader.org`, then install the SPF and
 DKIM records Resend prints for it into Cloudflare DNS. Wait for the domain to
@@ -201,10 +227,11 @@ seconds; during the production smoke test below, confirm
 letting the subscribe form fail.
 
 **Routes sanity check.** In the Cloudflare dashboard, confirm
-`federalistreader.org/api/*` and `federalistreader.org/manage*` (wildcard —
-exact routes do not match once a query string is attached, and every emailed
-manage link carries `?token=...`) route to the
-`publius-post` worker, and that every other path still serves the Pages site.
+`federalistreader.org/api/*`, `federalistreader.org/manage*` (wildcard — exact
+routes do not match once a query string is attached, and every emailed manage
+link carries `?token=...`), and `federalistreader.org/post-office*` route to
+the `publius-post` worker, and that every other path still serves the Pages
+site.
 If `www.federalistreader.org` is ever configured to serve the site directly
 instead of redirecting to the apex domain, `/api` posts made from `www` will
 miss the worker's routes entirely — keep the `www` → apex redirect (see
@@ -216,6 +243,10 @@ The worker must be deployed and its routes live **before** any site change
 that adds the subscribe coupon merges to `main`. If the site goes live first,
 the coupon's form posts to `/api/subscribe` on a domain where nothing is
 listening, and visitors get a 404.
+
+For dashboard changes, reverse that dependency: the Cloudflare Access
+application and account-member Allow policy must be live and intercepting
+`/post-office*` **before** a worker deploy activates that route.
 
 ### Ongoing operations
 
@@ -258,6 +289,14 @@ listening, and visitors get a 404.
   UTC cron, and verify the paper arrives with working manage and unsubscribe
   links. Set `send_dow` back afterward. Finally, click **Unsubscribe** from
   the email footer and confirm the one-click flow removes the subscriber.
+- **Dashboard smoke test.** In a private browser, confirm `/post-office` and
+  `/post-office/` both require Cloudflare authentication. After signing in,
+  confirm the page is readable at phone width, its aggregate totals match an
+  aggregate-only D1 query, and refresh updates the “Updated” timestamp. Confirm
+  the response includes `Cache-Control: private, no-store`,
+  `X-Robots-Tag: noindex, nofollow, noarchive`, and
+  `Referrer-Policy: no-referrer`. Never use individual subscriber rows or email
+  addresses to validate this page.
 
 ### Costs
 
