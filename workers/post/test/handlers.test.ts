@@ -342,16 +342,16 @@ describe('resend webhook', () => {
     };
   }
 
-  function webhookRequest(headers: Record<string, string>): Request {
+  function webhookRequest(payload: string, headers: Record<string, string>): Request {
     return new Request('https://federalistreader.org/api/webhooks/resend', {
-      method: 'POST', headers, body: BOUNCE
+      method: 'POST', headers, body: payload
     });
   }
 
   it('fails closed with 401 when no signing secret is configured', async () => {
     const db = makeStubDb();
     const res = await handleRequest(
-      webhookRequest(await svixHeaders(BOUNCE)), ENV, db, sender);
+      webhookRequest(BOUNCE, await svixHeaders(BOUNCE)), ENV, db, sender);
     expect(res.status).toBe(401);
     expect(db.unsubscribeByEmail).not.toHaveBeenCalled();
   });
@@ -359,7 +359,7 @@ describe('resend webhook', () => {
   it('unsubscribes on bounce with a valid signature', async () => {
     const db = makeStubDb();
     const res = await handleRequest(
-      webhookRequest(await svixHeaders(BOUNCE)), WEBHOOK_ENV, db, sender);
+      webhookRequest(BOUNCE, await svixHeaders(BOUNCE)), WEBHOOK_ENV, db, sender);
     expect(res.status).toBe(200);
     expect(db.unsubscribeByEmail).toHaveBeenCalledWith('reader@example.com');
   });
@@ -368,8 +368,87 @@ describe('resend webhook', () => {
     const db = makeStubDb();
     const headers = await svixHeaders(BOUNCE);
     headers['svix-signature'] = `v1,${btoa('forged-signature-bytes-here-1234')}`;
-    const res = await handleRequest(webhookRequest(headers), WEBHOOK_ENV, db, sender);
+    const res = await handleRequest(webhookRequest(BOUNCE, headers), WEBHOOK_ENV, db, sender);
     expect(res.status).toBe(401);
     expect(db.unsubscribeByEmail).not.toHaveBeenCalled();
+  });
+
+  it('records aggregate recipient count for a valid email.sent event', async () => {
+    const payload = JSON.stringify({
+      type: 'email.sent',
+      data: {
+        email_id: '56761188-7520-42d8-8898-ff6fc54ce618',
+        created_at: '2026-07-25T12:34:56Z',
+        to: ['first@example.com', 'second@example.com'],
+        cc: ['copy@example.com'],
+        bcc: ['blind@example.com'],
+        subject: 'Must not be persisted'
+      }
+    });
+    const db = makeStubDb();
+
+    const res = await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+
+    expect(res.status).toBe(200);
+    expect(db.recordEmailSend).toHaveBeenCalledWith(
+      '56761188-7520-42d8-8898-ff6fc54ce618',
+      '2026-07-25T12:34:56.000Z',
+      4
+    );
+  });
+
+  it.each([
+    { email_id: '', created_at: '2026-07-25T12:34:56Z' },
+    { email_id: 'id', created_at: 'not-a-date' }
+  ])('rejects malformed email.sent data', async (data) => {
+    const payload = JSON.stringify({ type: 'email.sent', data });
+    const db = makeStubDb();
+
+    const res = await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+
+    expect(res.status).toBe(400);
+    expect(db.recordEmailSend).not.toHaveBeenCalled();
+  });
+
+  it('uses one as the defensive minimum recipient count', async () => {
+    const payload = JSON.stringify({
+      type: 'email.sent',
+      data: { email_id: 'id', created_at: '2026-07-25T12:34:56Z' }
+    });
+    const db = makeStubDb();
+
+    await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+
+    expect(db.recordEmailSend).toHaveBeenCalledWith(
+      'id', '2026-07-25T12:34:56.000Z', 1
+    );
+  });
+
+  it('returns a generic 500 when email.sent persistence fails', async () => {
+    const payload = JSON.stringify({
+      type: 'email.sent',
+      data: {
+        email_id: 'private-provider-id',
+        created_at: '2026-07-25T12:34:56Z',
+        to: ['private@example.com'],
+        subject: 'Private subject'
+      }
+    });
+    const db = makeStubDb({
+      recordEmailSend: vi.fn(async () => {
+        throw new Error('SQL detail');
+      })
+    });
+
+    const res = await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+    const body = await res.text();
+
+    expect(res.status).toBe(500);
+    expect(body).toBe('webhook persistence failed');
+    expect(body).not.toMatch(/private|provider|subject|SQL|example\.com/i);
   });
 });

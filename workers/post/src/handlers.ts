@@ -271,13 +271,49 @@ async function handleWebhook(request: Request, env: Env, db: Db): Promise<Respon
   if (!(await verifySvix(request, env.RESEND_WEBHOOK_SECRET, payload))) {
     return new Response('bad signature', { status: 401 });
   }
+  let parsed: unknown;
   try {
-    const event = JSON.parse(payload) as { type: string; data: { to: string[] } };
-    if (event.type === 'email.bounced' || event.type === 'email.complained') {
-      for (const to of event.data.to ?? []) await db.unsubscribeByEmail(to);
-    }
+    parsed = JSON.parse(payload);
   } catch {
     return new Response('bad payload', { status: 400 });
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    return new Response('bad payload', { status: 400 });
+  }
+  const event = parsed as Record<string, unknown>;
+  const data = event.data;
+  if (!data || typeof data !== 'object') {
+    return new Response('bad payload', { status: 400 });
+  }
+  const fields = data as Record<string, unknown>;
+
+  if (event.type === 'email.sent') {
+    if (typeof fields.email_id !== 'string' || fields.email_id.length === 0 ||
+      typeof fields.created_at !== 'string' ||
+      !Number.isFinite(Date.parse(fields.created_at))) {
+      return new Response('bad payload', { status: 400 });
+    }
+    const recipientCount = Math.max(
+      1,
+      (Array.isArray(fields.to) ? fields.to.length : 0) +
+      (Array.isArray(fields.cc) ? fields.cc.length : 0) +
+      (Array.isArray(fields.bcc) ? fields.bcc.length : 0)
+    );
+    try {
+      await db.recordEmailSend(
+        fields.email_id,
+        new Date(fields.created_at).toISOString(),
+        recipientCount
+      );
+    } catch {
+      console.error('email.sent webhook persistence failed');
+      return new Response('webhook persistence failed', { status: 500 });
+    }
+  } else if (event.type === 'email.bounced' || event.type === 'email.complained') {
+    const recipients = Array.isArray(fields.to) ? fields.to : [];
+    for (const to of recipients) {
+      if (typeof to === 'string') await db.unsubscribeByEmail(to);
+    }
   }
   return new Response('ok');
 }
