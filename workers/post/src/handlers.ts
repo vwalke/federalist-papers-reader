@@ -4,10 +4,9 @@ import type { Env, Program, Subscriber } from './types';
 import { DOW_NAMES, nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
 import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
-import type { OutboundEmail } from './resend';
+import type { Sender } from './resend';
 import { renderDashboard, renderDashboardError } from './dashboard';
-
-export type Sender = (apiKey: string, mail: OutboundEmail) => Promise<string>;
+import { sendAndRecord } from './send-tracking';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -64,8 +63,15 @@ async function emailContext(env: Env, sub: Subscriber): Promise<EmailContext> {
   };
 }
 
-async function deliver(env: Env, send: Sender, sub: Subscriber, mail: RenderedEmail, ctx: EmailContext) {
-  await send(env.RESEND_API_KEY, {
+async function deliver(
+  env: Env,
+  db: Db,
+  send: Sender,
+  sub: Subscriber,
+  mail: RenderedEmail,
+  ctx: EmailContext
+) {
+  await sendAndRecord(env, db, send, {
     from: env.FROM_ADDRESS, to: sub.email, subject: mail.subject,
     html: mail.html, text: mail.text, unsubscribeUrl: ctx.unsubscribeUrl
   });
@@ -98,7 +104,7 @@ async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender)
   const existing = await db.getSubscriberByEmail(email);
   if (existing && (existing.status === 'active' || existing.status === 'paused')) {
     const ctx = await emailContext(env, existing);
-    await deliver(env, send, existing, {
+    await deliver(env, db, send, existing, {
       subject: 'You are already subscribed — The Federalist by Post',
       html: `<p>This address already receives the papers. Manage your subscription here: <a href="${ctx.manageUrl}">${ctx.manageUrl}</a></p>`,
       text: `Already subscribed. Manage: ${ctx.manageUrl}`
@@ -110,7 +116,7 @@ async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender)
   const sub = await db.upsertPending(email, program, tokenSecret, nextDayDowEastern(new Date()));
   const ctx = await emailContext(env, sub);
   const confirm = await signToken(sub.id, 'confirm', env.TOKEN_SECRET, sub.token_secret);
-  await deliver(env, send, sub, renderConfirmation(`${env.SITE_URL}/api/confirm?token=${confirm}`, ctx), ctx);
+  await deliver(env, db, send, sub, renderConfirmation(`${env.SITE_URL}/api/confirm?token=${confirm}`, ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/check-inbox/`);
 }
 
@@ -148,7 +154,7 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
   const today = new Date().toISOString().slice(0, 10);
   const firstDelivery = sub.program === 'weekly'
     ? humanDate(nextSendDate(today, sub.send_dow)) : 'October 27';
-  await deliver(env, send, sub,
+  await deliver(env, db, send, sub,
     renderWelcome(sub.program, firstDelivery, DOW_NAMES[sub.send_dow], ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
 }

@@ -4,6 +4,8 @@ export interface OutboundEmail {
   unsubscribeUrl: string;
 }
 
+export type Sender = (apiKey: string, mail: OutboundEmail) => Promise<string>;
+
 export async function sendEmail(apiKey: string, mail: OutboundEmail): Promise<string> {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',

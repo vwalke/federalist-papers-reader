@@ -21,6 +21,11 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
   const claimed: string[] = [];
   return {
     claimed,
+    getSubscriberStats: vi.fn(),
+    getWeeklyDayStats: vi.fn(),
+    recordEmailSend: vi.fn(async () => {}),
+    getEmailActivity: vi.fn(),
+    purgeEmailSends: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id) => subscribers.find((s) => s.id === id) ?? null),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(), activate: vi.fn(), setStatus: vi.fn(), setProgram: vi.fn(),
@@ -53,6 +58,7 @@ describe('runDaily', () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
     await runDaily(ENV, db, sender, '2026-07-18', 0);
     expect(db.purgeStalePending).toHaveBeenCalledWith(7);
+    expect(db.purgeEmailSends).toHaveBeenCalledWith(45);
   });
 
   it('sends the next weekly paper on Saturday and advances progress', async () => {
@@ -61,6 +67,7 @@ describe('runDaily', () => {
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('No. 5');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg', expect.any(String), 1);
   });
 
   it('is idempotent across reruns of the same day', async () => {
@@ -99,6 +106,18 @@ describe('runDaily', () => {
     await runDaily(ENV, db, sender, '2026-07-20', 0); // Monday: main loop no-ops
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('No. 5');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg');
+    expect(db.setProgress).toHaveBeenCalledWith(1, 5);
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg', expect.any(String), 1);
+  });
+
+  it('keeps an accepted delivery sent when activity recording fails', async () => {
+    const db = makeStubDb([sub({ progress_index: 4 })]);
+    vi.mocked(db.recordEmailSend).mockRejectedValue(new Error('D1 unavailable'));
+
+    await runDaily(ENV, db, sender, '2026-07-18', 0);
+
+    expect(sent).toHaveLength(1);
     expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
   });

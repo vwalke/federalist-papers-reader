@@ -15,6 +15,9 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
       active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0
     })),
     getWeeklyDayStats: vi.fn(async () => []),
+    recordEmailSend: vi.fn(async () => {}),
+    getEmailActivity: vi.fn(async () => ({ last24Hours: 0, days: [] })),
+    purgeEmailSends: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async () => SUB),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(async () => SUB),
@@ -136,6 +139,7 @@ describe('POST /api/subscribe', () => {
       expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/check-inbox/');
       expect(db.upsertPending).toHaveBeenCalledWith('reader@example.com', 'weekly', expect.any(String), 2);
       expect(sent[0].subject).toContain('Confirm');
+      expect(db.recordEmailSend).toHaveBeenCalledWith('msg_test', expect.any(String), 1);
     } finally {
       vi.useRealTimers();
     }
@@ -170,6 +174,7 @@ describe('POST /api/subscribe', () => {
     await handleRequest(post('/api/subscribe', { email: SUB.email, program: 'weekly' }), ENV, db, sender);
     expect(db.upsertPending).not.toHaveBeenCalled();
     expect(sent[0].subject).toContain('already');
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg_test', expect.any(String), 1);
   });
 });
 
@@ -184,6 +189,24 @@ describe('GET /api/confirm', () => {
     expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/confirmed/');
     expect(db.activate).toHaveBeenCalledWith(7, null);
     expect(sent[0].subject).toContain('Welcome');
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg_test', expect.any(String), 1);
+  });
+
+  it('keeps confirmation successful when activity recording fails', async () => {
+    const db = makeStubDb({
+      recordEmailSend: vi.fn(async () => {
+        throw new Error('D1 unavailable');
+      })
+    });
+    const res = await handleRequest(
+      post('/api/subscribe', { email: 'reader@example.com', program: 'weekly' }),
+      ENV,
+      db,
+      sender
+    );
+
+    expect(res.status).toBe(303);
+    expect(sent).toHaveLength(1);
   });
 
   it('rejects a bad token with 400', async () => {

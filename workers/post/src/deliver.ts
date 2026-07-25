@@ -5,7 +5,8 @@ import type { Env, PaperContent, Subscriber } from './types';
 import { papersDueOnDate, weeklyPaperDue } from './schedule';
 import { renderPaperIssue, type EmailContext } from './email';
 import { signToken } from './tokens';
-import type { Sender } from './handlers';
+import type { Sender } from './resend';
+import { sendAndRecord } from './send-tracking';
 
 const papers = papersJson as PaperContent[];
 const byNumber = new Map(papers.map((p) => [p.number, p]));
@@ -51,7 +52,7 @@ async function sendIssue(
   if (sub.program === 'weekly') ctx.progressLine = `Paper ${claimedNumbers[0]} of 85 · The Weekly Course`;
   try {
     const mail = renderPaperIssue(issue, ctx);
-    const messageId = await send(env.RESEND_API_KEY, {
+    const messageId = await sendAndRecord(env, db, send, {
       from: env.FROM_ADDRESS, to: sub.email, subject: mail.subject,
       html: mail.html, text: mail.text, unsubscribeUrl: ctx.unsubscribeUrl
     });
@@ -73,6 +74,7 @@ export async function runDaily(
   await db.autoResume(todayIso);
   await db.purgeUnsubscribed(30);
   await db.purgeStalePending(7);
+  await db.purgeEmailSends(45);
   const dueCalendarPapers = papersDueOnDate(papers, todayIso);
   let sent = 0, failed = 0, retried = 0;
 
@@ -109,7 +111,7 @@ export async function runDaily(
       const mail = renderPaperIssue([paper], ctx);
       attemptedSend = true;
       retried++;
-      const messageId = await send(env.RESEND_API_KEY, {
+      const messageId = await sendAndRecord(env, db, send, {
         from: env.FROM_ADDRESS, to: sub.email, subject: mail.subject,
         html: mail.html, text: mail.text, unsubscribeUrl: ctx.unsubscribeUrl
       });
