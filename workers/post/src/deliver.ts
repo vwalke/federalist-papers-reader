@@ -235,7 +235,7 @@ export async function runDaily(
   let failed = 0;
   let retried = 0;
 
-  const due: PreparedDelivery[] = [];
+  let due: PreparedDelivery[] = [];
   for (const sub of await db.listDeliverable()) {
     try {
       let paperNumbers: number[] = [];
@@ -253,7 +253,15 @@ export async function runDaily(
         paperNumbers,
         todayIso
       );
-      if (delivery) due.push(delivery);
+      if (delivery) {
+        due.push(delivery);
+        if (due.length === BATCH_SIZE) {
+          const result = await sendPrepared(env, db, sendBatch, due);
+          sent += result.sent;
+          failed += result.failed;
+          due = [];
+        }
+      }
     } catch (error) {
       failed++;
       console.error('deliver failed', {
@@ -263,11 +271,11 @@ export async function runDaily(
     }
   }
 
-  const dueResult = await sendPrepared(env, db, sendBatch, due);
-  sent += dueResult.sent;
-  failed += dueResult.failed;
+  const remainingDueResult = await sendPrepared(env, db, sendBatch, due);
+  sent += remainingDueResult.sent;
+  failed += remainingDueResult.failed;
 
-  const retries: PreparedDelivery[] = [];
+  let retries: PreparedDelivery[] = [];
   for (const retry of await db.listRetryable()) {
     try {
       const sub = await db.getSubscriberById(retry.subscriber_id);
@@ -278,6 +286,13 @@ export async function runDaily(
         [retry.paper_number],
         retry.scheduled_for
       ));
+      retried++;
+      if (retries.length === BATCH_SIZE) {
+        const result = await sendPrepared(env, db, sendBatch, retries);
+        sent += result.sent;
+        failed += result.failed;
+        retries = [];
+      }
     } catch (error) {
       failed++;
       console.error('deliver retry preparation failed', {
@@ -287,11 +302,10 @@ export async function runDaily(
       });
     }
   }
-  retried = retries.length;
 
-  const retryResult = await sendPrepared(env, db, sendBatch, retries);
-  sent += retryResult.sent;
-  failed += retryResult.failed;
+  const remainingRetryResult = await sendPrepared(env, db, sendBatch, retries);
+  sent += remainingRetryResult.sent;
+  failed += remainingRetryResult.failed;
 
   // The dead-man's switch: written only when the run reaches the end, so the
   // nightly backup workflow can tell a completed run from a silent death.

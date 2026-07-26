@@ -191,6 +191,31 @@ describe('runDaily', () => {
     expect(batchSizes).toEqual([100, 1]);
   });
 
+  it('flushes a full batch before preparing the next subscriber', async () => {
+    const subscribers = Array.from({ length: 101 }, (_, index) => sub({
+      id: index + 1,
+      email: `reader${index + 1}@example.com`,
+      progress_index: 4
+    }));
+    const db = makeStubDb(subscribers);
+    const events: string[] = [];
+    vi.mocked(db.claimDelivery).mockImplementation(async (id) => {
+      events.push(`claim:${id}`);
+      return true;
+    });
+    const observingSender = async (
+      _key: string,
+      mails: Array<{ to: string; subject: string }>
+    ): Promise<BatchEmailOutcome[]> => {
+      events.push(`send:${mails.length}`);
+      return mails.map((_, index) => ({ status: 'sent', id: `msg_${index + 1}` }));
+    };
+
+    await runDaily(ENV, db, observingSender, '2026-07-18');
+
+    expect(events.indexOf('send:100')).toBeLessThan(events.indexOf('claim:101'));
+  });
+
   it('uses a stable versioned idempotency key for the same delivery chunk', async () => {
     const keys: string[] = [];
     const collectingSender = async (
