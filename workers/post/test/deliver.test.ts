@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runDaily } from '../src/deliver';
 import type { Db } from '../src/db';
 import type { Env, Subscriber } from '../src/types';
+import type { BatchEmailOutcome } from '../src/resend';
 
 const ENV = {
   SITE_URL: 'https://federalistreader.org', FROM_ADDRESS: 'Publius <p@f.org>',
@@ -49,43 +50,55 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
 
 describe('runDaily', () => {
   let sent: Array<{ to: string; subject: string }>;
-  const sender = async (_k: string, mail: { to: string; subject: string }) => {
-    sent.push(mail); return 'msg';
+  let batchSizes: number[];
+  let nextMessageId: number;
+  const batchSender = async (
+    _key: string,
+    mails: Array<{ to: string; subject: string }>,
+    _idempotencyKey: string
+  ): Promise<BatchEmailOutcome[]> => {
+    batchSizes.push(mails.length);
+    sent.push(...mails);
+    return mails.map(() => ({ status: 'sent', id: `msg_${nextMessageId++}` }));
   };
-  beforeEach(() => { sent = []; });
+  beforeEach(() => {
+    sent = [];
+    batchSizes = [];
+    nextMessageId = 1;
+  });
 
   it('purges stale pending signups older than seven days', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
-    await runDaily(ENV, db, sender, '2026-07-18', 0);
+    await runDaily(ENV, db, batchSender, '2026-07-18');
     expect(db.purgeStalePending).toHaveBeenCalledWith(7);
     expect(db.purgeEmailSends).toHaveBeenCalledWith(45);
   });
 
   it('sends the next weekly paper on Saturday and advances progress', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
-    await runDaily(ENV, db, sender, '2026-07-18', 0); // a Saturday
+    await runDaily(ENV, db, batchSender, '2026-07-18'); // a Saturday
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('No. 5');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
-    expect(db.recordEmailSend).toHaveBeenCalledWith('msg', expect.any(String), 1);
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg_1', expect.any(String), 1);
   });
 
   it('is idempotent across reruns of the same day', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
-    await runDaily(ENV, db, sender, '2026-07-18', 0);
-    await runDaily(ENV, db, sender, '2026-07-18', 0);
+    await runDaily(ENV, db, batchSender, '2026-07-18');
+    await runDaily(ENV, db, batchSender, '2026-07-18');
     expect(sent).toHaveLength(1);
   });
 
   it('sends nothing on a non-send day', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
-    await runDaily(ENV, db, sender, '2026-07-20', 0); // Monday
+    await runDaily(ENV, db, batchSender, '2026-07-20'); // Monday
     expect(sent).toHaveLength(0);
   });
 
   it('sends one combined issue to calendar subscribers on the season opener', async () => {
     const db = makeStubDb([sub({ program: 'calendar' })]);
-    await runDaily(ENV, db, sender, '2026-10-27', 0);
+    await runDaily(ENV, db, batchSender, '2026-10-27');
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('No. 1');
   });
@@ -93,7 +106,7 @@ describe('runDaily', () => {
   it('marks a delivery failed when the sender throws, without advancing progress', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
     const failing = async () => { throw new Error('resend down'); };
-    await runDaily(ENV, db, failing, '2026-07-18', 0);
+    await runDaily(ENV, db, failing, '2026-07-18');
     expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'failed', undefined);
     expect(db.setProgress).not.toHaveBeenCalled();
   });
@@ -103,22 +116,22 @@ describe('runDaily', () => {
     vi.mocked(db.listRetryable).mockResolvedValue([
       { subscriber_id: 1, paper_number: 5, scheduled_for: '2026-07-18' }
     ]);
-    await runDaily(ENV, db, sender, '2026-07-20', 0); // Monday: main loop no-ops
+    await runDaily(ENV, db, batchSender, '2026-07-20'); // Monday: main loop no-ops
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('No. 5');
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg_1');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
-    expect(db.recordEmailSend).toHaveBeenCalledWith('msg', expect.any(String), 1);
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg_1', expect.any(String), 1);
   });
 
   it('keeps an accepted delivery sent when activity recording fails', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
     vi.mocked(db.recordEmailSend).mockRejectedValue(new Error('D1 unavailable'));
 
-    await runDaily(ENV, db, sender, '2026-07-18', 0);
+    await runDaily(ENV, db, batchSender, '2026-07-18');
 
     expect(sent).toHaveLength(1);
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg_1');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
   });
 
@@ -127,22 +140,22 @@ describe('runDaily', () => {
     vi.mocked(db.listRetryable).mockResolvedValue([
       { subscriber_id: 1, paper_number: 3, scheduled_for: '2026-07-04' }
     ]);
-    await runDaily(ENV, db, sender, '2026-07-20', 0);
+    await runDaily(ENV, db, batchSender, '2026-07-20');
     expect(sent).toHaveLength(1);
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-04', 'sent', 'msg');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-04', 'sent', 'msg_1');
     expect(db.setProgress).not.toHaveBeenCalled();
   });
 
   it('records the heartbeat after a completed run', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
-    await runDaily(ENV, db, sender, '2026-07-18', 0);
+    await runDaily(ENV, db, batchSender, '2026-07-18');
     expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-18');
   });
 
   it('records the heartbeat even when every send fails', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
     const failing = async () => { throw new Error('resend down'); };
-    await runDaily(ENV, db, failing, '2026-07-18', 0);
+    await runDaily(ENV, db, failing, '2026-07-18');
     expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-18');
   });
 
@@ -151,8 +164,94 @@ describe('runDaily', () => {
     vi.mocked(db.listRetryable).mockResolvedValue([
       { subscriber_id: 1, paper_number: 5, scheduled_for: '2026-07-18' }
     ]);
-    await runDaily(ENV, db, sender, '2026-07-20', 0);
+    await runDaily(ENV, db, batchSender, '2026-07-20');
     expect(sent).toHaveLength(0);
     expect(db.markDelivery).not.toHaveBeenCalled();
+  });
+
+  it('sends 100 due subscribers in one batch', async () => {
+    const subscribers = Array.from({ length: 100 }, (_, index) => sub({
+      id: index + 1,
+      email: `reader${index + 1}@example.com`,
+      progress_index: 4
+    }));
+    await runDaily(ENV, makeStubDb(subscribers), batchSender, '2026-07-18');
+    expect(sent).toHaveLength(100);
+    expect(batchSizes).toEqual([100]);
+  });
+
+  it('splits 101 due subscribers into batches of 100 and one', async () => {
+    const subscribers = Array.from({ length: 101 }, (_, index) => sub({
+      id: index + 1,
+      email: `reader${index + 1}@example.com`,
+      progress_index: 4
+    }));
+    await runDaily(ENV, makeStubDb(subscribers), batchSender, '2026-07-18');
+    expect(sent).toHaveLength(101);
+    expect(batchSizes).toEqual([100, 1]);
+  });
+
+  it('uses a stable versioned idempotency key for the same delivery chunk', async () => {
+    const keys: string[] = [];
+    const collectingSender = async (
+      _key: string,
+      mails: Array<{ to: string; subject: string }>,
+      idempotencyKey: string
+    ): Promise<BatchEmailOutcome[]> => {
+      keys.push(idempotencyKey);
+      return mails.map((_, index) => ({ status: 'sent', id: `msg_${index + 1}` }));
+    };
+    const subscribers = [sub({ id: 7, progress_index: 4 })];
+
+    await runDaily(ENV, makeStubDb(subscribers), collectingSender, '2026-07-18');
+    await runDaily(ENV, makeStubDb(subscribers), collectingSender, '2026-07-18');
+
+    expect(keys).toHaveLength(2);
+    expect(keys[0]).toMatch(/^scheduled-delivery\/v1\/[a-f0-9]{64}$/);
+    expect(keys[1]).toBe(keys[0]);
+  });
+
+  it('marks only a rejected batch item failed', async () => {
+    const subscribers = [
+      sub({ id: 1, email: 'first@example.com', progress_index: 4 }),
+      sub({ id: 2, email: 'second@example.com', progress_index: 4 })
+    ];
+    const db = makeStubDb(subscribers);
+    const partial = async (): Promise<BatchEmailOutcome[]> => [
+      { status: 'sent', id: 'msg_ok' },
+      { status: 'failed', error: 'invalid recipient' }
+    ];
+
+    await runDaily(ENV, db, partial, '2026-07-18');
+
+    expect(db.markDelivery).toHaveBeenCalledWith(
+      1, 5, '2026-07-18', 'sent', 'msg_ok'
+    );
+    expect(db.markDelivery).toHaveBeenCalledWith(
+      2, 5, '2026-07-18', 'failed', undefined
+    );
+    expect(db.setProgress).toHaveBeenCalledWith(1, 5);
+    expect(db.setProgress).not.toHaveBeenCalledWith(2, 5);
+  });
+
+  it('marks every item failed when a batch request rejects', async () => {
+    const subscribers = [
+      sub({ id: 1, email: 'first@example.com', progress_index: 4 }),
+      sub({ id: 2, email: 'second@example.com', progress_index: 4 })
+    ];
+    const db = makeStubDb(subscribers);
+    const rejected = async (): Promise<BatchEmailOutcome[]> => {
+      throw new Error('Resend 503');
+    };
+
+    await runDaily(ENV, db, rejected, '2026-07-18');
+
+    expect(db.markDelivery).toHaveBeenCalledWith(
+      1, 5, '2026-07-18', 'failed', undefined
+    );
+    expect(db.markDelivery).toHaveBeenCalledWith(
+      2, 5, '2026-07-18', 'failed', undefined
+    );
+    expect(db.setProgress).not.toHaveBeenCalled();
   });
 });
