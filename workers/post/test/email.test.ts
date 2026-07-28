@@ -20,10 +20,11 @@ describe('renderPaperIssue', () => {
     expect(mail.html).toContain('naming the stakes');
     expect(mail.html).toContain('https://federalistreader.org/papers/1/');
     expect(mail.html).toContain('Paper 1 of 85');
+    expect(mail.html).not.toMatch(/https:\/\/(?:x\.com|twitter\.com)\//);
+    expect(mail.html).not.toContain('@ReadPublius');
+    expect(mail.html).toContain(CTX.manageUrl);
     expect(mail.html).toContain(CTX.unsubscribeUrl);
     expect(mail.html).toContain(CTX.postalAddress);
-    expect(mail.html).toContain('<a href="https://x.com/ReadPublius"');
-    expect(mail.html).toContain('@ReadPublius on X</a>');
     expect(mail.text).toContain('https://federalistreader.org/papers/1/');
   });
 
@@ -48,14 +49,19 @@ describe('confirmation and welcome', () => {
     const mail = renderConfirmation('https://federalistreader.org/api/confirm?token=C', CTX);
     expect(mail.html).toContain('/api/confirm?token=C');
     expect(mail.subject).toContain('Confirm');
-    expect(mail.html).toContain('<a href="https://x.com/ReadPublius"');
-    expect(mail.html).toContain('@ReadPublius on X</a>');
+    expect(mail.html).not.toMatch(/https:\/\/(?:x\.com|twitter\.com)\//);
+    expect(mail.html).not.toContain('@ReadPublius');
   });
   it('welcome states the first delivery expectation per program', () => {
     const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);
     expect(weekly.html).toContain('Tuesday, July 21, 2026');
     expect(weekly.html).toContain('each Tuesday');
     expect(weekly.html).toContain('Change your delivery day');
+    expect(weekly.html).not.toMatch(/https:\/\/(?:x\.com|twitter\.com)\//);
+    expect(weekly.html).not.toContain('@ReadPublius');
+    expect(weekly.html).toContain(CTX.manageUrl);
+    expect(weekly.html).toContain(CTX.unsubscribeUrl);
+    expect(weekly.html).toContain(CTX.postalAddress);
     const calendar = renderWelcome('calendar', 'October 27', 'Saturday', CTX);
     expect(calendar.html).toContain('October 27');
     expect(calendar.html).not.toContain('Change your delivery day');
