@@ -23,7 +23,8 @@ describe('About this edition', () => {
     expect(html).toContain('class="about-closing__column"');
     expect(html).toContain('Questions, comments');
     expect(html).toContain('mailto:publius@federalistreader.org');
-    expect(html).toContain('https://x.com/ReadPublius');
+    expect(html).not.toContain('https://x.com/');
+    expect(html).not.toContain('Follow along on X');
     expect(html).not.toContain('class="about-notes__privacy"');
     expect(html).not.toContain('No account, no tracking your reading');
     expect(html).toContain('class="about-colophon"');

@@ -193,65 +193,6 @@ a:hover {
   text-transform: uppercase;
 }
 
-.readpublius-notice {
-  position: relative;
-  margin-block-end: var(--space-md);
-  padding-block: var(--space-2xs) var(--space-sm);
-  padding-inline: 2.75rem;
-  border-block-end: 1px solid var(--color-rule);
-  text-align: center;
-}
-
-html[data-readpublius-dismissed] .readpublius-notice {
-  display: none;
-}
-
-.readpublius-notice__body {
-  max-inline-size: 66ch;
-  margin-inline: auto;
-  font-size: 0.9375rem;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-.readpublius-notice__hand {
-  margin-inline-end: 0.3em;
-  color: var(--color-oxblood);
-  font-size: 1.2em;
-}
-
-.readpublius-notice__label {
-  color: var(--color-oxblood);
-  font-size: 0.82em;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.readpublius-notice__link {
-  color: var(--color-verdigris);
-  font-style: italic;
-}
-
-.readpublius-notice__dismiss {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-end: 0;
-  inline-size: 2.75rem;
-  block-size: 2.75rem;
-  padding: 0;
-  border: 0;
-  translate: 0 -50%;
-  color: var(--color-muted-ink);
-  background: transparent;
-  font: 400 1.35rem/1 var(--font-utility);
-  cursor: pointer;
-}
-
-.readpublius-notice__dismiss:hover {
-  color: var(--color-oxblood);
-}
-
 .home-intro {
   display: grid;
   gap: var(--space-xl);
@@ -856,15 +797,6 @@ html[data-readpublius-dismissed] .readpublius-notice {
     box-shadow: none;
   }
 
-  .readpublius-notice {
-    margin-block-end: var(--space-sm);
-  }
-
-  .readpublius-notice__body {
-    font-size: 0.875rem;
-    line-height: 1.5;
-  }
-
   .gazette-masthead__issue {
     gap: 0.25rem;
     margin-block-start: -0.15rem;
@@ -915,9 +847,6 @@ html[data-readpublius-dismissed] .readpublius-notice {
     outline-color: CanvasText;
   }
 
-  .readpublius-notice {
-    border-block-end: 1px solid CanvasText;
-  }
 }
 
 @media (display-mode: standalone) {
@@ -941,8 +870,7 @@ html[data-readpublius-dismissed] .readpublius-notice {
 
   .site-utility,
   .site-footer,
-  .skip-link,
-  .readpublius-notice {
+  .skip-link {
     display: none;
   }
 

@@ -31,8 +31,14 @@ test.describe('subscribe surfaces', () => {
     await expect(page.getByRole('heading', { name: /confirmation/i })).toBeVisible();
     await page.goto('/subscribe/confirmed/');
     await expect(page.getByText(/Confirmed/i)).toBeVisible();
-    const xLink = page.getByRole('main').getByRole('link', { name: '@ReadPublius on X' });
-    await expect(xLink).toBeVisible();
-    await expect(xLink).toHaveAttribute('href', 'https://x.com/ReadPublius');
+    await expect(page.getByRole('link', { name: 'Read Federalist No. 1' })).toHaveAttribute(
+      'href',
+      '/papers/1/',
+    );
+    await expect(page.getByRole('link', { name: 'browse the full collection' })).toHaveAttribute(
+      'href',
+      '/#all-papers',
+    );
+    await expect(page.locator('a[href*="x.com"], a[href*="twitter.com"]')).toHaveCount(0);
   });
 });

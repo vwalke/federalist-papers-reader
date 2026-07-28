@@ -79,9 +79,10 @@ describe('static site shell', () => {
     expect(sitemap).toContain('<loc>https://federalistreader.org/teachers/</loc>');
   });
 
-  it('links the X account from the footer nav', async () => {
+  it('keeps the footer navigation on Federalist Reader destinations', async () => {
     const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
-    expect(html).toContain('href="https://x.com/ReadPublius">@ReadPublius on X</a>');
+    expect(html).not.toContain('href="https://x.com/');
+    expect(html).toContain('href="/colophon/">Colophon</a>');
   });
 
   it('links the colophon from the footer nav', async () => {

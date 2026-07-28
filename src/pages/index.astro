@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import IndexLedger from '../components/IndexLedger.astro';
-import ReadPubliusNotice from '../components/ReadPubliusNotice.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getOrderedPapers } from '../lib/papers';
 
@@ -20,7 +19,6 @@ const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
   pageClass="home-page"
 >
   <article class="paper-sheet">
-    <ReadPubliusNotice />
     <GazetteMasthead />
 
     <section class="home-intro" aria-labelledby="welcome-title">
