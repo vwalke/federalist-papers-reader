@@ -17,9 +17,10 @@ describe('paper pages', () => {
     expect(html).not.toContain('social-card.svg');
     expect(html).toContain('class="essay-share"');
     expect(html).toContain('Share this paper');
-    expect(html).toContain('data-share-x');
-    expect(html).toMatch(/href="https:\/\/twitter\.com\/intent\/tweet\?[^"]*papers%2F1%2F/);
+    expect(html).not.toContain('data-share-x');
+    expect(html).not.toContain('twitter.com/intent/tweet');
     expect(html).toContain('data-share-copy');
+    expect(html).toContain('Copy link');
     expect(html).toContain('class="essay-flow"');
     expect(html).toContain('data-gazette="FŒDERALIST"');
     expect(html).toContain('data-modern="FEDERALIST"');

@@ -536,12 +536,6 @@
   text-decoration: none;
 }
 
-.essay-share__divider {
-  inline-size: 1px;
-  block-size: 0.9rem;
-  background: color-mix(in oklab, var(--color-rule) 60%, transparent);
-}
-
 /* By Subscription coupon: end-of-paper signup, framed like a clipped
    newspaper notice. Highest-intent moment—the reader just finished a paper. */
 .subscribe-coupon {
