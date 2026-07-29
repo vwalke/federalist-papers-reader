@@ -18,7 +18,6 @@ papers:
 by a passion or interest against the rights of others or the good of the whole.
 They saw it as the disease most likely to kill a republic.
 
-What is striking is Madison's response. He does not promise to end faction. He
-argues that the attempt would be worse than the disease, and that the cure is
-structural: a republic large enough, and a government divided enough, that no one
-faction can dominate the rest.
+Madison treats faction as permanent. Trying to end it, he argues, would be worse
+than the disease. His cure is structural: a republic large enough, and a
+government divided enough, that no one faction can dominate the rest.

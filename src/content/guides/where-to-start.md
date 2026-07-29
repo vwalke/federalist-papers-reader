@@ -18,6 +18,6 @@ the harder passages. There is no account and no rush — your progress is rememb
 in this browser, one paper at a time.
 
 The simplest way in is to begin at the beginning and let Publius make his case in
-order. If you would rather sample first, the companions below gather the essays
-everyone cites and follow the questions the series keeps returning to — faction,
-the division of power, the presidency, the courts.
+order. If you would rather sample first, choose one of the companions below. Each
+follows a subject through several essays: faction, the division of power, the
+presidency, or the courts.

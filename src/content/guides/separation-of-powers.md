@@ -19,5 +19,5 @@ was how to keep them that way, since a line on paper does not stop an ambitious
 legislature or executive from crossing it.
 
 These three essays give the answer. Madison starts from the principle, shows why
-stating it is not enough, and then lays out the design that actually holds: give
+stating it is not enough, and then lays out the design that holds: give
 each branch the means and the motive to check the others.
