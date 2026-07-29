@@ -6,7 +6,9 @@ describe('About this edition', () => {
   it('tells the family reading story and credits its historical inspirations', async () => {
     const html = await readFile(new URL('../dist/about/index.html', import.meta.url), 'utf8');
 
-    expect(html).toContain('This edition began with a gift for my mom.');
+    expect(html).toContain(
+      'This edition began with a gift for my mom—a subscription to LetterJoy’s Federalist Papers series',
+    );
     expect(html).toContain('href="https://www.letterjoy.co/pages/federalist-papers"');
     expect(html).toContain('LetterJoy’s Federalist Papers series');
     expect(html).toContain('class="paper-sheet about-page"');
