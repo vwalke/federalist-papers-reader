@@ -16,9 +16,28 @@
   - "the period typography actually makes these feel like i am reading a 1787
     paper rather than a modern website"
   - "Love that the notes are short enough to stay out of the way"
-- Show HN: blocked 2026-07-21 by the new-account Show HN restriction; karma
-  building underway (Justif thread); re-run planned ~early August with PH
-  receipt + subscriber count in the maker comment.
+- **Show HN, 2026-07-29 (Wed ~10am ET): posted successfully** — title "The
+  Federalist Papers, typeset as the 1787 newspapers they ran in." Peaked ~12
+  points, reached the **/show page** (not the main front page), **zero
+  comments**. For a reading/craft project, no-comments = quiet approval, and
+  notably no political flamewar — the craft framing held. The earlier
+  2026-07-21 new-account block had cleared.
+  - **Traffic delivered:** clean spike from a ~5–15 visits/hr baseline to
+    **~142 in the peak hour**; ~300 visits over the run.
+  - **Funnel (Cloudflare Paths, cold audience):** home 191 → **/papers/1 at 70
+    (~37% click-through — they *started reading*)** → papers 2/3/4 in a normal
+    sequential-read decay, plus a healthy smattering across the corpus (47, 22,
+    21, 34, 5). `/about` + `/colophon` drew real views (the maker's-note craft
+    story landed).
+  - **Captured audience: +4 subscribers** during the run — the compounding part
+    that outlasts the spike (HN converts stingily; 4 with no lead magnet is fine).
+  - **Lesson:** vote count is vanity; the payoff was traffic + the one-click
+    proof that the product sells itself to a cold audience. HN links are
+    `nofollow`, so value = traffic spike + any secondary pickups, not a raw
+    backlink. Never submitted before (algolia clean), so this was the first.
+  - **Parked (holding site changes on thin data):** `/subscribe/` saw only 4
+    views of ~300 — subscribe prompt likely under-visible in the reading flow;
+    revisit with more data.
 
 *Drafted 2026-07-18. Status: awaiting Vann's go + date pick.*
 

@@ -99,6 +99,51 @@ Ground rules for every send:
 >
 > Best, Vann Walke · federalistreader.org
 
+## Template D — academic & public librarians (LibGuides)
+
+Highest-response cohort: linking free, ad-free primary-source editions is their
+job, no procurement gate. Find targets with `"federalist papers" site:libguides.com`,
+then reference *their* guide and what it already links (the personalization writes
+itself). Ideal recipient = the guide's owner (profile box on the guide) or the
+subject librarian; reference/"Ask a Librarian" desk is the fallback.
+
+> **Subject: A more readable Federalist Papers edition for your [guide title] guide**
+>
+> Hello [name],
+>
+> I came across your library's guide, "[exact guide title]," and noticed it points
+> readers to the [LoC / Avalon / Congress.gov] text. I thought you might like a
+> more readable option to sit alongside it.
+>
+> I built federalistreader.org, a free reading edition of all 85 Federalist Papers:
+> the original wording (from the Project Gutenberg edition, checked against the
+> Library of Congress record), set like the 1787–88 New York newspapers they first
+> ran in, with short plain-English notes on each paper and reading-path guides for
+> newcomers — plus a clean modern reading view. Contested attributions are marked
+> as contested rather than silently assigned. No accounts, no ads, no cost; reading
+> progress stays on the student's own device, so there's nothing to log into on a
+> school network.
+>
+> It began as a family reading project, not a company, and sells nothing. It was
+> recently featured on kottke.org.
+>
+> If it's useful to your students, it's yours to link freely — and if you or a
+> student ever spots an error in my notes, I'll fix it and thank you.
+>
+> With appreciation for what you do, Vann Walke · federalistreader.org
+
+## Sends log (running)
+
+| Sent | Target | To | Template | Follow-up (~2 wks) |
+|---|---|---|---|---|
+| 2026-07-29 | Westport Library — Federalist Papers guide | ref@westportlibrary.org | D | ~2026-08-12 (individuals: Melanie Myers / Nancy Paquet) |
+| 2026-07-29 | Christopher Newport Univ. — Madison primary-sources guide | matt.shelley@cnu.edu (Head of Instruction) | D | ~2026-08-12 (fallback library@cnu.edu) |
+
+*LibGuides shortlist queued next (send 2–3/day): Sarah Lawrence (US Constitution,
+LoC-only = easy add), St. Petersburg / Palm Beach State / Full Sail (FL civic-
+literacy, .edu), and — hold for early September — Jefferson CTC's Constitution &
+Citizenship Day guide (Sept 17 seasonal hook).*
+
 ## Target list (non-partisan-vetted)
 
 | Target | Why / hook | Template |
