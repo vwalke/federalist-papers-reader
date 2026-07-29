@@ -1,6 +1,14 @@
 # Marketing Plan — Beyond X
 
-*Owner: Social/Marketing. Last updated: 2026-07-21.*
+*Owner: Social/Marketing. Last updated: 2026-07-28.*
+
+> **Channel change (2026-07-28): X is discontinued.** @ReadPublius was
+> suspended for "authenticity/platform manipulation" and the appeal was denied
+> (twice-upheld spam determination — label `SpamHighRecall`). See the post-mortem
+> at the end of this doc. Net effect on strategy: **none to the engine.** X was
+> always Tier-2/3 and our lowest-ROI channel; the daily-sweep time now goes to
+> the August teacher push + SEO. Bluesky is the replacement social channel if/when
+> we want one.
 
 ## The growth thesis (adopted 2026-07-21)
 
@@ -53,10 +61,9 @@ subscribers; default-link status in teacher communities. Long arc: the
 Constitution's 250th (2037) and the papers' own 250th (2037–38) — own the
 category before the biggest civic anniversary of our lifetimes.
 
-**Status notes:** X Premium purchased 2026-07-21 (reply visibility + link
-penalty gone — the two-part posting workaround is no longer required).
-Follow list live in `follow-list.md`. Email/site follow-touchpoints PRD
-handed off 2026-07-21.
+**Status notes:** X discontinued 2026-07-28 (account suspended; see post-mortem
+below). The daily-sweep hours are reallocated to Phase 2 (teacher push) and SEO.
+Email/site follow-touchpoints PRD handed off 2026-07-21.
 
 The goal for federalistreader.org is **readership and reach**, not conversions
 (nothing is being sold). So the leverage is in **discovery** (people already
@@ -64,8 +71,9 @@ searching), an **owned audience** (readers who return), **communities** where
 these texts are discussed, and a few **one-time launch spikes** for backlinks and
 traffic. Paid ads are near-last and probably never needed.
 
-X is live (see `strategy.md`); daily anchor posts + good-faith replies are
-building the account. Everything below is the broader push.
+X is discontinued (see post-mortem below); `strategy.md` is retained as a
+record of the playbook. Everything below is the broader push — the actual engine,
+and unaffected by the X loss.
 
 ## Tier 1 — start here (compounding, high-leverage)
 
@@ -100,9 +108,15 @@ building the account. Everything below is the broader push.
 ## Tier 3 — extend social with assets we already have
 
 The per-paper cards (`social-cards/{n}.jpg`) are reusable across:
-- **Instagram + Threads** (Threads cross-posts easily from the X content),
+- **Bluesky** — the replacement for X. The history/typography/civics niche
+  migrated here, and the network is **link-friendly by design** (no off-platform-
+  link penalty — the exact thing that got us suspended on X). Philosophically the
+  right room. Lead channel if/when we restart social. Reuse the card + voice
+  assets; keep the link in bio/pinned and in posts (Bluesky doesn't punish it).
 - **Pinterest** (evergreen search + homeschool/education crowd),
-- **LinkedIn** (strong for governance/civics content, professional readers).
+- **LinkedIn** (strong for governance/civics content, professional readers),
+- **Instagram + Threads** (cards work; lower priority without an X content engine
+  feeding them).
 
 Low effort since the visuals already exist.
 
@@ -140,3 +154,43 @@ unmonetized site. Still skip SimilarWeb.
 *Pricing snapshot (2026): Ahrefs Starter $29/mo, Lite ~$129/mo (no free trial);
 Ahrefs Webmaster Tools free for verified owners. SimilarWeb paid from ~$125/mo,
 useful tiers enterprise, now quote-only.*
+
+## Post-mortem — the X experiment (2026-07-18 → 2026-07-28)
+
+**Outcome.** @ReadPublius was suspended for "inauthentic activity / platform
+manipulation." X's spam classifier labeled the account `SpamHighRecall` (Jul 23);
+an automated re-review upheld it; a human appeal was denied (Jul 28). We chose not
+to pursue the credential-based "restore" flow — even reinstated, the account stays
+flagged and would have to run defanged (link in bio only, no source links in
+replies), which removes the entire reason we were there.
+
+**Why it happened (the real lesson).** It was never about any single link being
+"spammy." It was the *aggregate behavioral signature*, which is statistically
+identical to link-spam and which an automated filter cannot distinguish from it:
+- a weeks-old account,
+- posting on a fixed daily cadence,
+- with the **same domain (federalistreader.org) in nearly every post and reply**,
+- dropped into **replies to strangers** (not mutuals),
+- plus a **burst of follows** during the follow-list ramp.
+
+Each behavior was innocent and well-intentioned (handing a reader the exact
+primary-source text is *generous*). Stacked, they read as affiliate/link-dropping.
+**The most helpful act — linking the source in a discussion — is, at volume from a
+new account, the most spam-shaped act.** X also structurally disfavors accounts
+whose purpose is routing traffic *off* X, so we were swimming upstream regardless.
+
+**What we'd do differently (rules for any future platform):**
+1. **Link in bio + one pinned post; keep source links out of replies.** Reply
+   helpfully without a URL; interested readers click the profile. Removes ~90% of
+   the spam signal.
+2. **Link occasionally, not in every post.** Vary posts: facts and card images
+   with no link at all.
+3. **No follow bursts.** 2–3/day, tied to real engagement.
+4. **Build conversation/authority first, links second.** Never automate.
+
+**Was it worth it?** Marginally, as a learning exercise. On the numbers, no: X
+delivered ~15–20 cold-start followers under reach-throttle for weeks of daily
+manual work, while email, the kottke feature, and SEO drove essentially all real
+traffic. X was correctly ranked Tier-2/3 here from the start; its loss doesn't
+touch the engine. **Do not re-attempt X.** If a social channel is wanted, use
+**Bluesky** (Tier 3 above) — link-friendly and where the audience actually is.

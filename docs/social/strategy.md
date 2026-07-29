@@ -2,6 +2,13 @@
 
 *Owner: Social. Platform: X (others later). Last updated: 2026-07-18.*
 
+> **⚠️ DISCONTINUED 2026-07-28 — X only.** @ReadPublius was suspended for
+> "platform manipulation" (spam classifier; appeal denied). This document is
+> retained as a historical record of the X playbook, **not** an active plan. Do
+> not resume X. The post-mortem and the rules for any future platform (link in
+> bio not replies, no follow bursts) are in `marketing-plan.md`. Bluesky is the
+> designated replacement channel.
+
 ## Mission
 
 Get more people reading the Federalist Papers by meeting curious citizens where
