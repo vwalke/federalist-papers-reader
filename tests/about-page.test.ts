@@ -57,7 +57,7 @@ describe('About this edition', () => {
     expect(html).toContain('helped bring the Great Seal of the United States to its final design');
     expect(html).toContain('personally carried word of George Washington’s unanimous election');
     expect(html).toContain('translating the Septuagint Bible from Greek into English');
-    expect(html).toContain('The penniless ten-year-old orphan grew into a man');
+    expect(html).toContain('Mom and I think of that history as we read these arguments together.');
     expect(html).not.toContain('his was the quieter role');
     expect(html).toContain('href="https://www.carpentershall.org/pages/my-zeal-for-liberty"');
     expect(html).toContain(
@@ -91,7 +91,7 @@ describe('About this edition', () => {
     );
     expect(html).toContain('Here it was, in ink and paper, directly in front of us.');
     expect(html).toContain(
-      'no screen can reproduce the scale, texture, survival, and sheer presence',
+      'Seeing an original reveals its scale and physical presence in a way a screen cannot.',
     );
     expect(html).toContain('If <em>The Promise of Liberty</em>—or any exhibition');
     expect(html).toContain('wanting to bring a piece of history home');
