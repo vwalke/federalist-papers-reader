@@ -34,6 +34,13 @@ the [About page](https://federalistreader.org/about/).
 - Built with AI assistance, reviewed by a human; the essays themselves are the
   originals, verified against the cited sources.
 
+## Documentation
+
+- [Product principles](PRODUCT.md)
+- [Design system](DESIGN.md)
+- [Text and editorial sources](docs/sources.md)
+- [Deployment architecture](docs/deployment.md)
+
 ## Developing
 
 ```bash
