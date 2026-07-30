@@ -52,7 +52,7 @@ PLAYWRIGHT_PORT=4399 pnpm test:e2e        # Playwright against a production buil
 pnpm check                                # astro check + verifications + tests
 ```
 
-The worker has its own tests: `cd workers/post && pnpm test`.
+The root Vitest suite includes the Worker tests.
 
 ## Licensing
 

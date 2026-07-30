@@ -58,7 +58,7 @@ The Worker lives in `workers/post/`. It uses:
 - Cloudflare Access as the security boundary for `/post-office*`.
 
 Its public routes are declared in `workers/post/wrangler.toml`. Secrets are
-configured with Wrangler and are never committed. The required secret names are:
+configured with Wrangler and are never committed. The production secret names are:
 
 ```text
 RESEND_API_KEY
@@ -68,7 +68,8 @@ RESEND_WEBHOOK_SECRET
 TURNSTILE_SECRET
 ```
 
-Install and test the Worker from `workers/post/`:
+Install dependencies and run the root Vitest suite, which includes the Worker
+tests, from the repository root:
 
 ```bash
 pnpm install --frozen-lockfile
