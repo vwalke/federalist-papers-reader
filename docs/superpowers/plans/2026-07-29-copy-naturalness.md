@@ -318,6 +318,26 @@ git commit -m "edit: vary home and guide copy"
 - Consumes: All revised source files and the project's existing validation toolchain.
 - Produces: Evidence that copy-only edits preserve valid content, tests, build output, and scope.
 
+- [ ] **Step 0: Addendum — the most-read companion notes**
+
+Tasks 1–3 excluded the 85 companion notes. After those shipped, Vann approved one
+bounded exception: the notes on the five most-read papers (Nos. 1, 10, 51, 70, 78 —
+No. 10 plus the four AP-required essays, which readers meet side by side from
+`/teachers/` and the "most important" guide).
+
+Findings and action:
+
+- The contrast constructions in those five (`rather than accident or force`,
+  `neither rulers nor citizens are angels`, `neither money nor force`,
+  `judgment rather than the … purse or … sword`) are Publius's own antitheses.
+  They are content-bearing and were left alone, per the global constraints.
+- The real tic was a shared template: Nos. 10, 51, 70, and 78 each opened
+  `whyItMattered` with `No. X became/remains/is the [superlative] defense/statement
+  of Y`. Those four fields were rewritten to state a concrete consequence instead,
+  each with a different sentence shape.
+- No. 1 needed no change.
+- Only `whyItMattered` changed; no original essay text, no other note field.
+
 - [ ] **Step 1: Run the complete project checks**
 
 Run:
