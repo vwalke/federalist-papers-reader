@@ -80,6 +80,7 @@ Before deploying Worker code that expects a new schema, apply its committed D1
 migrations:
 
 ```bash
+cd workers/post
 pnpm migrate:remote
 pnpm run deploy
 ```
