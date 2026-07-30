@@ -1,429 +1,117 @@
-# Deploying Federalist Reader with Cloudflare Pages
+# Deploying Federalist Reader
 
-Federalist Reader's public reading experience is a fully static Astro site:
-generated HTML, self-hosted fonts, CSS, and small browser scripts. Cloudflare
-Pages serves it from GitHub with HTTPS, a global CDN, and automatic deployments
-whenever `main` changes. The separately deployed Publius by Post worker provides
-the subscription API, subscriber management, and a private operator dashboard.
+Federalist Reader has two deployable parts:
 
-The production site is:
+- a fully static Astro site served by Cloudflare Pages; and
+- the `publius-post` Cloudflare Worker, which provides subscriptions, subscriber
+  management, scheduled email delivery, and an access-controlled aggregate
+  dashboard.
 
-```text
-https://federalistreader.org
-```
+The production site is [federalistreader.org](https://federalistreader.org).
 
-## Current setup
+## Static site
 
-The Cloudflare Pages project is named `federalist-papers-reader` and is
-connected to the private `vwalke/federalist-papers-reader` GitHub repository.
-Its production branch is `main`; a successful push to that branch builds and
-deploys the site automatically.
-
-Cloudflare Pages uses these build settings:
+Cloudflare Pages builds the `main` branch with:
 
 ```text
 Framework preset: Astro
-Production branch: main
 Build command: npm run build
 Build output directory: dist
 Node version: 22.22.2
 ```
 
-Do not set `SKIP_DEPENDENCY_INSTALL`. Cloudflare Pages must install the
-project's pinned pnpm dependencies before it runs the build.
-
-## Environment variables
-
-Set these production (and, if desired, preview) environment variables in
-**Workers & Pages → federalist-papers-reader → Settings → Environment
-variables**:
+The build accepts these environment variables:
 
 ```text
 NODE_VERSION=22.22.2
 PUBLIC_SITE_URL=https://federalistreader.org
-PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<your-Cloudflare-Web-Analytics-site-token>
+PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<optional-public-beacon-token>
+PUBLIC_TURNSTILE_SITE_KEY=<optional-public-site-key>
 ```
 
-The analytics token is optional. It is a public browser beacon identifier, not
-an account credential. If it is absent or invalid, the site continues to build
-and read normally; it simply emits no analytics beacon.
+The analytics token and Turnstile site key are public browser identifiers, not
+account credentials. The site builds without either optional value.
 
-## Updating the site
+Verify a site change locally:
 
-1. Make the change on a branch and verify it locally:
+```bash
+pnpm install --frozen-lockfile
+PUBLIC_SITE_URL=https://federalistreader.org pnpm check
+PLAYWRIGHT_PORT=4399 pnpm test:e2e
+```
 
-   ```bash
-   pnpm install --frozen-lockfile
-   pnpm check
-   ```
+A push to `main` triggers the Pages deployment. Afterward, verify the home page,
+a representative paper such as `/papers/1/`, the About page, and any changed
+route.
 
-2. Merge the verified change to `main` and push it to GitHub.
-3. In Cloudflare Pages, open **Deployments** for `federalist-papers-reader` and
-   confirm the new production deployment is marked **Success**.
-4. Verify `https://federalistreader.org`, a representative paper such as
-   `/papers/1/`, and the About page.
+The apex domain is canonical. `www.federalistreader.org` redirects permanently
+to the apex domain while preserving paths and query strings.
 
-## Domains
+## Publius by Post Worker
 
-`federalistreader.org` is attached to the Pages project as its production
-domain. Its proxied DNS record is:
+The Worker lives in `workers/post/`. It uses:
+
+- D1 for subscriber and delivery state;
+- Resend for transactional email;
+- a daily cron trigger for scheduled delivery;
+- Turnstile as an optional subscription challenge; and
+- Cloudflare Access as the security boundary for `/post-office*`.
+
+Its public routes are declared in `workers/post/wrangler.toml`. Secrets are
+configured with Wrangler and are never committed. The production secret names are:
 
 ```text
-CNAME  @  federalist-papers-reader.pages.dev
+RESEND_API_KEY
+TOKEN_SECRET
+POSTAL_ADDRESS
+RESEND_WEBHOOK_SECRET
+TURNSTILE_SECRET
 ```
 
-Keep the root domain as the public address. Configure `www.federalistreader.org`
-as a proxied host with a permanent 301 redirect to the root domain, preserving
-paths and query strings.
+Install dependencies and run the root Vitest suite, which includes the Worker
+tests, from the repository root:
 
-## Apple Home Screen verification
+```bash
+pnpm install --frozen-lockfile
+pnpm test
+```
 
-After a production deployment, verify the standalone experience on a real
-iPhone or iPad:
-
-1. Open the production site in Safari, use **Share → Add to Home Screen**, and
-   confirm the suggested name is **Federalist**.
-2. Confirm the installed icon is the framed oxblood **F**, not a generic webpage
-   thumbnail.
-3. Launch the site from the Home Screen and confirm it opens without Safari's
-   address and tab bars.
-4. Open a paper in portrait and landscape. Check that the header clears the
-   camera/notch area, the footer clears the Home indicator, and no content
-   scrolls sideways.
-5. At phone widths, confirm Gazette and Reader share the first toolbar row,
-   text size occupies the second row, and every control remains easy to tap.
-6. Mark a paper as read and confirm the outlined oxblood check becomes a filled
-   oxblood button with a light check. Relaunch the Home Screen app and confirm
-   the read state remains.
-
-## Publius by Post worker
-
-Federalist Reader also ships a small Cloudflare Worker, `publius-post`, that
-runs the "Publius by Post" email subscription. It serves the subscription API
-(`/api/*`) and the subscriber `/manage` page, and on a daily cron it walks the
-subscriber list and sends that day's paper through Resend. All subscriber and
-delivery state lives in a D1 database; nothing is stored on the Pages site
-itself.
-
-Unlike the site, the worker is not built or deployed by Cloudflare Pages. It
-is deployed by hand with `wrangler`, from `workers/post/`, whenever its code
-changes.
-
-### One-time provisioning
-
-Run these once, from `workers/post/`, to stand the worker up in a fresh
-Cloudflare account:
+Before deploying Worker code that expects a new schema, apply its committed D1
+migrations:
 
 ```bash
 cd workers/post
-npx wrangler d1 create publius-post
-```
-
-This prints a `database_id`. Paste it into `workers/post/wrangler.toml`,
-replacing the `REPLACE-IN-TASK-13` placeholder in the `[[d1_databases]]`
-block.
-
-```bash
 pnpm migrate:remote
-```
-
-Applies the worker's D1 migrations to the new remote database.
-
-```bash
-npx wrangler secret put RESEND_API_KEY
-```
-
-An API key from [resend.com](https://resend.com), created after the sending
-domain (below) is verified.
-
-```bash
-npx wrangler secret put TOKEN_SECRET
-```
-
-A random signing secret for manage/unsubscribe/confirmation tokens. Generate
-one locally and paste it in:
-
-```text
-openssl rand -hex 32
-```
-
-```bash
-npx wrangler secret put POSTAL_ADDRESS
-```
-
-The operator's own mailing address, used verbatim in the CAN-SPAM footer of
-every email.
-
-```bash
-npx wrangler secret put RESEND_WEBHOOK_SECRET
-```
-
-The signing secret Resend generates for the webhook (set up below). This one
-is required, not optional: the webhook handler verifies every inbound request
-against it and rejects everything if it is unset.
-
-```bash
-npx wrangler secret put TURNSTILE_SECRET
-```
-
-The Turnstile widget's secret key (set up below). Optional — if it is unset,
-the worker skips Turnstile verification on subscribe requests rather than
-failing closed.
-
-```bash
 pnpm run deploy
 ```
 
-Deploys the worker and activates its routes. Before the first deploy whose
-configuration includes `post-office*`, complete the Cloudflare Access setup
-below and verify that Access intercepts the path.
+The Worker and its account-level dependencies must exist before a static-site
+change begins sending visitors to a new Worker route. Conversely, Cloudflare
+Access must protect `/post-office*` before deploying a Worker version that
+serves the operator dashboard.
 
-### External dashboard setup
+## Generated email content
 
-**Subscriber dashboard (Cloudflare Access).** The aggregate-only operator
-dashboard lives at `https://federalistreader.org/post-office/`. Configure its
-Access boundary before deploying the matching Worker route:
-
-1. In Cloudflare, open **Zero Trust → Access controls → Applications** and add
-   a **Self-hosted** application.
-2. Set the public hostname to `federalistreader.org` and the path to
-   `post-office*`. The suffix wildcard deliberately protects both the parent
-   path and its slash form; `post-office/*` does not protect the parent path.
-3. Select **Cloudflare** as the login method.
-4. Add an **Allow** policy for **Cloudflare account member**, limited to the
-   current Cloudflare account. Do not use an Everyone policy or an unrestricted
-   login-method rule.
-5. Set the application session duration to **1 month**.
-6. Save the application, then open the URL in a private browser and confirm
-   Cloudflare Access intercepts it. A Pages 404 after successful authentication
-   is expected until the Worker route is deployed.
-
-The unlinked URL and robots directives reduce discovery; Cloudflare Access is
-the actual security boundary. Keep `workers_dev = false` and
-`preview_urls = false` in `wrangler.toml` so the dashboard cannot be reached
-through alternate Worker hostnames that bypass the Access application.
-
-**Resend.** Add the domain `federalistreader.org`, then install the SPF and
-DKIM records Resend prints for it into Cloudflare DNS. Wait for the domain to
-show **Verified** before sending. Also add a DMARC TXT record:
-
-```text
-v=DMARC1; p=quarantine; rua=mailto:vann@walkeonline.com
-```
-
-In Resend, create a webhook pointed at
-`https://federalistreader.org/api/webhooks/resend`, subscribed to the
-`email.sent`, `email.bounced`, and `email.complained` events. Copy its signing
-secret into the `RESEND_WEBHOOK_SECRET` worker secret above. Keep one webhook
-endpoint with all three events so its signing secret and retry behavior remain
-consistent.
-
-**Turnstile.** Create a widget for `federalistreader.org` in **invisible**
-mode (this is a property of the sitekey itself, not a `data-size` attribute on
-the embed). Put the site key in the Cloudflare Pages environment variable
-`PUBLIC_TURNSTILE_SITE_KEY` (optional — the subscribe form falls back to no
-challenge if it is unset) and the secret key in the `TURNSTILE_SECRET` worker
-secret above. Invisible-mode tokens rendered implicitly expire after 300
-seconds; during the production smoke test below, confirm
-`data-refresh-expired='auto'` actually refreshes a stale token rather than
-letting the subscribe form fail.
-
-**Routes sanity check.** In the Cloudflare dashboard, confirm
-`federalistreader.org/api/*`, `federalistreader.org/manage*` (wildcard — exact
-routes do not match once a query string is attached, and every emailed manage
-link carries `?token=...`), and `federalistreader.org/post-office*` route to
-the `publius-post` worker, and that every other path still serves the Pages
-site.
-If `www.federalistreader.org` is ever configured to serve the site directly
-instead of redirecting to the apex domain, `/api` posts made from `www` will
-miss the worker's routes entirely — keep the `www` → apex redirect (see
-Domains, above) in place.
-
-### Deploy order
-
-The worker must be deployed and its routes live **before** any site change
-that adds the subscribe coupon merges to `main`. If the site goes live first,
-the coupon's form posts to `/api/subscribe` on a domain where nothing is
-listening, and visitors get a 404.
-
-For dashboard changes, reverse that dependency: the Cloudflare Access
-application and account-member Allow policy must be live and intercepting
-`/post-office*` **before** a worker deploy activates that route.
-
-Apply every pending D1 migration with `pnpm migrate:remote` before deploying
-Worker code that reads or writes the new schema.
-
-### Ongoing operations
-
-- **Paper content changes.** If a paper's frontmatter changes, re-run
-  `pnpm generate:email-content` from the repo root, commit the regenerated
-  output, and redeploy the worker with `pnpm run deploy` from `workers/post/`.
-  The worker reads its own bundled copy of this content, so a Pages deploy
-  alone does not update it.
-- **Deploys are manual.** The worker is never deployed by the Pages build.
-  Every code or content change requires an explicit `pnpm run deploy` from
-  `workers/post/`.
-- **Watching the cron.** Tail the worker live with `npx wrangler tail` from
-  `workers/post/`. A successful daily run logs a `runDaily done` line with the
-  date and counts of sent, failed, and retried deliveries.
-- **Alerting.** Cloudflare has no notification type for Workers cron
-  failures — its notification catalog covers no Workers events at all, and
-  Cron Events/Workers Logs are view-only. The dead-man's switch lives in the
-  nightly backup instead: every completed `runDaily` writes a
-  `last_daily_run` heartbeat into the `ops_meta` table, and the scheduled
-  12:00 UTC backup run fails — triggering GitHub's workflow-failure email —
-  if the heartbeat inside the dump isn't today's date. Manual backup runs
-  report the heartbeat without enforcing it (they may run before 11:00 UTC).
-  If the alert fires, check `npx wrangler tail` and the worker's Cron Events
-  in the dashboard.
-- **Production smoke test.** After any worker deploy, or as part of initial
-  setup: subscribe with a personal email address from the live site, confirm
-  the confirmation email arrives, click through to confirm, and confirm the
-  welcome email arrives. Before announcing the worker publicly, also send
-  yourself one paper email and open it in Gmail, Outlook, and Apple Mail to
-  confirm it renders correctly in each, and confirm the message stays under
-  roughly 100KB (Gmail clips messages above that size). Check D1 directly if
-  needed:
-
-  ```bash
-  npx wrangler d1 execute publius-post --remote --command "SELECT email, status FROM subscribers"
-  ```
-
-  To exercise a real send without waiting for the actual day, temporarily set
-  that subscriber's `send_dow` to tomorrow's day-of-week, wait for the 11:00
-  UTC cron, and verify the paper arrives with working manage and unsubscribe
-  links. Set `send_dow` back afterward. Finally, click **Unsubscribe** from
-  the email footer and confirm the one-click flow removes the subscriber.
-- **Dashboard smoke test.** In a private browser, confirm `/post-office` and
-  `/post-office/` both require Cloudflare authentication. After signing in,
-  confirm the page is readable at phone width, its aggregate totals match an
-  aggregate-only D1 query, and refresh updates the “Updated” timestamp. Confirm
-  the response includes `Cache-Control: private, no-store`,
-  `X-Robots-Tag: noindex, nofollow, noarchive`, and
-  `Referrer-Policy: no-referrer`. Never use individual subscriber rows or email
-  addresses to validate this page. For the sent-mail panel, confirm the rolling
-  count is numeric, the graph has 30 vertical bars grouped in Eastern Time,
-  the 100-send reference is visible, the exact-value disclosure contains 30
-  dates including zero days, and no address, subject, provider ID, or message
-  body appears.
-
-### One-time sent-email history backfill
-
-After migration `0003_email_sends.sql` and the matching Worker are deployed,
-populate the graph with Resend's retained history. Create a temporary
-full-access Resend API key, then run from `workers/post/`:
+The Worker bundles its own copy of paper metadata and excerpts. After changing
+paper frontmatter, regenerate that copy from the repository root:
 
 ```bash
-read -s "RESEND_API_KEY?Temporary full-access Resend key: "
-export RESEND_API_KEY
-pnpm run backfill:email-sends
-unset RESEND_API_KEY
+pnpm generate:email-content
 ```
 
-The script pages through retained sent-email records and writes only provider
-IDs, UTC timestamps, and aggregate recipient counts to D1. It does not write
-or print recipients, senders, subjects, bodies, or complete API records.
-Re-running it is safe because provider IDs are upserted. After verifying the
-aggregate dashboard totals, revoke the temporary key immediately.
+Commit the regenerated output and redeploy the Worker; a Pages deployment alone
+does not update the Worker's bundled content.
 
-The rolling count covers the exact previous 24 hours. The daily chart uses
-`America/New_York`, so Eastern Standard and Daylight Saving Time boundaries
-are handled automatically. Its 100-send line is a reference rather than an
-exact remaining-quota calculation because Resend can count inbound mail too.
+## Operations
 
-### Costs
+Account-specific provisioning, credential setup, backup/restore commands,
+dashboard administration, and production smoke-test records are maintained
+outside the public repository.
 
-Resend's free tier covers 3,000 emails/month and 100/day. Cloudflare Workers
-and D1 also have generous free tiers that this worker's traffic sits well
-within. The binding constraint in practice is Resend's 100/day cap: because
-subscribers largely share the same weekly send day, Saturday sends are the
-first to cluster near that limit as the subscriber list grows.
+## References
 
-### Backups
-
-The D1 database is the only state that cannot be regenerated from git.
-`.github/workflows/backup-d1.yml` exports it nightly at 12:00 UTC (an hour
-after the delivery cron, so each dump includes that day's deliveries) with
-`wrangler d1 export` and uploads the dump to S3 under `d1/`. The workflow
-refuses to upload a dump that lacks the schema or looks truncated, and it
-only ever writes new objects — retention is entirely the bucket's 365-day
-lifecycle rule below. Keeping the copy on AWS rather than R2 is deliberate:
-it survives a Cloudflare account problem. GitHub emails the workflow author
-when a scheduled run fails.
-
-**One-time AWS setup.** Pick a region and a bucket name (below:
-`us-east-1`, `federalistreader-backups`), then:
-
-```bash
-aws s3api create-bucket --bucket federalistreader-backups --region us-east-1
-aws s3api put-public-access-block --bucket federalistreader-backups \
-  --public-access-block-configuration \
-  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
-aws s3api put-bucket-lifecycle-configuration --bucket federalistreader-backups \
-  --lifecycle-configuration '{"Rules":[{"ID":"expire-d1-backups","Status":"Enabled",
-    "Filter":{"Prefix":"d1/"},"Expiration":{"Days":365}}]}'
-```
-
-(Outside `us-east-1`, `create-bucket` also needs
-`--create-bucket-configuration LocationConstraint=<region>`.)
-
-Create an IAM user that can do nothing but drop backups into that prefix:
-
-```bash
-aws iam create-user --user-name federalistreader-backup
-aws iam put-user-policy --user-name federalistreader-backup \
-  --policy-name put-d1-backups --policy-document '{"Version":"2012-10-17",
-  "Statement":[{"Effect":"Allow","Action":"s3:PutObject",
-  "Resource":"arn:aws:s3:::federalistreader-backups/d1/*"}]}'
-aws iam create-access-key --user-name federalistreader-backup
-```
-
-**One-time Cloudflare setup.** Create an API token (dashboard → My Profile →
-API Tokens) with the single permission **Account → D1 → Edit** (the export
-endpoint requires the write scope). The account id is on the Workers
-overview page.
-
-**GitHub secrets.** From the repo root:
-
-```bash
-gh secret set CLOUDFLARE_API_TOKEN      # the D1-scoped token
-gh secret set CLOUDFLARE_ACCOUNT_ID
-gh secret set AWS_ACCESS_KEY_ID         # from create-access-key above
-gh secret set AWS_SECRET_ACCESS_KEY
-gh secret set AWS_REGION                # e.g. us-east-1
-gh secret set BACKUP_BUCKET             # e.g. federalistreader-backups
-```
-
-To avoid long-lived AWS keys entirely, set `AWS_ROLE_ARN` to an OIDC role
-instead of the two key secrets — the workflow prefers the role when that
-secret exists. (Requires adding GitHub as an OIDC identity provider in IAM
-and trusting this repo; see AWS's "configure-aws-credentials" OIDC docs.)
-
-**First run.** Trigger the workflow manually (Actions → Backup D1 to S3 →
-Run workflow) and confirm an object appears:
-`aws s3 ls s3://federalistreader-backups/d1/`.
-
-**Restore.** Download the newest dump, create a fresh database, load it, and
-repoint the worker:
-
-```bash
-aws s3 cp "s3://federalistreader-backups/d1/<newest>.sql" restore.sql
-npx wrangler d1 create publius-post-restored
-npx wrangler d1 execute publius-post-restored --remote --file restore.sql
-```
-
-Then set the new `database_id` in `workers/post/wrangler.toml` and redeploy
-the worker. Restoring into a fresh database (rather than the damaged one)
-keeps the original around for forensics.
-
-**Caveat.** GitHub disables scheduled workflows after 60 days without any
-repo activity — it emails a warning first. Any push resets the clock; if the
-repo ever goes fully dormant, re-enable the workflow from the Actions tab.
-
-## Sources
-
-- [Cloudflare Pages: Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/)
-- [Cloudflare Pages: Build configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/)
-- [Cloudflare Pages: Custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/)
-- [Cloudflare Pages: Redirecting www to the apex domain](https://developers.cloudflare.com/pages/how-to/www-redirect/)
-- [Cloudflare: Enable Web Analytics](https://developers.cloudflare.com/web-analytics/get-started/)
+- [Cloudflare Pages Git integration](https://developers.cloudflare.com/pages/get-started/git-integration/)
+- [Cloudflare Pages build configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/)
+- [Cloudflare Pages custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/)
+- [Cloudflare Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
+- [Cloudflare D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)

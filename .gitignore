@@ -9,3 +9,9 @@ test-results/
 .claude/
 workers/post/.wrangler/
 workers/post/.dev.vars
+
+# Local strategy, agent plans, and operator runbooks
+docs/social/
+docs/superpowers/
+docs/plans/
+docs/private/

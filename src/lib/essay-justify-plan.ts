@@ -6,9 +6,8 @@
  * CSS multicolumn break against its individual column width (and keeps a
  * fragmented drop cap in native layout on its own), so straddlers no
  * longer need excluding here. Every essay paragraph is eligible except
- * the PUBLIUS signature (which keeps its end alignment) and anything a
- * previous pass this layout already enhanced. See
- * docs/superpowers/specs/2026-07-22-gazette-justif-justification-design.md.
+ * the PUBLIUS signature, which keeps its end alignment, and a paragraph
+ * already enhanced by a previous pass through this layout.
  */
 
 export interface ParagraphInfo {
