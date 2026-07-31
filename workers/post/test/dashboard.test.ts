@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeWeeklyDays, renderDashboard, renderDashboardError } from '../src/dashboard';
 
+const days = (last: number) => Array.from({ length: 30 }, (_, index) => ({
+  date: new Date(Date.UTC(2026, 6, 2 + index)).toISOString().slice(0, 10),
+  count: index === 29 ? last : index % 5
+}));
+
 describe('subscriber dashboard renderer', () => {
   it('fills and orders all seven weekly send days', () => {
     expect(normalizeWeeklyDays([
@@ -113,5 +118,76 @@ describe('subscriber dashboard renderer', () => {
     expect(html).toContain('<span class="stat__value">34</span>');
     expect(html).toContain('<th scope="row">Friday</th>');
     expect(html).toContain('Email activity temporarily unavailable');
+  });
+
+  it('renders aligned accessible visit and confirmed-subscription charts', () => {
+    const html = renderDashboard(
+      { active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13 },
+      [],
+      { last24Hours: 2, days: days(2) },
+      new Date('2026-07-31T16:00:00.000Z'),
+      { visits: { days: days(42) }, subscriptions: { days: days(3) } }
+    );
+
+    expect(html).toContain('<h2 id="progress-heading">Progress</h2>');
+    expect(html).toContain('30 days · Eastern Time');
+    expect(html).toMatch(/<title[^>]*>Visits by Eastern date<\/title>/);
+    expect(html).toMatch(/<title[^>]*>Confirmed subscriptions by Eastern date<\/title>/);
+    expect(html.match(/class="visit-point"/g)).toHaveLength(30);
+    expect(html.match(/class="subscription-bar"/g)).toHaveLength(30);
+    expect(html).toContain('Jul 31: 42 visits');
+    expect(html).toContain('Jul 31: 3 confirmed subscriptions');
+    expect(html).toContain('<th scope="col">Visits</th>');
+    expect(html).toContain('<th scope="col">Confirmed subscriptions</th>');
+    expect(html.indexOf('id="weekly-heading"')).toBeLessThan(html.indexOf('id="progress-heading"'));
+    expect(html.indexOf('id="progress-heading"')).toBeLessThan(html.indexOf('id="email-heading"'));
+  });
+
+  it('renders visits with unavailable subscriptions marked by em dashes', () => {
+    const html = renderDashboard(
+      { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },
+      [],
+      null,
+      new Date('2026-07-31T16:00:00.000Z'),
+      { visits: { days: days(42) }, subscriptions: null }
+    );
+
+    expect(html.match(/class="visit-point"/g)).toHaveLength(30);
+    expect(html).not.toContain('class="subscription-bar"');
+    expect(html).toContain('<th scope="col">Visits</th>');
+    expect(html).toContain('<th scope="col">Confirmed subscriptions</th>');
+    expect(html).toContain('<time datetime="2026-07-31">Jul 31</time></th>\n          <td>42</td>\n          <td>&mdash;</td>');
+    expect(html).toContain('<time datetime="2026-07-02">Jul 2</time></th>\n          <td>0</td>\n          <td>&mdash;</td>');
+  });
+
+  it('renders subscriptions with unavailable visits marked by em dashes', () => {
+    const html = renderDashboard(
+      { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },
+      [],
+      null,
+      new Date('2026-07-31T16:00:00.000Z'),
+      { visits: null, subscriptions: { days: days(3) } }
+    );
+
+    expect(html).not.toContain('class="visit-point"');
+    expect(html.match(/class="subscription-bar"/g)).toHaveLength(30);
+    expect(html).toContain('<th scope="col">Visits</th>');
+    expect(html).toContain('<th scope="col">Confirmed subscriptions</th>');
+    expect(html).toContain('<time datetime="2026-07-31">Jul 31</time></th>\n          <td>&mdash;</td>\n          <td>3</td>');
+    expect(html).toContain('<time datetime="2026-07-02">Jul 2</time></th>\n          <td>&mdash;</td>\n          <td>0</td>');
+  });
+
+  it('renders one progress-unavailable note without empty charts', () => {
+    const html = renderDashboard(
+      { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },
+      [],
+      null,
+      new Date('2026-07-31T16:00:00.000Z'),
+      { visits: null, subscriptions: null }
+    );
+
+    expect(html.match(/Progress activity temporarily unavailable/g)).toHaveLength(1);
+    expect(html).not.toContain('class="activity-chart"');
+    expect(html).not.toContain('class="progress-values"');
   });
 });

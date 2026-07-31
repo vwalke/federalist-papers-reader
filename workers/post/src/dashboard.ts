@@ -14,6 +14,7 @@
  * and single action are precisely specified.
  */
 import type { EmailActivity, SubscriberStats, WeeklyDayStats } from './db';
+import type { DailyActivity } from './daily-activity';
 import { DOW_NAMES } from './schedule';
 
 export interface DashboardDay {
@@ -21,6 +22,13 @@ export interface DashboardDay {
   active: number;
   pending: number;
 }
+
+export interface ProgressActivity {
+  visits: DailyActivity | null;
+  subscriptions: DailyActivity | null;
+}
+
+const EMPTY_PROGRESS: ProgressActivity = { visits: null, subscriptions: null };
 
 export function normalizeWeeklyDays(rows: WeeklyDayStats[]): DashboardDay[] {
   const byDay = new Map(rows.map((row) => [row.sendDow, row]));
@@ -100,7 +108,8 @@ function document(title: string, content: string): string {
       border-bottom: 4px double var(--ink);
     }
     .kicker, .updated, .stat__label, thead, .refresh, .note,
-    .email-summary, .email-values summary {
+    .email-summary, .email-values summary, .progress-meta,
+    .progress-values summary, .plot-label {
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     .kicker {
@@ -175,6 +184,27 @@ function document(title: string, content: string): string {
       border-block: 1px solid var(--ink);
       background: rgb(244 239 226 / 38%);
     }
+    .progress-meta {
+      margin: -.35rem 0 .85rem;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+    .progress-plot + .progress-plot { margin-top: 1rem; }
+    .activity-chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+    .activity-chart text {
+      fill: var(--muted);
+      font: 13px ui-sans-serif, system-ui, sans-serif;
+    }
+    .activity-rule { stroke: var(--rule); }
+    .visit-line { fill: none; stroke: var(--focus); stroke-width: 2; }
+    .visit-point { fill: var(--focus); }
+    .subscription-bar { fill: var(--accent); }
+    .progress-values { margin-top: .75rem; }
     .email-summary {
       display: flex;
       align-items: baseline;
@@ -214,7 +244,7 @@ function document(title: string, content: string): string {
       font: 13px ui-sans-serif, system-ui, sans-serif;
     }
     .email-values { margin-top: .75rem; }
-    .email-values summary {
+    .email-values summary, .progress-values summary {
       min-height: 44px;
       padding-block: .7rem;
       cursor: pointer;
@@ -282,11 +312,14 @@ function document(title: string, content: string): string {
     @media (forced-colors: active) {
       :root, html, body, main { background: Canvas; color: CanvasText; }
       main { background-image: none; box-shadow: none; }
-      .kicker, .updated, .stat__label, .note, thead th { color: CanvasText; }
+      .kicker, .updated, .stat__label, .note, .progress-meta, thead th { color: CanvasText; }
       .refresh { color: ButtonText; background: ButtonFace; }
-      .email-bar, .quota-meter span { fill: CanvasText; background: CanvasText; }
-      .email-chart text { fill: CanvasText; }
-      .email-rule, .email-quota { stroke: CanvasText; }
+      .email-bar, .visit-point, .subscription-bar, .quota-meter span {
+        fill: CanvasText;
+        background: CanvasText;
+      }
+      .email-chart text, .activity-chart text { fill: CanvasText; }
+      .email-rule, .email-quota, .visit-line, .activity-rule { stroke: CanvasText; }
     }
     @media (prefers-reduced-transparency: reduce) {
       main { background-image: none; }
@@ -306,6 +339,113 @@ function shortDate(isoDate: string): string {
     month: 'short',
     day: 'numeric'
   }).format(new Date(`${isoDate}T12:00:00.000Z`));
+}
+
+function xFor(index: number, length: number, left = 42, width = 538): number {
+  return left + (length <= 1 ? width / 2 : index * width / (length - 1));
+}
+
+function yFor(count: number, max: number, top = 14, height = 120): number {
+  return top + height - (count / Math.max(max, 1)) * height;
+}
+
+function renderDateLabels(activity: DailyActivity): string {
+  return activity.days.map((day, index) => {
+    const isEndpoint = index === 0 || index === activity.days.length - 1;
+    const isWeekly = index % 7 === 0 && index < activity.days.length - 2;
+    if (!isEndpoint && !isWeekly) return '';
+    return `<text class="plot-label" x="${xFor(index, activity.days.length).toFixed(2)}" y="166" text-anchor="middle">${shortDate(day.date)}</text>`;
+  }).join('');
+}
+
+function renderVisitsChart(activity: DailyActivity): string {
+  const max = Math.max(...activity.days.map((day) => day.count), 1);
+  const points = activity.days.map((day, index) =>
+    `${xFor(index, activity.days.length).toFixed(2)},${yFor(day.count, max).toFixed(2)}`
+  ).join(' ');
+  const marks = activity.days.map((day, index) => {
+    const label = `${shortDate(day.date)}: ${day.count} ${day.count === 1 ? 'visit' : 'visits'}`;
+    return `<g><title>${label}</title><circle class="visit-point" cx="${xFor(index, activity.days.length).toFixed(2)}" cy="${yFor(day.count, max).toFixed(2)}" r="2.75"></circle></g>`;
+  }).join('');
+
+  return `<div class="progress-plot">
+        <svg class="activity-chart" viewBox="0 0 600 180" role="img" aria-labelledby="visit-chart-title visit-chart-desc">
+          <title id="visit-chart-title">Visits by Eastern date</title>
+          <desc id="visit-chart-desc">Visits for the most recent 30 days, grouped by Eastern date. The current date may be partial. The vertical scale is independent.</desc>
+          <text class="plot-label" x="42" y="11">Visits</text>
+          <text class="plot-label" x="36" y="18" text-anchor="end">${max}</text>
+          <text class="plot-label" x="36" y="138" text-anchor="end">0</text>
+          <line class="activity-rule" x1="42" y1="134" x2="580" y2="134" vector-effect="non-scaling-stroke"></line>
+          <polyline class="visit-line" points="${points}" vector-effect="non-scaling-stroke"></polyline>
+          ${marks}${renderDateLabels(activity)}
+        </svg>
+      </div>`;
+}
+
+function renderSubscriptionsChart(activity: DailyActivity): string {
+  const plotBottom = 134;
+  const max = Math.max(...activity.days.map((day) => day.count), 1);
+  const slot = 538 / Math.max(activity.days.length, 1);
+  const barWidth = slot * .56;
+  const bars = activity.days.map((day, index) => {
+    const height = day.count === 0 ? 0 : Math.max(1, plotBottom - yFor(day.count, max));
+    const x = xFor(index, activity.days.length) - barWidth / 2;
+    const y = plotBottom - height;
+    const noun = day.count === 1 ? 'confirmed subscription' : 'confirmed subscriptions';
+    return `<g><title>${shortDate(day.date)}: ${day.count} ${noun}</title><rect class="subscription-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${height.toFixed(2)}"></rect></g>`;
+  }).join('');
+
+  return `<div class="progress-plot">
+        <svg class="activity-chart" viewBox="0 0 600 180" role="img" aria-labelledby="subscription-chart-title subscription-chart-desc">
+          <title id="subscription-chart-title">Confirmed subscriptions by Eastern date</title>
+          <desc id="subscription-chart-desc">Confirmed subscriptions for the most recent 30 days, grouped by Eastern date. The current date may be partial. The vertical scale is independent.</desc>
+          <text class="plot-label" x="42" y="11">New subscriptions</text>
+          <text class="plot-label" x="36" y="18" text-anchor="end">${max}</text>
+          <text class="plot-label" x="36" y="138" text-anchor="end">0</text>
+          <line class="activity-rule" x1="42" y1="134" x2="580" y2="134" vector-effect="non-scaling-stroke"></line>
+          ${bars}${renderDateLabels(activity)}
+        </svg>
+      </div>`;
+}
+
+function renderProgressActivity(progress: ProgressActivity): string {
+  const { visits, subscriptions } = progress;
+  if (!visits && !subscriptions) {
+    return `<section aria-labelledby="progress-heading">
+      <h2 id="progress-heading">Progress</h2>
+      <p class="note">Progress activity temporarily unavailable. Refresh counts to try again.</p>
+    </section>`;
+  }
+
+  const sourceDays = visits?.days ?? subscriptions!.days;
+  const visitCounts = new Map(visits?.days.map((day) => [day.date, day.count]));
+  const subscriptionCounts = new Map(subscriptions?.days.map((day) => [day.date, day.count]));
+  const rows = sourceDays.map((day) => `<tr>
+          <th scope="row"><time datetime="${day.date}">${shortDate(day.date)}</time></th>
+          <td>${visits ? visitCounts.get(day.date) ?? 0 : '&mdash;'}</td>
+          <td>${subscriptions ? subscriptionCounts.get(day.date) ?? 0 : '&mdash;'}</td>
+        </tr>`).join('');
+  const unavailableNote = !visits
+    ? '<p class="note">Visit activity temporarily unavailable. Refresh counts to try again.</p>'
+    : !subscriptions
+      ? '<p class="note">Confirmed subscription activity temporarily unavailable. Refresh counts to try again.</p>'
+      : '';
+
+  return `<section aria-labelledby="progress-heading">
+      <h2 id="progress-heading">Progress</h2>
+      <p class="progress-meta">30 days · Eastern Time</p>
+      ${visits ? renderVisitsChart(visits) : ''}
+      ${subscriptions ? renderSubscriptionsChart(subscriptions) : ''}
+      ${unavailableNote}
+      <details class="progress-values">
+        <summary>Exact daily values</summary>
+        <div class="table-wrap"><table>
+          <caption>Visits and confirmed subscriptions by Eastern date</caption>
+          <thead><tr><th scope="col">Date</th><th scope="col">Visits</th><th scope="col">Confirmed subscriptions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </details>
+    </section>`;
 }
 
 function renderEmailBars(activity: EmailActivity): string {
@@ -382,7 +522,8 @@ export function renderDashboard(
   stats: SubscriberStats,
   weeklyRows: WeeklyDayStats[],
   emailActivity: EmailActivity | null,
-  refreshedAt: Date
+  refreshedAt: Date,
+  progress: ProgressActivity = EMPTY_PROGRESS
 ): string {
   const days = normalizeWeeklyDays(weeklyRows);
   const iso = refreshedAt.toISOString();
@@ -427,6 +568,7 @@ export function renderDashboard(
         </table>
       </div>
     </section>
+    ${renderProgressActivity(progress)}
     ${renderEmailActivity(emailActivity)}
     <a class="refresh" href="/post-office/">Refresh counts</a>`);
 }
