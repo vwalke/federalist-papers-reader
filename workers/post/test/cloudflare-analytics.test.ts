@@ -19,16 +19,24 @@ function analyticsResponse(payload: unknown): Response {
 }
 
 describe('Cloudflare visit activity', () => {
-  it('requests hourly end-user visits and returns 30 Eastern dates', async () => {
-    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
-      new Response(JSON.stringify({
-        data: { viewer: { zones: [{ hourly: [
-          { dimensions: { datetimeHour: '2026-04-06T03:00:00Z' }, sum: { visits: 2 } },
-          { dimensions: { datetimeHour: '2026-04-06T14:00:00Z' }, sum: { visits: 3 } }
-        ] }] } },
+  it('keeps every analytics request within one day and returns 30 Eastern dates', async () => {
+    const rows = [
+      { dimensions: { datetimeHour: '2026-04-06T03:00:00Z' }, sum: { visits: 2 } },
+      { dimensions: { datetimeHour: '2026-04-06T14:00:00Z' }, sum: { visits: 3 } }
+    ];
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      const start = Date.parse(body.variables.start);
+      const end = Date.parse(body.variables.end);
+      const hourly = rows.filter((row) => {
+        const occurredAt = Date.parse(row.dimensions.datetimeHour);
+        return occurredAt >= start && occurredAt < end;
+      });
+      return new Response(JSON.stringify({
+        data: { viewer: { zones: [{ hourly }] } },
         errors: null
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
-    );
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    });
 
     const result = await getVisitActivity(
       ENV,
@@ -40,7 +48,7 @@ describe('Cloudflare visit activity', () => {
     expect(result.days[0]?.date).toBe('2026-03-08');
     expect(result.days.find((day) => day.date === '2026-04-05')?.count).toBe(2);
     expect(result.days.at(-1)?.count).toBe(3);
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(30);
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe('https://api.cloudflare.com/client/v4/graphql');
     expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer token_test');
@@ -51,8 +59,15 @@ describe('Cloudflare visit activity', () => {
     expect(body.query).toContain('visits');
     expect(body.variables.zoneTag).toBe('zone_test');
     expect(body.variables.start).toBe('2026-03-08T05:00:00.000Z');
-    expect(body.variables.end).toBe('2026-04-06T16:00:00.000Z');
+    expect(body.variables.end).toBe('2026-03-09T05:00:00.000Z');
     expect(init?.signal).toBeInstanceOf(AbortSignal);
+    for (const [, requestInit] of fetchImpl.mock.calls) {
+      const variables = JSON.parse(String(requestInit?.body)).variables;
+      expect(Date.parse(variables.end) - Date.parse(variables.start))
+        .toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+    }
+    const finalBody = JSON.parse(String(fetchImpl.mock.calls.at(-1)?.[1]?.body));
+    expect(finalBody.variables.end).toBe('2026-04-06T16:00:00.000Z');
   });
 
   it.each([

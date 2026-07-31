@@ -2,6 +2,7 @@ import { easternWindow, summarizeDailyActivity, type DailyActivity } from './dai
 import type { Env } from './types';
 
 const GRAPHQL_URL = 'https://api.cloudflare.com/client/v4/graphql';
+const MAX_QUERY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const VISITS_QUERY = `query PostOfficeVisits($zoneTag: string, $start: Time, $end: Time) {
   viewer {
     zones(filter: { zoneTag: $zoneTag }) {
@@ -38,34 +39,45 @@ export async function getVisitActivity(
   }
   try {
     const window = easternWindow(now);
-    const response = await fetchImpl(GRAPHQL_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.CLOUDFLARE_ANALYTICS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query: VISITS_QUERY,
-        variables: {
-          zoneTag: env.CLOUDFLARE_ZONE_ID,
-          start: window.start.toISOString(),
-          end: window.end.toISOString()
-        }
-      }),
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-    if (!response.ok) throw new Error();
-    const payload: unknown = await response.json();
-    if (!isObject(payload)) throw new Error();
-    const errors = payload.errors;
-    if (errors !== undefined && errors !== null &&
-      (!Array.isArray(errors) || errors.length > 0)) throw new Error();
-    if (!isObject(payload.data) || !isObject(payload.data.viewer)) throw new Error();
-    const zones = payload.data.viewer.zones;
-    if (!Array.isArray(zones) || zones.length !== 1 || !isObject(zones[0])) throw new Error();
-    const rows = zones[0].hourly;
-    if (!Array.isArray(rows)) throw new Error();
-    const timed = rows.map((row) => {
+    const ranges: Array<{ start: string; end: string }> = [];
+    for (let start = window.start.getTime(); start < window.end.getTime();
+      start += MAX_QUERY_WINDOW_MS) {
+      ranges.push({
+        start: new Date(start).toISOString(),
+        end: new Date(Math.min(start + MAX_QUERY_WINDOW_MS, window.end.getTime())).toISOString()
+      });
+    }
+    const payloads = await Promise.all(ranges.map(async (range) => {
+      const response = await fetchImpl(GRAPHQL_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.CLOUDFLARE_ANALYTICS_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: VISITS_QUERY,
+          variables: {
+            zoneTag: env.CLOUDFLARE_ZONE_ID,
+            start: range.start,
+            end: range.end
+          }
+        }),
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      if (!response.ok) throw new Error();
+      const payload: unknown = await response.json();
+      if (!isObject(payload)) throw new Error();
+      const errors = payload.errors;
+      if (errors !== undefined && errors !== null &&
+        (!Array.isArray(errors) || errors.length > 0)) throw new Error();
+      if (!isObject(payload.data) || !isObject(payload.data.viewer)) throw new Error();
+      const zones = payload.data.viewer.zones;
+      if (!Array.isArray(zones) || zones.length !== 1 || !isObject(zones[0])) throw new Error();
+      const rows = zones[0].hourly;
+      if (!Array.isArray(rows)) throw new Error();
+      return rows;
+    }));
+    const timed = payloads.flat().map((row) => {
       if (!isObject(row) || !isObject(row.dimensions) || !isObject(row.sum)) {
         throw new Error();
       }

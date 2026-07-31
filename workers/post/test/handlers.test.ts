@@ -289,7 +289,7 @@ describe('operator dashboard', () => {
 
       expect(getEmailActivity).toHaveBeenCalledOnce();
       expect(getSubscriptionActivity).toHaveBeenCalledOnce();
-      expect(fetchImpl).toHaveBeenCalledOnce();
+      expect(fetchImpl).toHaveBeenCalledTimes(30);
 
       email.resolve({ last24Hours: 0, days: [] });
       subscriptions.resolve({ days: THIRTY_DAILY_VALUES });
