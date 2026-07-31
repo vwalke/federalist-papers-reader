@@ -23,6 +23,10 @@ const VISITS_QUERY = `query PostOfficeVisits($zoneTag: string, $start: Time, $en
 
 type AnalyticsEnv = Pick<Env, 'CLOUDFLARE_ZONE_ID' | 'CLOUDFLARE_ANALYTICS_TOKEN'>;
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export async function getVisitActivity(
   env: AnalyticsEnv,
   now: Date,
@@ -52,29 +56,28 @@ export async function getVisitActivity(
     });
     if (!response.ok) throw new Error();
     const payload: unknown = await response.json();
-    const root = payload as {
-      errors?: unknown[] | null;
-      data?: { viewer?: { zones?: Array<{ hourly?: unknown[] }> } };
-    };
-    if ((root.errors?.length ?? 0) > 0 || root.data?.viewer?.zones?.length !== 1) {
-      throw new Error();
-    }
-    const rows = root.data.viewer.zones[0].hourly;
+    if (!isObject(payload)) throw new Error();
+    const errors = payload.errors;
+    if (errors !== undefined && errors !== null &&
+      (!Array.isArray(errors) || errors.length > 0)) throw new Error();
+    if (!isObject(payload.data) || !isObject(payload.data.viewer)) throw new Error();
+    const zones = payload.data.viewer.zones;
+    if (!Array.isArray(zones) || zones.length !== 1 || !isObject(zones[0])) throw new Error();
+    const rows = zones[0].hourly;
     if (!Array.isArray(rows)) throw new Error();
     const timed = rows.map((row) => {
-      const value = row as {
-        dimensions?: { datetimeHour?: unknown };
-        sum?: { visits?: unknown };
-      };
-      if (typeof value.dimensions?.datetimeHour !== 'string' ||
-        !Number.isFinite(Date.parse(value.dimensions.datetimeHour)) ||
-        typeof value.sum?.visits !== 'number' ||
-        !Number.isSafeInteger(value.sum.visits) || value.sum.visits < 0) {
+      if (!isObject(row) || !isObject(row.dimensions) || !isObject(row.sum)) {
+        throw new Error();
+      }
+      const occurredAt = row.dimensions.datetimeHour;
+      const visits = row.sum.visits;
+      if (typeof occurredAt !== 'string' || !Number.isFinite(Date.parse(occurredAt)) ||
+        typeof visits !== 'number' || !Number.isSafeInteger(visits) || visits < 0) {
         throw new Error();
       }
       return {
-        occurredAt: value.dimensions.datetimeHour,
-        count: value.sum.visits
+        occurredAt,
+        count: visits
       };
     });
     return summarizeDailyActivity(timed, now);

@@ -25,18 +25,26 @@ describe('daily activity', () => {
   });
 
   it('uses exact Eastern bounds across spring forward', () => {
-    const window = easternWindow(new Date('2026-03-09T16:00:00.000Z'));
-    expect(easternDate(window.start)).toBe(window.labels[0]);
-    expect(window.end.toISOString()).toBe('2026-03-09T16:00:00.000Z');
-    expect(easternDate(new Date('2026-03-08T04:59:59.999Z'))).toBe('2026-03-07');
-    expect(easternDate(new Date('2026-03-08T05:00:00.000Z'))).toBe('2026-03-08');
+    const transitionWindow = easternWindow(new Date('2026-04-06T16:00:00.000Z'));
+    const followingWindow = easternWindow(new Date('2026-04-07T16:00:00.000Z'));
+    expect(transitionWindow.labels[0]).toBe('2026-03-08');
+    expect(transitionWindow.start.toISOString()).toBe('2026-03-08T05:00:00.000Z');
+    expect(followingWindow.labels[0]).toBe('2026-03-09');
+    expect(followingWindow.start.toISOString()).toBe('2026-03-09T04:00:00.000Z');
+    expect(followingWindow.start.getTime() - transitionWindow.start.getTime())
+      .toBe(23 * 60 * 60 * 1000);
+    expect(transitionWindow.end.toISOString()).toBe('2026-04-06T16:00:00.000Z');
   });
 
   it('uses exact Eastern bounds across fall back', () => {
-    expect(easternDate(new Date('2026-11-01T03:59:59.999Z'))).toBe('2026-10-31');
-    expect(easternDate(new Date('2026-11-01T04:00:00.000Z'))).toBe('2026-11-01');
-    expect(easternDate(new Date('2026-11-02T04:59:59.999Z'))).toBe('2026-11-01');
-    expect(easternDate(new Date('2026-11-02T05:00:00.000Z'))).toBe('2026-11-02');
+    const transitionWindow = easternWindow(new Date('2026-11-30T16:00:00.000Z'));
+    const followingWindow = easternWindow(new Date('2026-12-01T16:00:00.000Z'));
+    expect(transitionWindow.labels[0]).toBe('2026-11-01');
+    expect(transitionWindow.start.toISOString()).toBe('2026-11-01T04:00:00.000Z');
+    expect(followingWindow.labels[0]).toBe('2026-11-02');
+    expect(followingWindow.start.toISOString()).toBe('2026-11-02T05:00:00.000Z');
+    expect(followingWindow.start.getTime() - transitionWindow.start.getTime())
+      .toBe(25 * 60 * 60 * 1000);
   });
 
   it('ignores malformed, negative, fractional, and out-of-window rows', () => {

@@ -69,11 +69,16 @@ TURNSTILE_SECRET
 CLOUDFLARE_ANALYTICS_TOKEN
 ```
 
-Configure the analytics zone as a plain Worker variable:
+Configure the analytics zone as a plain Worker variable outside this repository,
+for example in the Cloudflare dashboard:
 
 ```text
 CLOUDFLARE_ZONE_ID (plain Worker variable set to the existing federalistreader.org zone ID)
 ```
+
+The committed Wrangler configuration sets `keep_vars = true`, so deploys preserve
+that dashboard-managed `CLOUDFLARE_ZONE_ID` instead of replacing it with the
+repository's committed `[vars]` table. Do not commit the zone ID.
 
 `CLOUDFLARE_ANALYTICS_TOKEN` must be a least-privilege Cloudflare API token
 with analytics read access limited to the `federalistreader.org` zone. Store it
