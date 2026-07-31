@@ -69,8 +69,43 @@ async function manageToken(): Promise<string> {
   return signToken(7, 'manage', ENV.TOKEN_SECRET, SUB.token_secret);
 }
 
+const THIRTY_DAILY_VALUES = [
+  { date: '2026-07-02', count: 0 }, { date: '2026-07-03', count: 1 },
+  { date: '2026-07-04', count: 0 }, { date: '2026-07-05', count: 0 },
+  { date: '2026-07-06', count: 1 }, { date: '2026-07-07', count: 0 },
+  { date: '2026-07-08', count: 0 }, { date: '2026-07-09', count: 1 },
+  { date: '2026-07-10', count: 0 }, { date: '2026-07-11', count: 0 },
+  { date: '2026-07-12', count: 1 }, { date: '2026-07-13', count: 0 },
+  { date: '2026-07-14', count: 0 }, { date: '2026-07-15', count: 1 },
+  { date: '2026-07-16', count: 0 }, { date: '2026-07-17', count: 0 },
+  { date: '2026-07-18', count: 1 }, { date: '2026-07-19', count: 0 },
+  { date: '2026-07-20', count: 0 }, { date: '2026-07-21', count: 1 },
+  { date: '2026-07-22', count: 0 }, { date: '2026-07-23', count: 0 },
+  { date: '2026-07-24', count: 1 }, { date: '2026-07-25', count: 0 },
+  { date: '2026-07-26', count: 0 }, { date: '2026-07-27', count: 1 },
+  { date: '2026-07-28', count: 0 }, { date: '2026-07-29', count: 0 },
+  { date: '2026-07-30', count: 1 }, { date: '2026-07-31', count: 0 }
+];
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, resolve, reject };
+}
+
 describe('operator dashboard', () => {
   it.each(['/post-office', '/post-office/'])('renders aggregate counts at %s', async (path) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
+    const getEmailActivity = vi.fn(async () => ({
+      last24Hours: 2,
+      days: [{ date: '2026-07-25', count: 2 }]
+    }));
+    const getSubscriptionActivity = vi.fn(async () => ({ days: THIRTY_DAILY_VALUES }));
     const db = makeStubDb({
       getSubscriberStats: vi.fn(async () => ({
         active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13
@@ -79,25 +114,152 @@ describe('operator dashboard', () => {
         { sendDow: 0, active: 1, pending: 0 },
         { sendDow: 5, active: 10, pending: 1 }
       ]),
+      getEmailActivity,
+      getSubscriptionActivity
+    });
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      data: { viewer: { zones: [{ hourly: [
+        { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
+      ] }] } }, errors: null
+    }))) as unknown as typeof fetch;
+    try {
+      const res = await handleRequest(
+        new Request(`https://federalistreader.org${path}`),
+        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        db,
+        sender,
+        fetchImpl
+      );
+      const html = await res.text();
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+      expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow, noarchive');
+      expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
+      expect(html).toContain('Post Office');
+      expect(html).toContain('<span class="stat__value">34</span>');
+      expect(html).toContain('<th scope="row">Friday</th>');
+      expect(html).toContain('Visits by Eastern date');
+      expect(html).toContain('Confirmed subscriptions by Eastern date');
+      expect(html).toContain('Sent mail');
+      expect(getEmailActivity).toHaveBeenCalledOnce();
+      expect(getSubscriptionActivity).toHaveBeenCalledOnce();
+      expect(getSubscriptionActivity.mock.calls[0][0]).toBe(getEmailActivity.mock.calls[0][0]);
+      expect(html).not.toMatch(/reader@example\.com|secret/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps visits and core figures when subscription and email activity fail', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const db = makeStubDb({
+      getSubscriberStats: vi.fn(async () => ({
+        active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13
+      })),
+      getSubscriptionActivity: vi.fn(async () => { throw new Error('private subscription error'); }),
+      getEmailActivity: vi.fn(async () => { throw new Error('private email error'); })
+    });
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      data: { viewer: { zones: [{ hourly: [
+        { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
+      ] }] } }, errors: null
+    }))) as unknown as typeof fetch;
+    try {
+      const res = await handleRequest(
+        new Request('https://federalistreader.org/post-office/'),
+        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        db,
+        sender,
+        fetchImpl
+      );
+      const html = await res.text();
+      expect(res.status).toBe(200);
+      expect(html).toContain('<span class="stat__value">34</span>');
+      expect(html).toContain('Visits by Eastern date');
+      expect(html).toMatch(/subscription activity temporarily unavailable/i);
+      expect(html).toContain('Email activity temporarily unavailable');
+      expect(html).not.toMatch(/private subscription error|private email error|secret/);
+      expect(errorSpy.mock.calls).toEqual([
+        ['dashboard email activity unavailable'],
+        ['dashboard subscription activity unavailable']
+      ]);
+    } finally {
+      errorSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps subscription and email activity when visit activity fails', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const db = makeStubDb({
+      getSubscriptionActivity: vi.fn(async () => ({ days: THIRTY_DAILY_VALUES })),
       getEmailActivity: vi.fn(async () => ({
         last24Hours: 2,
-        days: [{ date: '2026-07-25', count: 2 }]
+        days: [{ date: '2026-07-31', count: 2 }]
       }))
     });
-    const res = await handleRequest(
-      new Request(`https://federalistreader.org${path}`), ENV, db, sender);
-    const html = await res.text();
+    const fetchImpl = vi.fn(async () => { throw new Error('private fetch error'); }) as unknown as typeof fetch;
+    try {
+      const res = await handleRequest(
+        new Request('https://federalistreader.org/post-office/'),
+        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        db,
+        sender,
+        fetchImpl
+      );
+      const html = await res.text();
+      expect(res.status).toBe(200);
+      expect(html).toContain('Confirmed subscriptions by Eastern date');
+      expect(html).toContain('Sent emails by Eastern date');
+      expect(html).toContain('Visit activity temporarily unavailable');
+      expect(html).not.toMatch(/private fetch error|secret/);
+      expect(errorSpy.mock.calls).toEqual([
+        ['dashboard visit activity unavailable']
+      ]);
+    } finally {
+      errorSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
 
-    expect(res.status).toBe(200);
-    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
-    expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow, noarchive');
-    expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
-    expect(html).toContain('Post Office');
-    expect(html).toContain('<span class="stat__value">34</span>');
-    expect(html).toContain('<th scope="row">Friday</th>');
-    expect(html).toContain('Sent mail');
-    expect(db.getEmailActivity).toHaveBeenCalledWith(expect.any(Date));
-    expect(html).not.toContain(SUB.email);
+  it('starts all optional dashboard loads before waiting for any one source', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
+    const email = deferred<{ last24Hours: number; days: Array<{ date: string; count: number }> }>();
+    const subscriptions = deferred<{ days: Array<{ date: string; count: number }> }>();
+    const visits = deferred<Response>();
+    const getEmailActivity = vi.fn(() => email.promise);
+    const getSubscriptionActivity = vi.fn(() => subscriptions.promise);
+    const fetchImpl = vi.fn(() => visits.promise) as unknown as typeof fetch;
+    const db = makeStubDb({ getEmailActivity, getSubscriptionActivity });
+    try {
+      const responsePromise = handleRequest(
+        new Request('https://federalistreader.org/post-office/'),
+        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        db,
+        sender,
+        fetchImpl
+      );
+      await new Promise<void>((resolve) => queueMicrotask(resolve));
+
+      expect(getEmailActivity).toHaveBeenCalledOnce();
+      expect(getSubscriptionActivity).toHaveBeenCalledOnce();
+      expect(fetchImpl).toHaveBeenCalledOnce();
+
+      email.resolve({ last24Hours: 0, days: [] });
+      subscriptions.resolve({ days: THIRTY_DAILY_VALUES });
+      visits.resolve(new Response(JSON.stringify({
+        data: { viewer: { zones: [{ hourly: [] }] } }, errors: null
+      })));
+      expect((await responsePromise).status).toBe(200);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('rejects non-GET methods without querying D1', async () => {

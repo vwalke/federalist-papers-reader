@@ -1,5 +1,5 @@
 // workers/post/src/handlers.ts
-import type { Db, EmailActivity } from './db';
+import type { Db } from './db';
 import type { Env, Program, Subscriber } from './types';
 import { DOW_NAMES, nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
@@ -7,6 +7,7 @@ import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type 
 import type { Sender } from './resend';
 import { renderDashboard, renderDashboardError } from './dashboard';
 import { sendAndRecord } from './send-tracking';
+import { getVisitActivity } from './cloudflare-analytics';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,30 +35,43 @@ function dashboardPage(html: string, status = 200, extraHeaders: Record<string, 
   });
 }
 
-async function handleDashboard(request: Request, db: Db): Promise<Response> {
+async function handleDashboard(
+  request: Request,
+  env: Env,
+  db: Db,
+  fetchImpl: typeof fetch
+): Promise<Response> {
   if (request.method !== 'GET') {
     return dashboardPage(renderDashboardError(
       'That request is not supported',
       'Open this page normally to see the current figures.'
     ), 405, { Allow: 'GET' });
   }
+  const refreshedAt = new Date();
   try {
     const [stats, weeklyDays] = await Promise.all([
       db.getSubscriberStats(),
       db.getWeeklyDayStats()
     ]);
-    const refreshedAt = new Date();
-    let emailActivity: EmailActivity | null = null;
-    try {
-      emailActivity = await db.getEmailActivity(refreshedAt);
-    } catch {
-      console.error('dashboard email activity unavailable');
-    }
+    const [emailResult, subscriptionResult, visitResult] = await Promise.allSettled([
+      db.getEmailActivity(refreshedAt),
+      db.getSubscriptionActivity(refreshedAt),
+      getVisitActivity(env, refreshedAt, fetchImpl)
+    ]);
+    if (emailResult.status === 'rejected') console.error('dashboard email activity unavailable');
+    if (subscriptionResult.status === 'rejected') console.error('dashboard subscription activity unavailable');
+    if (visitResult.status === 'rejected') console.error('dashboard visit activity unavailable');
     return dashboardPage(renderDashboard(
       stats,
       weeklyDays,
-      emailActivity,
-      refreshedAt
+      emailResult.status === 'fulfilled' ? emailResult.value : null,
+      refreshedAt,
+      {
+        visits: visitResult.status === 'fulfilled' ? visitResult.value : null,
+        subscriptions: subscriptionResult.status === 'fulfilled'
+          ? subscriptionResult.value
+          : null
+      }
     ));
   } catch {
     return dashboardPage(renderDashboardError(), 500);
@@ -330,7 +344,13 @@ async function handleWebhook(request: Request, env: Env, db: Db): Promise<Respon
   return new Response('ok');
 }
 
-export async function handleRequest(request: Request, env: Env, db: Db, send: Sender): Promise<Response> {
+export async function handleRequest(
+  request: Request,
+  env: Env,
+  db: Db,
+  send: Sender,
+  fetchImpl: typeof fetch = fetch
+): Promise<Response> {
   const rawPathname = new URL(request.url).pathname;
   // The site is built with trailingSlash: 'always', so tolerate a trailing
   // slash on every route rather than 404ing on /api/subscribe/.
@@ -338,7 +358,7 @@ export async function handleRequest(request: Request, env: Env, db: Db, send: Se
     ? rawPathname.slice(0, -1)
     : rawPathname;
   const method = request.method;
-  if (pathname === '/post-office') return handleDashboard(request, db);
+  if (pathname === '/post-office') return handleDashboard(request, env, db, fetchImpl);
   if (method === 'POST' && pathname === '/api/subscribe') return handleSubscribe(request, env, db, send);
   if (method === 'GET' && pathname === '/api/confirm') return handleConfirm(request, env, db, send);
   if (method === 'GET' && pathname === '/manage') return handleManageGet(request, env, db);
