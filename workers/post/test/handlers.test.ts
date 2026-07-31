@@ -15,6 +15,7 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
       active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0
     })),
     getWeeklyDayStats: vi.fn(async () => []),
+    getSubscriptionActivity: vi.fn(async () => ({ days: [] })),
     recordEmailSend: vi.fn(async () => {}),
     getEmailActivity: vi.fn(async () => ({ last24Hours: 0, days: [] })),
     purgeEmailSends: vi.fn(async () => {}),

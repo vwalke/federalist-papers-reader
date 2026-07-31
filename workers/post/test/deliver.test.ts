@@ -24,6 +24,7 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     claimed,
     getSubscriberStats: vi.fn(),
     getWeeklyDayStats: vi.fn(),
+    getSubscriptionActivity: vi.fn(async () => ({ days: [] })),
     recordEmailSend: vi.fn(async () => {}),
     getEmailActivity: vi.fn(),
     purgeEmailSends: vi.fn(async () => {}),

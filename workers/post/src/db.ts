@@ -1,6 +1,11 @@
 // workers/post/src/db.ts
 import type { Program, Subscriber } from './types';
 import {
+  easternWindow,
+  summarizeDailyActivity,
+  type DailyActivity
+} from './daily-activity';
+import {
   summarizeEmailActivity,
   type EmailActivity,
   type EmailSendRow
@@ -22,6 +27,10 @@ export interface WeeklyDayStats {
   pending: number;
 }
 
+interface ConfirmationRow {
+  confirmed_at: string;
+}
+
 interface SubscriberStatsRow {
   active: number;
   pending: number;
@@ -39,6 +48,7 @@ interface WeeklyDayStatsRow {
 export interface Db {
   getSubscriberStats(): Promise<SubscriberStats>;
   getWeeklyDayStats(): Promise<WeeklyDayStats[]>;
+  getSubscriptionActivity(now: Date): Promise<DailyActivity>;
   recordEmailSend(providerMessageId: string, sentAt: string, recipientCount: number): Promise<void>;
   getEmailActivity(now: Date): Promise<EmailActivity>;
   purgeEmailSends(olderThanDays: number): Promise<void>;
@@ -96,6 +106,19 @@ export function makeDb(d1: D1Database): Db {
         active: Number(row.active),
         pending: Number(row.pending)
       }));
+    },
+    async getSubscriptionActivity(now) {
+      const cutoff = easternWindow(now).start.toISOString();
+      const { results } = await d1.prepare(
+        `SELECT strftime('%Y-%m-%dT%H:%M:%SZ', confirmed_at) AS confirmed_at
+         FROM subscribers
+         WHERE confirmed_at IS NOT NULL AND confirmed_at >= datetime(?)
+         ORDER BY confirmed_at`
+      ).bind(cutoff).all<ConfirmationRow>();
+      return summarizeDailyActivity(results.map((row) => ({
+        occurredAt: row.confirmed_at,
+        count: 1
+      })), now);
     },
     async recordEmailSend(providerMessageId, sentAt, recipientCount) {
       await d1.prepare(

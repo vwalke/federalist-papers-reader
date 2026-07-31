@@ -149,3 +149,33 @@ describe('email activity queries', () => {
     }]);
   });
 });
+
+describe('confirmed subscription activity queries', () => {
+  it('queries only bounded confirmation timestamps and summarizes them', async () => {
+    const calls: Array<{ sql: string; bind: unknown[] }> = [];
+    const d1 = {
+      prepare: vi.fn((sql: string) => ({
+        bind: vi.fn((...bind: unknown[]) => ({
+          all: vi.fn(async () => {
+            calls.push({ sql, bind });
+            return { results: [
+              { confirmed_at: '2026-07-31T03:30:00Z' },
+              { confirmed_at: '2026-07-31T14:00:00Z' }
+            ] };
+          })
+        }))
+      }))
+    } as unknown as D1Database;
+
+    const result = await makeDb(d1)
+      .getSubscriptionActivity(new Date('2026-07-31T16:00:00.000Z'));
+
+    expect(result.days.find((day) => day.date === '2026-07-30')?.count).toBe(1);
+    expect(result.days.at(-1)?.count).toBe(1);
+    expect(calls[0].sql).toContain('confirmed_at IS NOT NULL');
+    expect(calls[0].sql).toContain("strftime('%Y-%m-%dT%H:%M:%SZ', confirmed_at)");
+    expect(calls[0].sql).not.toMatch(/\b(email|confirm_ip|token_secret|subscriber_id)\b/);
+    expect(calls[0].sql).not.toContain('status =');
+    expect(calls[0].bind).toHaveLength(1);
+  });
+});
