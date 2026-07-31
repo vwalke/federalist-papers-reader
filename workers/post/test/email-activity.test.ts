@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { easternDate, summarizeEmailActivity } from '../src/email-activity';
+import { easternDate } from '../src/daily-activity';
+import { summarizeEmailActivity } from '../src/email-activity';
 
 const row = (sent_at: string, recipient_count = 1) => ({
   sent_at,
