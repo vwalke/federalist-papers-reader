@@ -101,11 +101,11 @@ describe('operator dashboard', () => {
   it.each(['/post-office', '/post-office/'])('renders aggregate counts at %s', async (path) => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
-    const getEmailActivity = vi.fn(async () => ({
+    const getEmailActivity = vi.fn(async (_now: Date) => ({
       last24Hours: 2,
       days: [{ date: '2026-07-25', count: 2 }]
     }));
-    const getSubscriptionActivity = vi.fn(async () => ({ days: THIRTY_DAILY_VALUES }));
+    const getSubscriptionActivity = vi.fn(async (_now: Date) => ({ days: THIRTY_DAILY_VALUES }));
     const db = makeStubDb({
       getSubscriberStats: vi.fn(async () => ({
         active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13
