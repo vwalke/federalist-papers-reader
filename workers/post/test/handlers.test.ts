@@ -179,11 +179,51 @@ describe('operator dashboard', () => {
       expect(res.status).toBe(200);
       expect(html).toContain('<span class="stat__value">34</span>');
       expect(html).toContain('Visits by Eastern date');
-      expect(html).toMatch(/subscription activity temporarily unavailable/i);
+      expect(html).toContain('Subscription activity temporarily unavailable');
       expect(html).toContain('Email activity temporarily unavailable');
       expect(html).not.toMatch(/private subscription error|private email error|secret/);
       expect(errorSpy.mock.calls).toEqual([
         ['dashboard email activity unavailable'],
+        ['dashboard subscription activity unavailable']
+      ]);
+    } finally {
+      errorSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps visits and email activity when only subscription activity fails', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const db = makeStubDb({
+      getSubscriptionActivity: vi.fn(async () => { throw new Error('private subscription error'); }),
+      getEmailActivity: vi.fn(async () => ({
+        last24Hours: 2,
+        days: [{ date: '2026-07-31', count: 2 }]
+      }))
+    });
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      data: { viewer: { zones: [{ hourly: [
+        { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
+      ] }] } }, errors: null
+    }))) as unknown as typeof fetch;
+    try {
+      const res = await handleRequest(
+        new Request('https://federalistreader.org/post-office/'),
+        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        db,
+        sender,
+        fetchImpl
+      );
+      const html = await res.text();
+      expect(res.status).toBe(200);
+      expect(html).toContain('Visits by Eastern date');
+      expect(html).toContain('Sent emails by Eastern date');
+      expect(html).toContain('Subscription activity temporarily unavailable');
+      expect(html).not.toContain('Email activity temporarily unavailable');
+      expect(html).not.toMatch(/private subscription error|secret/);
+      expect(errorSpy.mock.calls).toEqual([
         ['dashboard subscription activity unavailable']
       ]);
     } finally {
@@ -295,7 +335,10 @@ describe('operator dashboard', () => {
     expect(html).not.toContain('SELECT email');
   });
 
-  it('keeps core figures available when only email activity fails', async () => {
+  it('keeps visits and subscription activity when only email activity fails', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-31T16:00:00.000Z'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const db = makeStubDb({
       getSubscriberStats: vi.fn(async () => ({
         active: 34, pending: 3, gone: 0, weekly: 21, asItHappened: 13
@@ -303,20 +346,42 @@ describe('operator dashboard', () => {
       getWeeklyDayStats: vi.fn(async () => [
         { sendDow: 5, active: 10, pending: 1 }
       ]),
+      getSubscriptionActivity: vi.fn(async () => ({ days: THIRTY_DAILY_VALUES })),
       getEmailActivity: vi.fn(async () => {
         throw new Error('D1_ERROR: private@example.com');
       })
     });
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      data: { viewer: { zones: [{ hourly: [
+        { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
+      ] }] } }, errors: null
+    }))) as unknown as typeof fetch;
+    try {
+      const res = await handleRequest(
+        new Request('https://federalistreader.org/post-office/'),
+        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        db,
+        sender,
+        fetchImpl
+      );
+      const html = await res.text();
 
-    const res = await handleRequest(
-      new Request('https://federalistreader.org/post-office/'), ENV, db, sender);
-    const html = await res.text();
-
-    expect(res.status).toBe(200);
-    expect(html).toContain('<span class="stat__value">34</span>');
-    expect(html).toContain('<th scope="row">Friday</th>');
-    expect(html).toContain('Email activity temporarily unavailable');
-    expect(html).not.toMatch(/D1_ERROR|private@example\.com/);
+      expect(res.status).toBe(200);
+      expect(html).toContain('<span class="stat__value">34</span>');
+      expect(html).toContain('<th scope="row">Friday</th>');
+      expect(html).toContain('Visits by Eastern date');
+      expect(html).toContain('Confirmed subscriptions by Eastern date');
+      expect(html).toContain('Email activity temporarily unavailable');
+      expect(html).not.toContain('Visit activity temporarily unavailable');
+      expect(html).not.toContain('Subscription activity temporarily unavailable');
+      expect(html).not.toMatch(/D1_ERROR|private@example\.com|secret/);
+      expect(errorSpy.mock.calls).toEqual([
+        ['dashboard email activity unavailable']
+      ]);
+    } finally {
+      errorSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });
 

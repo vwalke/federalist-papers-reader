@@ -430,7 +430,7 @@ function renderProgressActivity(progress: ProgressActivity): string {
   const unavailableNote = !visits
     ? '<p class="note">Visit activity temporarily unavailable. Refresh counts to try again.</p>'
     : !subscriptions
-      ? '<p class="note">Confirmed subscription activity temporarily unavailable. Refresh counts to try again.</p>'
+      ? '<p class="note">Subscription activity temporarily unavailable. Refresh counts to try again.</p>'
       : '';
 
   return `<section aria-labelledby="progress-heading">
