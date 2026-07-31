@@ -118,14 +118,14 @@ describe('operator dashboard', () => {
       getSubscriptionActivity
     });
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
-      data: { viewer: { zones: [{ hourly: [
+      data: { viewer: { accounts: [{ hourly: [
         { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
       ] }] } }, errors: null
     }))) as unknown as typeof fetch;
     try {
       const res = await handleRequest(
         new Request(`https://federalistreader.org${path}`),
-        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        { ...ENV, CLOUDFLARE_ACCOUNT_ID: 'account', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
         db,
         sender,
         fetchImpl
@@ -163,14 +163,14 @@ describe('operator dashboard', () => {
       getEmailActivity: vi.fn(async () => { throw new Error('private email error'); })
     });
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
-      data: { viewer: { zones: [{ hourly: [
+      data: { viewer: { accounts: [{ hourly: [
         { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
       ] }] } }, errors: null
     }))) as unknown as typeof fetch;
     try {
       const res = await handleRequest(
         new Request('https://federalistreader.org/post-office/'),
-        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        { ...ENV, CLOUDFLARE_ACCOUNT_ID: 'account', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
         db,
         sender,
         fetchImpl
@@ -204,14 +204,14 @@ describe('operator dashboard', () => {
       }))
     });
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
-      data: { viewer: { zones: [{ hourly: [
+      data: { viewer: { accounts: [{ hourly: [
         { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
       ] }] } }, errors: null
     }))) as unknown as typeof fetch;
     try {
       const res = await handleRequest(
         new Request('https://federalistreader.org/post-office/'),
-        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        { ...ENV, CLOUDFLARE_ACCOUNT_ID: 'account', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
         db,
         sender,
         fetchImpl
@@ -247,7 +247,7 @@ describe('operator dashboard', () => {
     try {
       const res = await handleRequest(
         new Request('https://federalistreader.org/post-office/'),
-        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        { ...ENV, CLOUDFLARE_ACCOUNT_ID: 'account', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
         db,
         sender,
         fetchImpl
@@ -280,7 +280,7 @@ describe('operator dashboard', () => {
     try {
       const responsePromise = handleRequest(
         new Request('https://federalistreader.org/post-office/'),
-        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        { ...ENV, CLOUDFLARE_ACCOUNT_ID: 'account', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
         db,
         sender,
         fetchImpl
@@ -289,12 +289,12 @@ describe('operator dashboard', () => {
 
       expect(getEmailActivity).toHaveBeenCalledOnce();
       expect(getSubscriptionActivity).toHaveBeenCalledOnce();
-      expect(fetchImpl).toHaveBeenCalledTimes(30);
+      expect(fetchImpl).toHaveBeenCalledOnce();
 
       email.resolve({ last24Hours: 0, days: [] });
       subscriptions.resolve({ days: THIRTY_DAILY_VALUES });
       visits.resolve(new Response(JSON.stringify({
-        data: { viewer: { zones: [{ hourly: [] }] } }, errors: null
+        data: { viewer: { accounts: [{ hourly: [] }] } }, errors: null
       })));
       expect((await responsePromise).status).toBe(200);
     } finally {
@@ -352,14 +352,14 @@ describe('operator dashboard', () => {
       })
     });
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
-      data: { viewer: { zones: [{ hourly: [
+      data: { viewer: { accounts: [{ hourly: [
         { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 5 } }
       ] }] } }, errors: null
     }))) as unknown as typeof fetch;
     try {
       const res = await handleRequest(
         new Request('https://federalistreader.org/post-office/'),
-        { ...ENV, CLOUDFLARE_ZONE_ID: 'zone', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
+        { ...ENV, CLOUDFLARE_ACCOUNT_ID: 'account', CLOUDFLARE_ANALYTICS_TOKEN: 'secret' },
         db,
         sender,
         fetchImpl

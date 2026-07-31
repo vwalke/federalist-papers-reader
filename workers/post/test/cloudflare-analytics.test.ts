@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { getVisitActivity } from '../src/cloudflare-analytics';
 
 const ENV = {
-  CLOUDFLARE_ZONE_ID: 'zone_test',
+  SITE_URL: 'https://federalistreader.org',
+  CLOUDFLARE_ACCOUNT_ID: 'account_test',
   CLOUDFLARE_ANALYTICS_TOKEN: 'token_test'
 };
 
@@ -19,24 +20,16 @@ function analyticsResponse(payload: unknown): Response {
 }
 
 describe('Cloudflare visit activity', () => {
-  it('keeps every analytics request within one day and returns 30 Eastern dates', async () => {
-    const rows = [
-      { dimensions: { datetimeHour: '2026-04-06T03:00:00Z' }, sum: { visits: 2 } },
-      { dimensions: { datetimeHour: '2026-04-06T14:00:00Z' }, sum: { visits: 3 } }
-    ];
-    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      const body = JSON.parse(String(init?.body));
-      const start = Date.parse(body.variables.start);
-      const end = Date.parse(body.variables.end);
-      const hourly = rows.filter((row) => {
-        const occurredAt = Date.parse(row.dimensions.datetimeHour);
-        return occurredAt >= start && occurredAt < end;
-      });
-      return new Response(JSON.stringify({
-        data: { viewer: { zones: [{ hourly }] } },
+  it('requests 30 days of hourly Web Analytics visits and returns Eastern dates', async () => {
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
+      new Response(JSON.stringify({
+        data: { viewer: { accounts: [{ hourly: [
+          { dimensions: { datetimeHour: '2026-04-06T03:00:00Z' }, sum: { visits: 2 } },
+          { dimensions: { datetimeHour: '2026-04-06T14:00:00Z' }, sum: { visits: 3 } }
+        ] }] } },
         errors: null
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    });
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    );
 
     const result = await getVisitActivity(
       ENV,
@@ -48,34 +41,28 @@ describe('Cloudflare visit activity', () => {
     expect(result.days[0]?.date).toBe('2026-03-08');
     expect(result.days.find((day) => day.date === '2026-04-05')?.count).toBe(2);
     expect(result.days.at(-1)?.count).toBe(3);
-    expect(fetchImpl).toHaveBeenCalledTimes(30);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe('https://api.cloudflare.com/client/v4/graphql');
     expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer token_test');
     const body = JSON.parse(String(init?.body));
-    expect(body.query).toContain('httpRequestsAdaptiveGroups');
-    expect(body.query).toContain('requestSource: "eyeball"');
+    expect(body.query).toContain('rumPageloadEventsAdaptiveGroups');
+    expect(body.query).toContain('requestHost: $requestHost');
     expect(body.query).toContain('datetimeHour');
     expect(body.query).toContain('visits');
-    expect(body.variables.zoneTag).toBe('zone_test');
+    expect(body.variables.accountTag).toBe('account_test');
+    expect(body.variables.requestHost).toBe('federalistreader.org');
     expect(body.variables.start).toBe('2026-03-08T05:00:00.000Z');
-    expect(body.variables.end).toBe('2026-03-09T05:00:00.000Z');
+    expect(body.variables.end).toBe('2026-04-06T16:00:00.000Z');
     expect(init?.signal).toBeInstanceOf(AbortSignal);
-    for (const [, requestInit] of fetchImpl.mock.calls) {
-      const variables = JSON.parse(String(requestInit?.body)).variables;
-      expect(Date.parse(variables.end) - Date.parse(variables.start))
-        .toBeLessThanOrEqual(24 * 60 * 60 * 1000);
-    }
-    const finalBody = JSON.parse(String(fetchImpl.mock.calls.at(-1)?.[1]?.body));
-    expect(finalBody.variables.end).toBe('2026-04-06T16:00:00.000Z');
   });
 
   it.each([
     ['missing config', {}, undefined],
     ['HTTP failure', ENV, new Response('secret body', { status: 403 })],
     ['GraphQL errors', ENV, new Response(JSON.stringify({ errors: [{ message: 'private' }] }))],
-    ['no zone', ENV, new Response(JSON.stringify({ data: { viewer: { zones: [] } } }))],
-    ['negative visits', ENV, new Response(JSON.stringify({ data: { viewer: { zones: [{ hourly: [
+    ['no account', ENV, new Response(JSON.stringify({ data: { viewer: { accounts: [] } } }))],
+    ['negative visits', ENV, new Response(JSON.stringify({ data: { viewer: { accounts: [{ hourly: [
       { dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: -1 } }
     ] }] } } }))]
   ])('%s is unavailable without leaking details', async (_name, env, response) => {
@@ -87,47 +74,47 @@ describe('Cloudflare visit activity', () => {
   it.each([
     ['an errors object', {
       errors: {},
-      data: { viewer: { zones: [{ hourly: [VALID_ROW] }] } }
+      data: { viewer: { accounts: [{ hourly: [VALID_ROW] }] } }
     }],
-    ['a non-array zones value', {
+    ['a non-array accounts value', {
       errors: [],
-      data: { viewer: { zones: { zone: { hourly: [VALID_ROW] } } } }
+      data: { viewer: { accounts: { account: { hourly: [VALID_ROW] } } } }
     }],
-    ['an array-like zones object', {
+    ['an array-like accounts object', {
       errors: [],
-      data: { viewer: { zones: { 0: { hourly: [VALID_ROW] }, length: 1 } } }
+      data: { viewer: { accounts: { 0: { hourly: [VALID_ROW] }, length: 1 } } }
     }],
-    ['multiple zones', {
+    ['multiple accounts', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: [VALID_ROW] }, { hourly: [] }] } }
+      data: { viewer: { accounts: [{ hourly: [VALID_ROW] }, { hourly: [] }] } }
     }],
     ['a non-array hourly value', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: { 0: VALID_ROW, length: 1 } }] } }
+      data: { viewer: { accounts: [{ hourly: { 0: VALID_ROW, length: 1 } }] } }
     }],
     ['missing dimensions', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: [{ sum: { visits: 3 } }] }] } }
+      data: { viewer: { accounts: [{ hourly: [{ sum: { visits: 3 } }] }] } }
     }],
     ['missing sum', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: [{ dimensions: { datetimeHour: '2026-07-31T14:00:00Z' } }] }] } }
+      data: { viewer: { accounts: [{ hourly: [{ dimensions: { datetimeHour: '2026-07-31T14:00:00Z' } }] }] } }
     }],
     ['an invalid time', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: [{
+      data: { viewer: { accounts: [{ hourly: [{
         dimensions: { datetimeHour: 'not-a-time' }, sum: { visits: 3 }
       }] }] } }
     }],
     ['fractional visits', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: [{
+      data: { viewer: { accounts: [{ hourly: [{
         dimensions: { datetimeHour: '2026-07-31T14:00:00Z' }, sum: { visits: 1.5 }
       }] }] } }
     }],
     ['unsafe-integer visits', {
       errors: [],
-      data: { viewer: { zones: [{ hourly: [{
+      data: { viewer: { accounts: [{ hourly: [{
         dimensions: { datetimeHour: '2026-07-31T14:00:00Z' },
         sum: { visits: Number.MAX_SAFE_INTEGER + 1 }
       }] }] } }
