@@ -89,9 +89,22 @@ describe('subscriber dashboard renderer', () => {
     expect(html.match(/class="email-bar"/g)).toHaveLength(30);
     expect(html.match(/class="email-axis-label"/g)).toHaveLength(5);
     expect(html).toContain('data-value="100"');
+    expect(html).toContain('<text class="email-quota-label" x="30" y="40.00">100-send reference</text>');
     expect(html).toContain('<th scope="row"><time datetime="2026-06-26">Jun 26</time></th>');
     expect(html).toContain('<th scope="row"><time datetime="2026-07-25">Jul 25</time></th>');
     expect(html).not.toMatch(/reader@example\.com|mailto:|provider_message_id/i);
+  });
+
+  it('positions the enlarged send reference label clear of a quota line inside the plot', () => {
+    const html = renderDashboard(
+      { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },
+      [],
+      { last24Hours: 0, days: [{ date: '2026-07-31', count: 200 }] },
+      new Date('2026-07-31T16:00:00.000Z')
+    );
+
+    expect(html).toContain('class="email-quota" data-value="100" x1="30" y1="97.00"');
+    expect(html).toContain('<text class="email-quota-label" x="30" y="87.00">100-send reference</text>');
   });
 
   it('caps the rolling usage meter at 100 percent', () => {

@@ -477,14 +477,14 @@ function renderEmailBars(activity: EmailActivity): string {
     const x = plotLeft + index * slot + slot / 2;
     return `<text class="email-axis-label" x="${x.toFixed(2)}" y="207" text-anchor="middle">${shortDate(day.date)}</text>`;
   }).join('');
-  const quotaLabelY = quotaY < plotTop + 16 ? quotaY + 15 : quotaY - 4;
+  const quotaLabelY = quotaY < plotTop + 24 ? quotaY + 28 : quotaY - 10;
 
   return `<svg class="email-chart" viewBox="0 0 600 220" role="img" aria-labelledby="email-chart-title email-chart-desc">
         <title id="email-chart-title">Sent emails by Eastern date</title>
         <desc id="email-chart-desc">Daily sent-email totals for the most recent 30 days, grouped in Eastern Time.</desc>
         <line class="email-rule" x1="${plotLeft}" y1="${plotBottom}" x2="${plotLeft + plotWidth}" y2="${plotBottom}" vector-effect="non-scaling-stroke"></line>
         <line class="email-quota" data-value="100" x1="${plotLeft}" y1="${quotaY.toFixed(2)}" x2="${plotLeft + plotWidth}" y2="${quotaY.toFixed(2)}" vector-effect="non-scaling-stroke"></line>
-        <text x="${plotLeft}" y="${quotaLabelY.toFixed(2)}">100-send reference</text>
+        <text class="email-quota-label" x="${plotLeft}" y="${quotaLabelY.toFixed(2)}">100-send reference</text>
         ${bars}${labels}
       </svg>`;
 }
