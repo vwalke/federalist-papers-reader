@@ -66,7 +66,21 @@ TOKEN_SECRET
 POSTAL_ADDRESS
 RESEND_WEBHOOK_SECRET
 TURNSTILE_SECRET
+CLOUDFLARE_ANALYTICS_TOKEN
 ```
+
+Configure the analytics zone as a plain Worker variable:
+
+```text
+CLOUDFLARE_ZONE_ID (plain Worker variable set to the existing federalistreader.org zone ID)
+```
+
+`CLOUDFLARE_ANALYTICS_TOKEN` must be a least-privilege Cloudflare API token
+with analytics read access limited to the `federalistreader.org` zone. Store it
+with `wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN`. Configure that zone's ID
+as the plain Worker variable `CLOUDFLARE_ZONE_ID`. If either value is absent or
+invalid, only the visit chart is unavailable; the protected dashboard continues
+to show D1-backed subscriber and email figures.
 
 Install dependencies and run the root Vitest suite, which includes the Worker
 tests, from the repository root:
@@ -89,6 +103,14 @@ The Worker and its account-level dependencies must exist before a static-site
 change begins sending visitors to a new Worker route. Conversely, Cloudflare
 Access must protect `/post-office*` before deploying a Worker version that
 serves the operator dashboard.
+
+After deployment, use an Access-authorized session to open `/post-office/` and
+compare at least three daily visit values with the corresponding Cloudflare
+Analytics values. Confirm that the route still sends `Cache-Control: private,
+no-store` and an `X-Robots-Tag` value containing `noindex`. In a non-production
+environment, repeat the dashboard check with an invalid analytics token: visits
+must degrade to the inline unavailable state while the D1-backed subscriber,
+subscription-history, and sent-mail figures remain visible.
 
 ## Generated email content
 
