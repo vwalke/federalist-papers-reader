@@ -137,10 +137,22 @@ describe('subscriber dashboard renderer', () => {
     expect(html.match(/class="subscription-bar"/g)).toHaveLength(30);
     expect(html).toContain('Jul 31: 42 visits');
     expect(html).toContain('Jul 31: 3 confirmed subscriptions');
+    expect(html).toContain('<text class="plot-label" x="42" y="11">New confirmed subscriptions</text>');
     expect(html).toContain('<th scope="col">Visits</th>');
     expect(html).toContain('<th scope="col">Confirmed subscriptions</th>');
     expect(html.indexOf('id="weekly-heading"')).toBeLessThan(html.indexOf('id="progress-heading"'));
     expect(html.indexOf('id="progress-heading"')).toBeLessThan(html.indexOf('id="email-heading"'));
+  });
+
+  it('uses readable SVG label sizing on narrow screens', () => {
+    const html = renderDashboard(
+      { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },
+      [],
+      null,
+      new Date('2026-07-31T16:00:00.000Z')
+    );
+
+    expect(html).toMatch(/@media \(max-width: 30rem\) \{\s+\.activity-chart text, \.email-chart text \{ font-size: 22px; \}\s+\}/);
   });
 
   it('prints the actual zero maximum for all-zero progress series', () => {

@@ -5,13 +5,14 @@
  * square ledger cells, Georgia for the printed voice, and system sans for
  * utility labels.
  * STORY: Confirm the subscriber roll, check pending or gone counts, inspect
- * weekly load by day, then refresh when another current reading is needed.
+ * weekly load by day, compare 30-day visits with confirmed subscriptions,
+ * check sent-mail load, then refresh when another current reading is needed.
  * FIRST VIEWPORT: Post Office and UTC freshness share the masthead; the five
  * totals form one ruled register immediately below; weekday distribution
  * follows without navigation or secondary actions.
  * FORM: A compact broadside register extending Federalist Reader's established
- * newspaper world for an Operate surface; shaped directly because the content
- * and single action are precisely specified.
+ * newspaper world for an Operate surface. User-approved Option A stacks the
+ * two progress plots with independent scales and identical date positions.
  */
 import type { EmailActivity, SubscriberStats, WeeklyDayStats } from './db';
 import type { DailyActivity } from './daily-activity';
@@ -302,6 +303,9 @@ function document(title: string, content: string): string {
         background-color 160ms cubic-bezier(.25, 1, .5, 1);
     }
     .refresh:hover { color: var(--ink); background: transparent; }
+    @media (max-width: 30rem) {
+      .activity-chart text, .email-chart text { font-size: 22px; }
+    }
     @media (min-width: 38rem) {
       main { min-height: calc(100vh - 3rem); margin-block: 1.5rem; padding: 2rem 2.25rem 3rem; }
       .stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -401,7 +405,7 @@ function renderSubscriptionsChart(activity: DailyActivity): string {
         <svg class="activity-chart" viewBox="0 0 600 180" role="img" aria-labelledby="subscription-chart-title subscription-chart-desc">
           <title id="subscription-chart-title">Confirmed subscriptions by Eastern date</title>
           <desc id="subscription-chart-desc">Confirmed subscriptions for the most recent 30 days, grouped by Eastern date. The current date may be partial. The vertical scale is independent.</desc>
-          <text class="plot-label" x="42" y="11">New subscriptions</text>
+          <text class="plot-label" x="42" y="11">New confirmed subscriptions</text>
           <text class="plot-label" x="36" y="18" text-anchor="end">${actualMax}</text>
           <text class="plot-label" x="36" y="138" text-anchor="end">0</text>
           <line class="activity-rule" x1="42" y1="134" x2="580" y2="134" vector-effect="non-scaling-stroke"></line>
