@@ -143,6 +143,23 @@ describe('subscriber dashboard renderer', () => {
     expect(html.indexOf('id="progress-heading"')).toBeLessThan(html.indexOf('id="email-heading"'));
   });
 
+  it('prints the actual zero maximum for all-zero progress series', () => {
+    const allZeroDays = days(0).map((day) => ({ ...day, count: 0 }));
+    const html = renderDashboard(
+      { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },
+      [],
+      null,
+      new Date('2026-07-31T16:00:00.000Z'),
+      {
+        visits: { days: allZeroDays },
+        subscriptions: { days: allZeroDays }
+      }
+    );
+
+    expect(html.match(/<text class="plot-label" x="36" y="18" text-anchor="end">0<\/text>/g))
+      .toHaveLength(2);
+  });
+
   it('renders visits with unavailable subscriptions marked by em dashes', () => {
     const html = renderDashboard(
       { active: 0, pending: 0, gone: 0, weekly: 0, asItHappened: 0 },

@@ -359,13 +359,14 @@ function renderDateLabels(activity: DailyActivity): string {
 }
 
 function renderVisitsChart(activity: DailyActivity): string {
-  const max = Math.max(...activity.days.map((day) => day.count), 1);
+  const actualMax = Math.max(...activity.days.map((day) => day.count), 0);
+  const scaleMax = Math.max(actualMax, 1);
   const points = activity.days.map((day, index) =>
-    `${xFor(index, activity.days.length).toFixed(2)},${yFor(day.count, max).toFixed(2)}`
+    `${xFor(index, activity.days.length).toFixed(2)},${yFor(day.count, scaleMax).toFixed(2)}`
   ).join(' ');
   const marks = activity.days.map((day, index) => {
     const label = `${shortDate(day.date)}: ${day.count} ${day.count === 1 ? 'visit' : 'visits'}`;
-    return `<g><title>${label}</title><circle class="visit-point" cx="${xFor(index, activity.days.length).toFixed(2)}" cy="${yFor(day.count, max).toFixed(2)}" r="2.75"></circle></g>`;
+    return `<g><title>${label}</title><circle class="visit-point" cx="${xFor(index, activity.days.length).toFixed(2)}" cy="${yFor(day.count, scaleMax).toFixed(2)}" r="2.75"></circle></g>`;
   }).join('');
 
   return `<div class="progress-plot">
@@ -373,7 +374,7 @@ function renderVisitsChart(activity: DailyActivity): string {
           <title id="visit-chart-title">Visits by Eastern date</title>
           <desc id="visit-chart-desc">Visits for the most recent 30 days, grouped by Eastern date. The current date may be partial. The vertical scale is independent.</desc>
           <text class="plot-label" x="42" y="11">Visits</text>
-          <text class="plot-label" x="36" y="18" text-anchor="end">${max}</text>
+          <text class="plot-label" x="36" y="18" text-anchor="end">${actualMax}</text>
           <text class="plot-label" x="36" y="138" text-anchor="end">0</text>
           <line class="activity-rule" x1="42" y1="134" x2="580" y2="134" vector-effect="non-scaling-stroke"></line>
           <polyline class="visit-line" points="${points}" vector-effect="non-scaling-stroke"></polyline>
@@ -384,11 +385,12 @@ function renderVisitsChart(activity: DailyActivity): string {
 
 function renderSubscriptionsChart(activity: DailyActivity): string {
   const plotBottom = 134;
-  const max = Math.max(...activity.days.map((day) => day.count), 1);
+  const actualMax = Math.max(...activity.days.map((day) => day.count), 0);
+  const scaleMax = Math.max(actualMax, 1);
   const slot = 538 / Math.max(activity.days.length, 1);
   const barWidth = slot * .56;
   const bars = activity.days.map((day, index) => {
-    const height = day.count === 0 ? 0 : Math.max(1, plotBottom - yFor(day.count, max));
+    const height = day.count === 0 ? 0 : Math.max(1, plotBottom - yFor(day.count, scaleMax));
     const x = xFor(index, activity.days.length) - barWidth / 2;
     const y = plotBottom - height;
     const noun = day.count === 1 ? 'confirmed subscription' : 'confirmed subscriptions';
@@ -400,7 +402,7 @@ function renderSubscriptionsChart(activity: DailyActivity): string {
           <title id="subscription-chart-title">Confirmed subscriptions by Eastern date</title>
           <desc id="subscription-chart-desc">Confirmed subscriptions for the most recent 30 days, grouped by Eastern date. The current date may be partial. The vertical scale is independent.</desc>
           <text class="plot-label" x="42" y="11">New subscriptions</text>
-          <text class="plot-label" x="36" y="18" text-anchor="end">${max}</text>
+          <text class="plot-label" x="36" y="18" text-anchor="end">${actualMax}</text>
           <text class="plot-label" x="36" y="138" text-anchor="end">0</text>
           <line class="activity-rule" x1="42" y1="134" x2="580" y2="134" vector-effect="non-scaling-stroke"></line>
           ${bars}${renderDateLabels(activity)}
