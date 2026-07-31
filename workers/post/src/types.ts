@@ -7,6 +7,8 @@ export interface Env {
   POSTAL_ADDRESS: string;
   TURNSTILE_SECRET?: string;
   RESEND_WEBHOOK_SECRET?: string;
+  CLOUDFLARE_ZONE_ID?: string;
+  CLOUDFLARE_ANALYTICS_TOKEN?: string;
 }
 
 export type Program = 'weekly' | 'calendar';
