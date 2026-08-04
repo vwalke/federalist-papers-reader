@@ -140,6 +140,19 @@ a:hover {
   max-inline-size: 34ch;
 }
 
+.site-footer__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.site-footer__license {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
 .paper-sheet {
   position: relative;
   isolation: isolate;
