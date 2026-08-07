@@ -168,7 +168,10 @@ function formatDate(value: string): string {
 
       resultCount.textContent = visible.length === 85 ? 'Showing all 85 papers' : `Showing ${visible.length} of 85 papers`;
       emptyMessage.hidden = visible.length !== 0;
-      if (progressSummary) progressSummary.textContent = `${readNumbers.size} of 85 read in this browser`;
+      /* The read set is shared with the Journal essays (ids 101+), so count
+         only the papers on this ledger rather than the whole set. */
+      const readPaperCount = papers.filter((paper) => readNumbers.has(paper.number)).length;
+      if (progressSummary) progressSummary.textContent = `${readPaperCount} of 85 read in this browser`;
 
       const nextUnread = getNextUnread(papers.map(({ number }) => number).sort((a, b) => a - b), readNumbers);
       for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-continue-link]')) {
