@@ -6,14 +6,14 @@ import type {
   PaperNick,
   PaperToningBand
 } from '../lib/paper-wear';
-import { getPaperWear } from '../lib/paper-wear';
+import { getWearForSeed } from '../lib/paper-wear';
 
 interface Props {
   number: number;
 }
 
 const { number } = Astro.props;
-const wear = getPaperWear(number);
+const wear = getWearForSeed(number);
 
 function maskUri(viewWidth: number, viewHeight: number, path: string): string {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${viewWidth} ${viewHeight}'><path d='${path}' fill='#fff'/></svg>`;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPaperWear } from '../src/lib/paper-wear';
+import { getPaperWear, getWearForSeed } from '../src/lib/paper-wear';
 
 const EDGE_SIDES = ['top', 'right', 'bottom', 'left'] as const;
 const CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const;
@@ -131,5 +131,30 @@ describe('paper wear fingerprints', () => {
     expect(() => getPaperWear(0)).toThrow(/1 through 85/);
     expect(() => getPaperWear(86)).toThrow(/1 through 85/);
     expect(() => getPaperWear(1.5)).toThrow(/1 through 85/);
+  });
+});
+
+describe('getWearForSeed', () => {
+  it('accepts Anti-Federalist seed ids beyond 85', () => {
+    const wear = getWearForSeed(101);
+    expect(wear.signature.startsWith('101-')).toBe(true);
+    expect(wear.edges).toHaveLength(4);
+  });
+
+  it('rejects non-positive, non-integer, and out-of-range seeds', () => {
+    for (const bad of [0, -3, 1.5, 1000]) {
+      expect(() => getWearForSeed(bad)).toThrow(RangeError);
+    }
+  });
+
+  it('never collides across the 85 papers and the 8 Journal essays', () => {
+    const seeds = [
+      ...Array.from({ length: 85 }, (_, index) => index + 1),
+      101, 102, 104, 106, 110, 112, 115, 154
+    ];
+    const fingerprints = new Set(
+      seeds.map((seed) => getWearForSeed(seed).edges.map((edge) => edge.path).join('|'))
+    );
+    expect(fingerprints.size).toBe(seeds.length);
   });
 });

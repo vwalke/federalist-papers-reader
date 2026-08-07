@@ -267,8 +267,20 @@ export function getPaperWear(number: number): PaperWear {
   if (!Number.isInteger(number) || number < 1 || number > 85) {
     throw new RangeError('Paper number must be an integer from 1 through 85.');
   }
+  return getWearForSeed(number);
+}
 
-  const random = mulberry32(number * 2_654_435_761);
+/**
+ * Wear for any sheet in the print shop. Federalist papers use their own
+ * number (1–85); New-York Journal essays use 100 + seriesNumber (Brutus)
+ * and 150 + seriesNumber (Cato), so no two sheets share a fingerprint.
+ */
+export function getWearForSeed(seed: number): PaperWear {
+  if (!Number.isInteger(seed) || seed < 1 || seed > 999) {
+    throw new RangeError('Wear seed must be an integer from 1 through 999.');
+  }
+
+  const random = mulberry32(seed * 2_654_435_761);
   const edges = EDGE_SIDES.map((side) => createEdge(random, side));
   const nicks = createNicks(random);
   const cornerFold = createCornerFold(random);
@@ -288,7 +300,7 @@ export function getPaperWear(number: number): PaperWear {
   };
 
   return {
-    signature: `${number}-${hash(edges.map((edge) => edge.path).join('|'))}`,
+    signature: `${seed}-${hash(edges.map((edge) => edge.path).join('|'))}`,
     edges,
     nicks,
     cornerFold,
