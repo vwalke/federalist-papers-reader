@@ -75,7 +75,9 @@ describe('static site shell', () => {
     expect(teachers).toContain('href="/papers/51/"');
     expect(teachers).toContain('href="/papers/70/"');
     expect(teachers).toContain('href="/papers/78/"');
-    expect(teachers).toContain('https://teachingamericanhistory.org/document/brutus-i/');
+    expect(teachers).toContain('href="/antifederalist/brutus-1/"');
+    expect(teachers).toContain('href="/antifederalist/cato-4/"');
+    expect(teachers).not.toContain('teachingamericanhistory.org');
     expect(sitemap).toContain('<loc>https://federalistreader.org/teachers/</loc>');
   });
 

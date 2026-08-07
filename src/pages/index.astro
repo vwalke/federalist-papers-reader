@@ -79,5 +79,14 @@ const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
     </section>
 
     <IndexLedger papers={papers} />
+
+    <aside class="index-opposition-note" aria-label="The opposition press">
+      <span class="section-kicker">The other side of the argument</span>
+      <p>
+        Publius did not write unopposed. Eight essays from Greenleaf&rsquo;s
+        New-York Journal &mdash; Brutus and Cato &mdash; now sit on
+        <a href="/antifederalist/">the opposition shelf</a>.
+      </p>
+    </aside>
   </article>
 </BaseLayout>

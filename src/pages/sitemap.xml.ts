@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { getCollection } from 'astro:content';
 
+import { essaySlug, getOrderedEssays } from '../lib/antifederalist';
 import { getOrderedGuides } from '../lib/guides';
 import { getOrderedPapers } from '../lib/papers';
 
@@ -15,6 +16,10 @@ export async function GET(context: APIContext): Promise<Response> {
 
   const guides = await getOrderedGuides();
 
+  const antifederalist = getOrderedEssays(
+    (await getCollection('antifederalist')).map((entry) => entry.data)
+  );
+
   const paths = [
     '/',
     '/about/',
@@ -23,6 +28,8 @@ export async function GET(context: APIContext): Promise<Response> {
     '/guides/',
     ...guides.map((guide) => `/guides/${guide.id}/`),
     '/teachers/',
+    '/antifederalist/',
+    ...antifederalist.map((essay) => `/antifederalist/${essaySlug(essay)}/`),
     '/subscribe/',
     ...papers.map((paper) => `/papers/${paper.data.number}/`)
   ];

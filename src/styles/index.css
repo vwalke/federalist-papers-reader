@@ -163,6 +163,19 @@
   font-style: italic;
 }
 
+/* The closing pointer to the Anti-Federalist shelf mirrors that page's own
+   coda: a kicker over one short measure of text, no rule of its own. */
+.index-opposition-note {
+  display: grid;
+  gap: var(--space-sm);
+  max-inline-size: 62ch;
+  margin-block-start: var(--space-xl);
+}
+
+.index-opposition-note p {
+  line-height: 1.55;
+}
+
 @media (min-width: 46rem) {
   .index-tools {
     grid-template-columns: minmax(15rem, 1fr) repeat(2, minmax(9rem, 0.34fr));

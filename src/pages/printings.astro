@@ -173,6 +173,19 @@ const entryId = printingAnchor;
 
     <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
 
+    <aside class="printings-journal-note" aria-label="The New-York Journal">
+      <span class="section-kicker">The other press</span>
+      <p>
+        The opposition printed too. Thomas Greenleaf’s New-York Journal — the
+        city’s Anti-Federalist paper — carried the essays of Brutus and Cato
+        through the same months. Its surviving pages, digitized by the Library
+        of Congress, appear beside each essay on{' '}
+        <a href="/antifederalist/">the opposition shelf</a>.
+      </p>
+    </aside>
+
+    <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
     <footer class="printings-credits">
       <p>
         Images courtesy of{' '}
@@ -401,6 +414,25 @@ const entryId = printingAnchor;
 
   .printings-context .printing--context {
     margin-block-start: var(--space-2xl);
+  }
+
+  /* Closing note on the opposition press: the intro's measure and leading,
+     with the kicker centered the way the printing headers set theirs. */
+  .printings-journal-note {
+    max-inline-size: 56ch;
+    margin: var(--space-xl) auto 0;
+  }
+
+  .printings-journal-note .section-kicker {
+    display: block;
+    text-align: center;
+  }
+
+  .printings-journal-note p {
+    margin-block-start: var(--space-md);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    text-wrap: pretty;
   }
 
   .printings-credits {
