@@ -16,6 +16,10 @@ tracking beyond Cloudflare's cookieless analytics.
 delivers the papers by email — one each Saturday in order, or each on the
 anniversary of its original 1787–88 publication date.
 
+**The other side:** [federalistreader.org/antifederalist](https://federalistreader.org/antifederalist/)
+shelves eight essays from Thomas Greenleaf's *New-York Journal* — Brutus and
+Cato answering Publius — with the original Library of Congress page images.
+
 It began as a family project: a LetterJoy subscription mailed one paper a week
 to my mom, and we wanted a reading companion to match. The longer story is on
 the [About page](https://federalistreader.org/about/).
