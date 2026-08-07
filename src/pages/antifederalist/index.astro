@@ -1,0 +1,206 @@
+---
+import { getCollection } from 'astro:content';
+
+import GazetteMasthead from '../../components/GazetteMasthead.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  essayDisplayName,
+  essaySlug,
+  getOrderedEssays,
+  progressId
+} from '../../lib/antifederalist';
+
+import '../../styles/index.css';
+
+const essays = getOrderedEssays(
+  (await getCollection('antifederalist')).map((entry) => ({ ...entry, ...entry.data }))
+);
+
+function formatDate(value: string): string {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC'
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+const GREENLEAF_MOTTO =
+  'Here TRUTH unlicens’d reigns; and dares accost—e’en KINGS themselves, or RULERS of the FREE!';
+---
+
+<BaseLayout
+  title="The Anti-Federalist Papers | Federalist Reader"
+  description="Eight essays from Thomas Greenleaf’s New-York Journal — Brutus and Cato answering Publius in the same city, the same weeks, the same format."
+  pageClass="index-page"
+  ogImage="/social-cards/antifederalist-default.jpg"
+>
+  <div class="paper-sheet">
+    <GazetteMasthead variant="new-york-journal" motto={GREENLEAF_MOTTO} />
+
+    <section class="index-ledger" id="opposition" aria-labelledby="opposition-heading">
+      <header class="index-ledger__heading">
+        <div>
+          <p class="section-kicker">The opposition press</p>
+          <h1 id="opposition-heading">The Anti-Federalist Papers</h1>
+        </div>
+        <p class="index-ledger__progress" data-journal-progress>0 of 8 read in this browser</p>
+      </header>
+
+      <p class="index-intro">
+        While Publius argued for the Constitution in the Independent Journal and
+        the Packet, Thomas Greenleaf’s New-York Journal carried the other side.
+        These eight essays — Brutus’s systematic case and Cato on the presidency
+        — met the Federalist argument in the same city, the same weeks, and the
+        same newspaper columns. Read them beside the papers they answer.
+      </p>
+
+      <ol class="index-ledger__list">
+        {essays.map((essay) => (
+          <li class="journal-entry">
+            <a class="journal-entry__link" href={`/antifederalist/${essaySlug(essay.data)}/`}>
+              <span class="journal-entry__name">{essayDisplayName(essay.data)}</span>
+              <span class="journal-entry__body">
+                <span class="journal-entry__title">{essay.data.title}</span>
+                <span class="journal-entry__meta">
+                  <time datetime={essay.data.publicationDate}>
+                    {formatDate(essay.data.publicationDate)}
+                  </time>
+                  {' · '}
+                  {essay.data.indexSummary}
+                </span>
+              </span>
+              <span
+                class="journal-entry__read-mark"
+                data-journal-read={progressId(essay.data)}
+                hidden
+              >
+                <span class="journal-entry__check" aria-hidden="true">✓</span> Read
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+
+      <aside class="index-coda" aria-label="What happened to the Journal">
+        <span class="section-kicker">The price of the argument</span>
+        <p>
+          Greenleaf paid for his columns. On July 26, 1788 — days after New York
+          ratified — a Federalist crowd of some five hundred sacked his
+          printing office on Water-Street and carried off his type. He rebuilt,
+          and the Journal kept publishing into the 1790s. The debate these
+          sheets carried, though, had already become the country’s inheritance:
+          it is in the dialogue, not merely the Federalist victory, that the
+          principles are to be found.
+        </p>
+      </aside>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  /* This shelf holds eight static rows, so it borrows the ledger frame from
+     index.css (.index-ledger heading, progress, ruled list) and sets its own
+     row idiom here rather than fitting the five-column searchable grid. */
+  .index-ledger__heading h1 {
+    margin-block-start: var(--space-xs);
+    font: 400 clamp(1.9rem, 4.2vw, 3rem) / 1.06 var(--font-display);
+    text-wrap: balance;
+  }
+
+  .index-intro {
+    max-inline-size: 62ch;
+    margin-block-end: var(--space-xl);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+
+  .journal-entry {
+    border-block-end: 1px solid var(--color-rule);
+  }
+
+  .journal-entry__link {
+    display: grid;
+    gap: var(--space-xs) var(--space-lg);
+    padding-block: var(--space-lg);
+    text-decoration: none;
+  }
+
+  .journal-entry__name {
+    color: var(--color-oxblood);
+    font: 400 1.15rem/1.2 var(--font-display);
+  }
+
+  .journal-entry__title {
+    display: block;
+    font: 400 1.25rem/1.15 var(--font-display);
+  }
+
+  .journal-entry__link:hover .journal-entry__title {
+    text-decoration: underline;
+    text-decoration-color: var(--color-verdigris);
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+  }
+
+  .journal-entry__meta {
+    display: block;
+    margin-block-start: var(--space-xs);
+    color: var(--color-muted-ink);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .journal-entry__read-mark {
+    color: var(--color-muted-ink);
+    font: 700 0.72rem/1.35 var(--font-utility);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .journal-entry__check {
+    color: var(--color-verdigris);
+    font-size: 1rem;
+  }
+
+  .index-coda {
+    display: grid;
+    gap: var(--space-sm);
+    max-inline-size: 62ch;
+    margin-block-start: var(--space-xl);
+  }
+
+  .index-coda p {
+    line-height: 1.55;
+  }
+
+  @media (min-width: 46rem) {
+    .journal-entry__link {
+      grid-template-columns: 8.5rem 1fr auto;
+      align-items: baseline;
+    }
+  }
+</style>
+
+<script>
+  import { createPreferences } from '../../lib/preferences';
+
+  let storage: Storage | null = null;
+  try {
+    storage = window.localStorage;
+  } catch {
+    // Read marks stay hidden without storage; the list still works.
+  }
+  const preferences = createPreferences(storage);
+  const marks = document.querySelectorAll<HTMLElement>('[data-journal-read]');
+  const summary = document.querySelector<HTMLElement>('[data-journal-progress]');
+
+  let readCount = 0;
+  for (const mark of marks) {
+    const read = preferences.isPaperRead(Number(mark.dataset.journalRead));
+    mark.hidden = !read;
+    if (read) readCount += 1;
+  }
+  if (summary) summary.textContent = `${readCount} of 8 read in this browser`;
+</script>
