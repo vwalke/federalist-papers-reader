@@ -51,4 +51,32 @@ const guides = defineCollection({
   })
 });
 
-export const collections = { papers, guides };
+const antifederalist = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/antifederalist' }),
+  schema: z.object({
+    series: z.enum(['Brutus', 'Cato']),
+    seriesNumber: z.number().int().min(1).max(16),
+    title: z.string().min(1),
+    topic: z.string().min(1),
+    author: z.string().min(1),
+    authorCertainty: z.enum(['certain', 'joint', 'disputed']),
+    publicationVenue: z.string().min(1),
+    publicationDate: z.string().regex(/^178[78]-\d{2}-\d{2}$/),
+    publicationDateLabel: z.string().min(1),
+    recipient: z.string().min(1),
+    indexSummary: z.string().min(1),
+    nutshell: z.string().min(1),
+    keyArguments: z.array(z.string().min(1)).min(3).max(5),
+    whyItMattered: z.string(),
+    talkItOver: z.string().min(1),
+    repliesTo: z.array(z.number().int().min(1).max(85)).min(1),
+    loc: z.object({
+      lccn: z.string().min(1),
+      date: z.string().regex(/^178[78]-\d{2}-\d{2}$/),
+      page: z.number().int().min(1).max(8)
+    }),
+    sources: z.array(sourceSchema).min(1)
+  })
+});
+
+export const collections = { papers, guides, antifederalist };
