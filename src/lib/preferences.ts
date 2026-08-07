@@ -7,8 +7,19 @@ const MODE_KEY = 'publius:reading-mode';
 const READ_KEY = 'publius:read-papers';
 const SCALE_KEY = 'publius:text-scale';
 
+// Read-state ids span three ranges, matching the shared number space in
+// src/lib/antifederalist.ts: 1–85 is Publius (The Federalist), 101–116 is
+// Brutus, and 151–166 is Cato (SERIES_BASE 100/150 + seriesNumber, capped at
+// 16 by the content schema). Kept as explicit ranges rather than importing
+// antifederalist.ts so this module stays dependency-free.
 function validPaperNumber(value: unknown): value is number {
-  return Number.isInteger(value) && Number(value) >= 1 && Number(value) <= 85;
+  if (!Number.isInteger(value)) return false;
+  const number = value as number;
+  return (
+    (number >= 1 && number <= 85) ||
+    (number >= 101 && number <= 116) ||
+    (number >= 151 && number <= 166)
+  );
 }
 
 function validTextScale(value: unknown): value is TextScale {

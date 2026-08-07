@@ -62,4 +62,33 @@ describe('browser-only reading preferences', () => {
     expect(getNextUnread([1, 2, 3, 4], new Set([1, 3, 4]), 4)).toBe(2);
     expect(getNextUnread([1, 2], new Set([1, 2]), 1)).toBeNull();
   });
+
+  it('accepts Anti-Federalist progress ids (Brutus 100+n, Cato 150+n)', () => {
+    const storage = new MemoryStorage();
+    const preferences = createPreferences(storage);
+
+    preferences.setPaperRead(101, true);
+    preferences.setPaperRead(154, true);
+
+    expect(preferences.isPaperRead(101)).toBe(true);
+    expect(preferences.isPaperRead(154)).toBe(true);
+    expect([...preferences.getReadPapers()]).toContain(101);
+    expect([...preferences.getReadPapers()]).toContain(154);
+  });
+
+  it('rejects ids outside the Publius/Brutus/Cato ranges and non-integers', () => {
+    const storage = new MemoryStorage();
+    const preferences = createPreferences(storage);
+    const invalidIds = [0, 86, 100, 117, 150, 167, 101.5];
+
+    for (const id of invalidIds) {
+      expect(preferences.isPaperRead(id)).toBe(false);
+
+      preferences.setPaperRead(id, true);
+      expect(preferences.isPaperRead(id)).toBe(false);
+    }
+
+    storage.setItem('publius:read-papers', JSON.stringify([...invalidIds, 1, 101]));
+    expect([...preferences.getReadPapers()]).toEqual([1, 101]);
+  });
 });
