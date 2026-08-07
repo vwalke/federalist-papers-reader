@@ -26,17 +26,21 @@ export function toRomanNumeral(number: number) {
   return result;
 }
 
-export function formatIssueDateline(
-  publicationDate: string,
-  publicationKind: 'newspaper' | 'book'
-) {
-  const date = new Date(`${publicationDate}T12:00:00Z`);
-  const monthDayYear = new Intl.DateTimeFormat('en-US', {
+/** "October 18, 1787" — the long month/day/year form shared by datelines and captions. */
+export function formatLongDate(publicationDate: string) {
+  return new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
     timeZone: 'UTC'
-  }).format(date);
+  }).format(new Date(`${publicationDate}T12:00:00Z`));
+}
+
+export function formatIssueDateline(
+  publicationDate: string,
+  publicationKind: 'newspaper' | 'book'
+) {
+  const monthDayYear = formatLongDate(publicationDate);
 
   if (publicationKind === 'book') {
     return `New-York · First collected ${monthDayYear}`;
@@ -45,7 +49,7 @@ export function formatIssueDateline(
   const weekday = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     timeZone: 'UTC'
-  }).format(date);
+  }).format(new Date(`${publicationDate}T12:00:00Z`));
 
   return `New-York, ${weekday}, ${monthDayYear}`;
 }

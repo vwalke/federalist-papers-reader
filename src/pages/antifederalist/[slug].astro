@@ -1,0 +1,40 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+
+import AntifederalistLayout from '../../layouts/AntifederalistLayout.astro';
+import { essaySlug, getOrderedEssays } from '../../lib/antifederalist';
+
+export async function getStaticPaths() {
+  const essays = getOrderedEssays(
+    (await getCollection('antifederalist')).map((entry) => ({ ...entry, ...entry.data }))
+  );
+  return essays.map((essay) => ({
+    params: { slug: essaySlug(essay.data) },
+    props: { essay }
+  }));
+}
+
+interface Props {
+  essay: CollectionEntry<'antifederalist'>;
+}
+
+const { essay } = Astro.props;
+const ordered = getOrderedEssays(
+  (await getCollection('antifederalist')).map((entry) => ({ ...entry, ...entry.data }))
+);
+const index = ordered.findIndex((entry) => essaySlug(entry.data) === essaySlug(essay.data));
+const previous = ordered[index - 1] ?? null;
+const next = ordered[index + 1] ?? null;
+
+const papers = await getCollection('papers');
+const replies = essay.data.repliesTo
+  .map((number) => papers.find((paper) => paper.data.number === number))
+  .filter((paper) => paper !== undefined)
+  .map((paper) => ({ number: paper.data.number, title: paper.data.title }));
+
+const { Content } = await render(essay);
+---
+
+<AntifederalistLayout essay={essay} previous={previous} next={next} replies={replies}>
+  <Content />
+</AntifederalistLayout>

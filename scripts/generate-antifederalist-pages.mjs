@@ -22,8 +22,9 @@ const ISSUES = [
   // LOC digitized only the outer sheet of the 1787-11-01 issue (pages 1 and 4,
   // both advertisements) plus a two-page EXTRAORDINARY supplement (ed-2); the
   // inner leaf carrying Brutus II is not held. We show the issue's front page
-  // (masthead: "Numb. 44, of Vol. xli", Thursday, November 1, 1787) instead.
-  { slug: 'brutus-2', lccn: 'sn83030565', date: '1787-11-01', page: 1 },
+  // (masthead: "Numb. 44, of Vol. xli", Thursday, November 1, 1787) instead,
+  // and flag it so the essay page captions the strip as a stand-in.
+  { slug: 'brutus-2', lccn: 'sn83030565', date: '1787-11-01', page: 1, carriesEssay: false },
   { slug: 'cato-4', lccn: 'sn83030565', date: '1787-11-08', page: 2 },
   { slug: 'brutus-4', lccn: 'sn83030566', date: '1787-11-29', page: 2 },
   { slug: 'brutus-6', lccn: 'sn83030566', date: '1787-12-27', page: 2 },
@@ -99,6 +100,8 @@ for (const issue of ISSUES) {
     page: issue.page,
     locUrl: `https://www.loc.gov/resource/${issue.lccn}/${issue.date}/ed-1/?sp=${issue.page}`
   };
+  // Emitted only when false so entries whose page carries the essay stay unchanged.
+  if (issue.carriesEssay === false) entry.carriesEssay = false;
 
   const largeBase = fileURLToPath(new URL('page-large', setDir));
   const thumbBase = fileURLToPath(new URL('page-thumb', setDir));

@@ -1,0 +1,339 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+import Commentary from '../components/Commentary.astro';
+import GazetteMasthead from '../components/GazetteMasthead.astro';
+import PaperWear from '../components/PaperWear.astro';
+import ReadingToolbar from '../components/ReadingToolbar.astro';
+import {
+  essayDisplayName,
+  essaySlug,
+  progressId
+} from '../lib/antifederalist';
+import { formatIssueDateline, formatLongDate, toRomanNumeral } from '../lib/paper-display';
+import BaseLayout from './BaseLayout.astro';
+import imagesManifest from '../data/antifederalist-images.json';
+
+import '../styles/paper.css';
+
+type Essay = CollectionEntry<'antifederalist'>;
+
+interface Props {
+  essay: Essay;
+  previous: Essay | null;
+  next: Essay | null;
+  /** Federalist papers this essay replies to, for the answer links. */
+  replies: Array<{ number: number; title: string }>;
+}
+
+const { essay, previous, next, replies } = Astro.props;
+const { data } = essay;
+const slug = essaySlug(data);
+const displayName = essayDisplayName(data);
+const wearId = progressId(data);
+const pageImage = (imagesManifest as Record<string, {
+  page: number;
+  locUrl: string;
+  /** Absent (true) unless the digitized page is a stand-in — see the generator's ISSUES config. */
+  carriesEssay?: boolean;
+  thumb: { w: number; h: number };
+  large: { w: number; h: number };
+}>)[slug];
+
+let strip: { alt: string; lightboxCaption: string; figcaption: string } | null = null;
+if (pageImage) {
+  const carriesEssay = pageImage.carriesEssay !== false;
+  const issueDate = formatLongDate(data.publicationDate);
+  strip = carriesEssay
+    ? {
+        alt: `Page ${pageImage.page} of the New-York Journal issue carrying ${displayName}`,
+        lightboxCaption: `${displayName} in the New-York Journal of ${issueDate}, page ${pageImage.page}.`,
+        figcaption: `Page ${pageImage.page} of Thomas Greenleaf’s New-York Journal.`
+      }
+    : {
+        alt: `Front page of the New-York Journal of ${issueDate}, the issue that carried ${displayName}`,
+        lightboxCaption: `Front page of the New-York Journal of ${issueDate}, the issue that carried ${displayName} — its inner leaf was never digitized.`,
+        figcaption: 'Front page of the issue that carried this essay — its inner leaf was never digitized.'
+      };
+}
+
+const essayURL = Astro.site
+  ? new URL(`/antifederalist/${slug}/`, Astro.site).href
+  : undefined;
+const imageURL = Astro.site
+  ? new URL(`/social-cards/antifederalist-${slug}.jpg`, Astro.site).href
+  : undefined;
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: `${displayName}: ${data.topic}`,
+    description: data.indexSummary,
+    author: { '@type': 'Person', name: data.author },
+    datePublished: data.publicationDate,
+    ...(essayURL ? { url: essayURL, mainEntityOfPage: essayURL } : {}),
+    ...(imageURL ? { image: imageURL } : {}),
+    isPartOf: { '@type': 'CreativeWorkSeries', name: 'The Anti-Federalist Papers' },
+    publisher: { '@type': 'Organization', name: 'Federalist Reader' }
+  }
+];
+
+const unreadLabel = next ? 'Mark read & continue →' : 'Mark read & finish →';
+const readLabel = next ? 'Next →' : 'The opposition shelf →';
+
+const GREENLEAF_MOTTO =
+  'Here TRUTH unlicens’d reigns; and dares accost—e’en KINGS themselves, or RULERS of the FREE!';
+---
+
+<BaseLayout
+  title={`${displayName}: ${data.topic} | Federalist Reader`}
+  description={data.indexSummary}
+  pageClass="essay-page"
+  ogImage={`/social-cards/antifederalist-${slug}.jpg`}
+  ogType="article"
+  jsonLd={structuredData}
+  readingMode
+>
+  <article
+    class="paper-sheet paper-page paper-page--journal"
+    data-paper-number={wearId}
+  >
+    <PaperWear number={wearId} />
+    <GazetteMasthead
+      compact
+      variant="new-york-journal"
+      motto={GREENLEAF_MOTTO}
+      dateLine={formatIssueDateline(data.publicationDate, 'newspaper')}
+    />
+    <ReadingToolbar
+      number={wearId}
+      label={`Reading tools for ${displayName}`}
+      indexHref="/antifederalist/"
+    />
+
+    <div class="essay-flow">
+      <header class="essay-heading">
+        <h1 class="essay-heading__title">
+          <span>{data.series.toUpperCase()}.</span>{' '}
+          <span class="essay-heading__number">No. {toRomanNumeral(data.seriesNumber)}.</span>
+        </h1>
+        <p class="essay-heading__topic">{data.title}</p>
+        <p class="essay-heading__recipient">{data.recipient}</p>
+      </header>
+
+      <div class="essay-body">
+        <slot />
+      </div>
+    </div>
+
+    <Commentary
+      author={data.author}
+      authorCertainty={data.authorCertainty}
+      nutshell={data.nutshell}
+      keyArguments={data.keyArguments}
+      whyItMattered={data.whyItMattered}
+      talkItOver={data.talkItOver}
+    />
+
+    {replies.length > 0 && (
+      <nav class="essay-replies" aria-label="Publius answers">
+        <span class="section-kicker">Publius answers</span>
+        <ul>
+          {replies.map((paper) => (
+            <li>
+              <a href={`/papers/${paper.number}/`}>
+                Federalist No. {paper.number}: {paper.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    {pageImage && strip && (
+      <aside class="essay-first-appearance" aria-label="As it first appeared">
+        <span class="section-kicker">As it first appeared</span>
+        <figure>
+          <a
+            href={`/images/antifederalist/${slug}/page-large.jpg`}
+            data-page-lightbox
+            data-caption={strip.lightboxCaption}
+          >
+            <picture>
+              <source
+                srcset={`/images/antifederalist/${slug}/page-thumb.avif`}
+                type="image/avif"
+              />
+              <img
+                src={`/images/antifederalist/${slug}/page-thumb.jpg`}
+                width={pageImage.thumb.w}
+                height={pageImage.thumb.h}
+                loading="lazy"
+                alt={strip.alt}
+              />
+            </picture>
+          </a>
+          <figcaption>
+            {strip.figcaption}{' '}
+            Library of Congress, Chronicling America ·{' '}
+            <a href={pageImage.locUrl} rel="external">view this issue at loc.gov</a>
+          </figcaption>
+        </figure>
+      </aside>
+    )}
+
+    <nav class="essay-navigation" aria-label="Anti-Federalist essay navigation">
+      {previous ? (
+        <a class="essay-navigation__previous" href={`/antifederalist/${essaySlug(previous.data)}/`}>
+          <span class="essay-navigation__label">← Previous</span>
+          <span>{essayDisplayName(previous.data)}: {previous.data.title}</span>
+        </a>
+      ) : (
+        <a class="essay-navigation__previous" href="/antifederalist/">
+          <span class="essay-navigation__label">← Return</span>
+          <span>Browse the opposition press</span>
+        </a>
+      )}
+      <a
+        class="essay-navigation__next"
+        href={next ? `/antifederalist/${essaySlug(next.data)}/` : '/antifederalist/'}
+        data-continue-control={wearId}
+        data-unread-label={unreadLabel}
+        data-read-label={readLabel}
+      >
+        <span class="essay-navigation__label" data-continue-label>{unreadLabel}</span>
+        <span>{next ? `${essayDisplayName(next.data)}: ${next.data.title}` : 'Return to the index'}</span>
+      </a>
+    </nav>
+  </article>
+
+  <dialog class="printing-lightbox" aria-label="Enlarged page view">
+    <div class="printing-lightbox__frame">
+      <img class="printing-lightbox__image" alt="" />
+    </div>
+    <p class="printing-lightbox__caption" aria-live="polite"></p>
+    <div class="printing-lightbox__controls">
+      <button type="button" class="printing-lightbox__button" data-close>Close</button>
+    </div>
+  </dialog>
+</BaseLayout>
+
+<script>
+  import { initEssayJustify } from '../lib/essay-justify';
+  import { createPreferences } from '../lib/preferences';
+
+  initEssayJustify();
+
+  /* Mark-read parity with EssayNavigation: the Next control marks the essay
+     read on navigate, keyed by the shared progress id. */
+  let storage: Storage | null = null;
+  try {
+    storage = window.localStorage;
+  } catch {
+    // The combined action still marks read for this page view.
+  }
+  const preferences = createPreferences(storage);
+
+  for (const anchor of document.querySelectorAll<HTMLAnchorElement>('[data-continue-control]')) {
+    const number = Number(anchor.dataset.continueControl);
+    const label = anchor.querySelector<HTMLElement>('[data-continue-label]');
+    let read = preferences.isPaperRead(number);
+
+    function render() {
+      const text = read ? anchor.dataset.readLabel : anchor.dataset.unreadLabel;
+      if (label && text) label.textContent = text;
+    }
+
+    render();
+
+    document.addEventListener('paper-read-change', (event) => {
+      const detail = (event as CustomEvent<{ number: number; read: boolean }>).detail;
+      if (detail.number !== number) return;
+      read = detail.read;
+      render();
+    });
+
+    /* Marks only from the unread state: a deliberately unmarked essay must
+       not be re-marked by plain Next navigation. localStorage writes are
+       synchronous, so the mark lands before the page unloads. */
+    anchor.addEventListener('click', () => {
+      if (!read) preferences.setPaperRead(number, true);
+    });
+  }
+
+  const dialog = document.querySelector<HTMLDialogElement>('.printing-lightbox');
+  const image = dialog?.querySelector<HTMLImageElement>('.printing-lightbox__image');
+  const caption = dialog?.querySelector<HTMLParagraphElement>('.printing-lightbox__caption');
+
+  if (dialog && image && caption) {
+    for (const anchor of document.querySelectorAll<HTMLAnchorElement>('[data-page-lightbox]')) {
+      anchor.addEventListener('click', (event) => {
+        event.preventDefault();
+        image.src = anchor.href;
+        image.alt = anchor.querySelector('img')?.alt ?? '';
+        caption.textContent = anchor.dataset.caption ?? '';
+        dialog.showModal();
+      });
+    }
+    dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => {
+      image.removeAttribute('src');
+    });
+  }
+</script>
+
+<style>
+  /* The print-room lightbox styles are scoped to printings.astro, so the
+     essay page carries its own copy for the single-page strip. */
+  .printing-lightbox {
+    inline-size: min(94vw, 72rem);
+    max-block-size: 94vh;
+    padding: var(--space-md);
+    border: 1px solid var(--color-rule);
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  .printing-lightbox::backdrop {
+    background: oklch(0.16 0.015 70 / 0.82);
+  }
+
+  .printing-lightbox__frame {
+    overflow: auto;
+    max-block-size: calc(94vh - 8.5rem);
+  }
+
+  .printing-lightbox__image {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  .printing-lightbox__caption {
+    margin: var(--space-sm) 0 0;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--color-muted-ink);
+  }
+
+  .printing-lightbox__controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-block-start: var(--space-sm);
+  }
+
+  .printing-lightbox__button {
+    min-block-size: 44px;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-rule);
+    background: var(--color-newsprint);
+    font-family: system-ui, sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+</style>

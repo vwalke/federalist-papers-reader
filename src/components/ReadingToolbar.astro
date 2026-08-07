@@ -3,13 +3,20 @@ import ProgressControl from './ProgressControl.astro';
 
 interface Props {
   number: number;
+  /** Accessible name for the toolbar, e.g. "Reading tools for Brutus No. I". */
+  label?: string;
+  indexHref?: string;
 }
 
-const { number } = Astro.props;
+const {
+  number,
+  label = `Reading tools for Federalist No. ${number}`,
+  indexHref = '/#all-papers'
+} = Astro.props;
 ---
 
-<nav class="reading-toolbar" aria-label={`Reading tools for Federalist No. ${number}`}>
-  <a class="reading-toolbar__index" href="/#all-papers"><span aria-hidden="true">←</span> Index</a>
+<nav class="reading-toolbar" aria-label={label}>
+  <a class="reading-toolbar__index" href={indexHref}><span aria-hidden="true">←</span> Index</a>
   <ProgressControl number={number} />
   <div class="reading-toolbar__modes" role="group" aria-label="Reading style">
     <button type="button" data-mode="gazette" aria-pressed="true">Gazette</button>

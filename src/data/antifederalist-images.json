@@ -14,6 +14,7 @@
   "brutus-2": {
     "page": 1,
     "locUrl": "https://www.loc.gov/resource/sn83030565/1787-11-01/ed-1/?sp=1",
+    "carriesEssay": false,
     "thumb": {
       "w": 640,
       "h": 1035

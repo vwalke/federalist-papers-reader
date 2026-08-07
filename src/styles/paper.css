@@ -964,3 +964,55 @@
   margin: var(--space-xs) auto 0;
   font: 400 1.05rem/1.5 var(--font-display);
 }
+
+/* ————— The rival sheet: Greenleaf's New-York Journal ————— */
+/* Same palette, inverted priority: oxblood leads where verdigris leads on
+   the Federalist sheets, so a reader knows which paper they are holding. */
+.paper-page--journal {
+  --color-verdigris: oklch(0.38 0.12 28); /* leads: oxblood */
+  --color-oxblood: oklch(0.42 0.075 188); /* secondary: verdigris */
+}
+
+.essay-replies,
+.essay-first-appearance {
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-lg);
+  border-block-start: 1px solid var(--color-rule);
+}
+
+.essay-replies .section-kicker,
+.essay-first-appearance .section-kicker {
+  color: var(--color-muted-ink);
+  font: 700 0.7rem/1.2 var(--font-reading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.essay-replies ul {
+  margin: var(--space-xs) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.essay-first-appearance figure {
+  margin: var(--space-sm) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.essay-first-appearance img {
+  max-width: min(14rem, 40vw);
+  height: auto;
+  border: 1px solid var(--color-rule);
+}
+
+.essay-first-appearance figcaption {
+  flex: 1 1 14rem;
+  font-size: 0.85rem;
+  color: var(--color-muted-ink);
+}
