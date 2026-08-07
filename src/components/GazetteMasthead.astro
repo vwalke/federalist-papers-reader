@@ -2,22 +2,29 @@
 interface Props {
   dateLine?: string;
   compact?: boolean;
+  variant?: 'independent-journal' | 'new-york-journal';
+  motto?: string;
 }
 
-const {
-  dateLine = 'New-York · The essays of Publius · 1787–1788',
-  compact = false
-} = Astro.props;
+const VARIANT_DEFAULTS = {
+  'independent-journal': 'New-York · The essays of Publius · 1787–1788',
+  'new-york-journal': 'New-York · Printed by Thomas Greenleaf · 1787–1788'
+} as const;
+
+const { compact = false, variant = 'independent-journal' } = Astro.props;
+const dateLine = Astro.props.dateLine ?? VARIANT_DEFAULTS[variant];
+const motto = Astro.props.motto;
 ---
 
 <header class:list={['gazette-masthead', { 'gazette-masthead--compact': compact }] }>
   <img
     class="gazette-masthead__art"
-    src="/masthead-independent-journal.svg"
+    src={`/masthead-${variant}.svg`}
     alt=""
     width="1200"
     height="145"
   />
+  {motto && <p class="gazette-masthead__motto">{motto}</p>}
   <div class="gazette-masthead__issue">
     <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
     <p class="gazette-masthead__dateline">{dateLine}</p>

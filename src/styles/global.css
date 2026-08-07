@@ -199,6 +199,16 @@ a:hover {
   border-block: 1px solid var(--color-rule);
 }
 
+.gazette-masthead__motto {
+  margin: 0 0 var(--space-2xs);
+  font-family: var(--font-reading);
+  font-size: 0.72rem;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--color-muted-ink);
+}
+
 .gazette-masthead__dateline {
   font: 700 clamp(0.66rem, 1.2vw, 0.82rem)/1.2 var(--font-reading);
   font-variant-caps: small-caps;
