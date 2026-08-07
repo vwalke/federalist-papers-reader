@@ -1,5 +1,5 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 
 import Commentary from '../components/Commentary.astro';
 import EssayNavigation from '../components/EssayNavigation.astro';
@@ -7,6 +7,7 @@ import EssayShare from '../components/EssayShare.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';
 import ReadingToolbar from '../components/ReadingToolbar.astro';
+import { essayDisplayName, essaySlug, getObjectionsForPaper } from '../lib/antifederalist';
 import { getThemeGuidesForPaper } from '../lib/guides';
 import { getPrintingForPaper, printingAnchor } from '../data/printings';
 import SubscribePrompt from '../components/SubscribePrompt.astro';
@@ -68,6 +69,10 @@ const structuredData = [
 
 const themeGuides = await getThemeGuidesForPaper(data.number);
 const printing = getPrintingForPaper(data.number);
+const objections = getObjectionsForPaper(
+  (await getCollection('antifederalist')).map((entry) => entry.data),
+  data.number
+);
 ---
 
 <BaseLayout
@@ -130,6 +135,21 @@ const printing = getPrintingForPaper(data.number);
           <a href={`/printings/#${printingAnchor(printing)}`}>See it in the print room</a>.
         </p>
       </aside>
+    )}
+
+    {objections.length > 0 && (
+      <nav class="essay-objections" aria-label="The opposition press">
+        <span class="section-kicker">From the opposition press</span>
+        <ul>
+          {objections.map((essay) => (
+            <li>
+              <a href={`/antifederalist/${essaySlug(essay)}/`}>
+                Greenleaf’s Journal objects — {essayDisplayName(essay)}: {essay.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     )}
 
     {themeGuides.length > 0 && (
