@@ -6,6 +6,7 @@ import { parse } from 'yaml';
 
 const ROOT = new URL('../', import.meta.url);
 const PAPERS_DIR = new URL('src/content/papers/', ROOT);
+const ANTIFEDERALIST_DIR = new URL('src/content/antifederalist/', ROOT);
 const OUT_DIR = new URL('public/social-cards/', ROOT);
 
 const WIDTH = 1200;
@@ -48,14 +49,14 @@ async function loadFontCss() {
   return faces.join('');
 }
 
-/** The card body: a numbered essay, or the site-identity default when roman is null. */
-function bodyMarkup({ roman, title }) {
+/** The card body: a numbered essay, or the series-identity default when roman is null. */
+function bodyMarkup({ roman, title, headline }) {
   if (roman === null) {
-    return `<div class="fed">THE FŒDERALIST</div>
-      <div class="topic">All Eighty-Five Essays, Made for Reading Together</div>`;
+    return `<div class="fed">${headline}</div>
+      <div class="topic">${escapeHtml(title)}</div>`;
   }
   const long = title.length > 46;
-  return `<div class="fed">THE FŒDERALIST. <span class="no">No. ${roman}.</span></div>
+  return `<div class="fed">${headline}. <span class="no">No. ${roman}.</span></div>
     <div class="topic${long ? ' small' : ''}">${escapeHtml(title)}</div>`;
 }
 
@@ -95,11 +96,11 @@ html,body{width:${WIDTH}px;height:${HEIGHT}px;}
 </style></head><body>
 <div class="card">
   <div class="plate">
-    <div class="name">THE INDEPENDENT JOURNAL</div>
-    <div class="sub"><span class="dia">&#10022;</span> OR, THE GENERAL ADVERTISER <span class="dia">&#10022;</span></div>
+    <div class="name">${card.plateName}</div>
+    <div class="sub"><span class="dia">&#10022;</span> ${card.plateSub} <span class="dia">&#10022;</span></div>
   </div>
   <div class="body">${bodyMarkup(card)}</div>
-  <div class="foot"><span class="url">federalistreader.org</span><span class="pub">Publius</span></div>
+  <div class="foot"><span class="url">federalistreader.org</span><span class="pub">${card.signature}</span></div>
 </div></body></html>`;
 }
 
@@ -116,8 +117,37 @@ async function loadPapers() {
   return papers;
 }
 
+async function loadAntifederalist() {
+  const filenames = (await readdir(ANTIFEDERALIST_DIR)).filter((name) => name.endsWith('.md')).sort();
+  const essays = [];
+  for (const filename of filenames) {
+    const source = await readFile(new URL(filename, ANTIFEDERALIST_DIR), 'utf8');
+    const match = source.match(/^---\n([\s\S]*?)\n---/);
+    if (!match) throw new Error(`${filename} is missing frontmatter.`);
+    const data = parse(match[1]);
+    essays.push({
+      slug: `${data.series.toLowerCase()}-${data.seriesNumber}`,
+      series: data.series,
+      seriesNumber: data.seriesNumber,
+      title: data.title
+    });
+  }
+  return essays;
+}
+
+const JOURNAL_PLATE = {
+  plateName: 'THE NEW-YORK JOURNAL',
+  plateSub: 'AND WEEKLY REGISTER'
+};
+
+const INDEPENDENT_PLATE = {
+  plateName: 'THE INDEPENDENT JOURNAL',
+  plateSub: 'OR, THE GENERAL ADVERTISER'
+};
+
 async function generate() {
   const papers = await loadPapers();
+  const essays = await loadAntifederalist();
   const fontCss = await loadFontCss();
   await mkdir(fileURLToPath(OUT_DIR), { recursive: true });
 
@@ -125,10 +155,45 @@ async function generate() {
   const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });
 
   const jobs = [
-    { file: 'default.jpg', card: { roman: null, title: '' } },
+    {
+      file: 'default.jpg',
+      card: {
+        ...INDEPENDENT_PLATE,
+        headline: 'THE FŒDERALIST',
+        signature: 'Publius',
+        roman: null,
+        title: 'All Eighty-Five Essays, Made for Reading Together'
+      }
+    },
     ...papers.map((paper) => ({
       file: `${paper.number}.jpg`,
-      card: { roman: toRoman(paper.number), title: paper.title }
+      card: {
+        ...INDEPENDENT_PLATE,
+        headline: 'THE FŒDERALIST',
+        signature: 'Publius',
+        roman: toRoman(paper.number),
+        title: paper.title
+      }
+    })),
+    {
+      file: 'antifederalist-default.jpg',
+      card: {
+        ...JOURNAL_PLATE,
+        headline: 'THE ANTI-FŒDERALIST',
+        signature: 'Brutus',
+        roman: null,
+        title: 'Brutus and Cato Answer Publius'
+      }
+    },
+    ...essays.map((essay) => ({
+      file: `antifederalist-${essay.slug}.jpg`,
+      card: {
+        ...JOURNAL_PLATE,
+        headline: essay.series.toUpperCase(),
+        signature: essay.series,
+        roman: toRoman(essay.seriesNumber),
+        title: essay.title
+      }
     }))
   ];
 
