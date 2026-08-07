@@ -1,0 +1,98 @@
+{
+  "brutus-1": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030565/1787-10-18/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 1015
+    },
+    "large": {
+      "w": 2000,
+      "h": 3174
+    }
+  },
+  "brutus-2": {
+    "page": 1,
+    "locUrl": "https://www.loc.gov/resource/sn83030565/1787-11-01/ed-1/?sp=1",
+    "thumb": {
+      "w": 640,
+      "h": 1035
+    },
+    "large": {
+      "w": 2000,
+      "h": 3233
+    }
+  },
+  "cato-4": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030565/1787-11-08/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 1057
+    },
+    "large": {
+      "w": 2000,
+      "h": 3304
+    }
+  },
+  "brutus-4": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030566/1787-11-29/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 1063
+    },
+    "large": {
+      "w": 2000,
+      "h": 3323
+    }
+  },
+  "brutus-6": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030566/1787-12-27/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 992
+    },
+    "large": {
+      "w": 2000,
+      "h": 3099
+    }
+  },
+  "brutus-10": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030566/1788-01-24/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 1025
+    },
+    "large": {
+      "w": 2000,
+      "h": 3204
+    }
+  },
+  "brutus-12": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030566/1788-02-07/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 1032
+    },
+    "large": {
+      "w": 2000,
+      "h": 3225
+    }
+  },
+  "brutus-15": {
+    "page": 2,
+    "locUrl": "https://www.loc.gov/resource/sn83030566/1788-03-20/ed-1/?sp=2",
+    "thumb": {
+      "w": 640,
+      "h": 1017
+    },
+    "large": {
+      "w": 2000,
+      "h": 3175
+    }
+  }
+}

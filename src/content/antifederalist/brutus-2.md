@@ -22,7 +22,7 @@ repliesTo:
 loc:
   lccn: "sn83030565"
   date: "1787-11-01"
-  page: 2
+  page: 1
 sources:
   - label: "Teaching American History source text"
     url: "https://teachingamericanhistory.org/document/brutus-ii/"
