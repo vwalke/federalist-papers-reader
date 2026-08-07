@@ -20,7 +20,7 @@ test('affected site routes retain their primary next step without X referrals', 
   await expect(page.locator('a[href*="x.com"], a[href*="twitter.com"]')).toHaveCount(0);
 });
 
-test('paper sharing copies the canonical page URL without an X action', async ({ page, context }) => {
+test('paper sharing copies the canonical page URL without an X action', async ({ page, context, baseURL }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/papers/1/#companion-heading');
 
@@ -29,6 +29,6 @@ test('paper sharing copies the canonical page URL without an X action', async ({
   await share.getByRole('button', { name: 'Copy link' }).click();
   await expect(share.getByText('Link copied')).toBeVisible();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'http://127.0.0.1:4321/papers/1/',
+    new URL('/papers/1/', baseURL).toString(),
   );
 });

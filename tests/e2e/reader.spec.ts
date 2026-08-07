@@ -378,8 +378,7 @@ test('justifies Gazette columns with justif and tears down for Reader', async ({
     return {
       total: paragraphs.length,
       enhanced: paragraphs.filter((p) => p.hasAttribute('data-justif')).length,
-      dropCapEnhanced: paragraphs[0]?.hasAttribute('data-justif') ?? true,
-      dropCapAlign: paragraphs[0] ? getComputedStyle(paragraphs[0]).textAlign : '',
+      dropCapEnhanced: paragraphs[0]?.hasAttribute('data-justif') ?? false,
       signatureAlign: (() => {
         const signature = body.querySelector('.essay-signature');
         return signature ? getComputedStyle(signature).textAlign : '';
@@ -393,12 +392,12 @@ test('justifies Gazette columns with justif and tears down for Reader', async ({
       ]
     };
   });
-  // Most paragraphs are enhanced; the drop cap (justif 0.5.0 still
-  // mis-renders float-boundary hyphens) and any column-break straddlers
-  // stay on the native justify baseline.
+  // justif 0.5.1 fixed the drop-cap float bugs and 0.6.1 measures
+  // column-straddling fragments per column, so the opener is enhanced along
+  // with the rest; anything revertOverflowing holds back falls to the
+  // native justify baseline.
   expect(counts.enhanced).toBeGreaterThan(counts.total / 2);
-  expect(counts.dropCapEnhanced).toBe(false);
-  expect(counts.dropCapAlign).toBe('justify');
+  expect(counts.dropCapEnhanced).toBe(true);
   expect(counts.unenhancedAligns.every((align) => align === 'justify')).toBe(true);
   expect(['end', 'right']).toContain(counts.signatureAlign);
 
