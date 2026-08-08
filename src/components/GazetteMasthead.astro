@@ -4,6 +4,8 @@ interface Props {
   compact?: boolean;
   variant?: 'independent-journal' | 'new-york-journal';
   motto?: string;
+  /** Italic source credit after the motto, as the original sheet prints it. */
+  mottoSource?: string;
 }
 
 const VARIANT_DEFAULTS = {
@@ -11,9 +13,20 @@ const VARIANT_DEFAULTS = {
   'new-york-journal': 'New-York · Printed by Thomas Greenleaf · 1787–1788'
 } as const;
 
+/* Greenleaf's sheet carries its motto under the nameplate, the emphasized
+   words in full caps against mixed case, with an italic credit to the
+   Thomson poem it quotes — transcribed from the Oct 18, 1787 front page. */
+const VARIANT_MOTTOS: Record<string, { text: string; source: string } | undefined> = {
+  'new-york-journal': {
+    text: 'Here TRUTH unlicens’d reigns; and dares accost—e’en KINGS themselves, or RULERS of the FREE!',
+    source: 'Thompson’s Liberty.'
+  }
+};
+
 const { compact = false, variant = 'independent-journal' } = Astro.props;
 const dateLine = Astro.props.dateLine ?? VARIANT_DEFAULTS[variant];
-const motto = Astro.props.motto;
+const motto = Astro.props.motto ?? VARIANT_MOTTOS[variant]?.text;
+const mottoSource = Astro.props.mottoSource ?? (Astro.props.motto ? undefined : VARIANT_MOTTOS[variant]?.source);
 ---
 
 <header class:list={['gazette-masthead', { 'gazette-masthead--compact': compact }] }>
@@ -24,7 +37,12 @@ const motto = Astro.props.motto;
     width="1200"
     height="145"
   />
-  {motto && <p class="gazette-masthead__motto">{motto}</p>}
+  {motto && (
+    <p class="gazette-masthead__motto">
+      {motto}
+      {mottoSource && <cite class="gazette-masthead__motto-source">{mottoSource}</cite>}
+    </p>
+  )}
   <div class="gazette-masthead__issue">
     <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
     <p class="gazette-masthead__dateline">{dateLine}</p>

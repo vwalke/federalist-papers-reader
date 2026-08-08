@@ -26,8 +26,6 @@ function formatDate(value: string): string {
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-const GREENLEAF_MOTTO =
-  'Here TRUTH unlicens’d reigns; and dares accost—e’en KINGS themselves, or RULERS of the FREE!';
 ---
 
 <BaseLayout
@@ -37,7 +35,7 @@ const GREENLEAF_MOTTO =
   ogImage="/social-cards/antifederalist-default.jpg"
 >
   <div class="paper-sheet">
-    <GazetteMasthead variant="new-york-journal" motto={GREENLEAF_MOTTO} />
+    <GazetteMasthead variant="new-york-journal" />
 
     <section class="index-ledger" id="opposition" aria-labelledby="opposition-heading">
       <header class="index-ledger__heading">

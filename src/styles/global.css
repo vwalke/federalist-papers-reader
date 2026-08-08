@@ -199,13 +199,23 @@ a:hover {
   border-block: 1px solid var(--color-rule);
 }
 
+/* Set as Greenleaf printed it: Fell type in ink, mixed case with the
+   emphasized words carrying full caps from the text itself, the poem credit
+   italic. No small-caps flattening — the caps ARE the emphasis. */
 .gazette-masthead__motto {
-  margin: 0 0 var(--space-2xs);
-  font-family: var(--font-reading);
-  font-size: 0.72rem;
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-xs);
+  font-family: 'IM Fell English', var(--font-reading);
+  font-size: 0.84rem;
+  letter-spacing: 0.05em;
+  word-spacing: 0.08em;
   text-align: center;
+  color: var(--color-ink);
+}
+
+.gazette-masthead__motto-source {
+  margin-inline-start: 0.55em;
+  font-style: italic;
+  letter-spacing: 0.02em;
   color: var(--color-muted-ink);
 }
 

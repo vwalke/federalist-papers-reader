@@ -81,9 +81,6 @@ const structuredData = [
 
 const unreadLabel = next ? 'Mark read & continue →' : 'Mark read & finish →';
 const readLabel = next ? 'Next →' : 'The opposition shelf →';
-
-const GREENLEAF_MOTTO =
-  'Here TRUTH unlicens’d reigns; and dares accost—e’en KINGS themselves, or RULERS of the FREE!';
 ---
 
 <BaseLayout
@@ -103,7 +100,6 @@ const GREENLEAF_MOTTO =
     <GazetteMasthead
       compact
       variant="new-york-journal"
-      motto={GREENLEAF_MOTTO}
       dateLine={formatIssueDateline(data.publicationDate, 'newspaper')}
     />
     <ReadingToolbar
