@@ -2,6 +2,7 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import GazetteMasthead from '../../components/GazetteMasthead.astro';
 import CuratedList from '../../components/CuratedList.astro';
+import DebateList from '../../components/DebateList.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getOrderedGuides } from '../../lib/guides';
 import '../../styles/guide.css';
@@ -22,6 +23,7 @@ const { Content } = await render(guide);
 const allGuides = await getOrderedGuides();
 const others = allGuides.filter((g) => g.id !== guide.id);
 const hasPapers = data.papers.length > 0;
+const hasExchanges = data.exchanges.length > 0;
 
 const pageURL = Astro.site ? new URL(`/guides/${guide.id}/`, Astro.site).href : undefined;
 const itemList = {
@@ -39,6 +41,21 @@ const itemList = {
             position: i + 1,
             name: `Federalist No. ${p.number}`,
             ...(Astro.site ? { url: new URL(`/papers/${p.number}/`, Astro.site).href } : {})
+          }))
+        }
+      }
+    : {}),
+  ...(hasExchanges
+    ? {
+        mainEntity: {
+          '@type': 'ItemList',
+          itemListElement: data.exchanges.map((exchange, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: exchange.heading,
+            ...(Astro.site
+              ? { url: new URL(`/antifederalist/${exchange.essay}/`, Astro.site).href }
+              : {})
           }))
         }
       }
@@ -72,6 +89,22 @@ const itemList = {
         <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
 
         <CuratedList entries={data.papers} />
+
+        <nav class="guide-crosslinks" aria-label="More guides">
+          <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+          <h2 class="guide-crosslinks__title">Further companions</h2>
+          <ul>
+            {others.map((g) => (
+              <li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </>
+    ) : hasExchanges ? (
+      <>
+        <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
+
+        <DebateList exchanges={data.exchanges} />
 
         <nav class="guide-crosslinks" aria-label="More guides">
           <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>

@@ -47,6 +47,17 @@ const guides = defineCollection({
           why: z.string().min(1)
         })
       )
+      .default([]),
+    // A debate guide pairs Anti-Federalist essays with the papers that answer them.
+    exchanges: z
+      .array(
+        z.object({
+          essay: z.string().min(1),
+          papers: z.array(z.number().int().min(1).max(85)).min(1),
+          heading: z.string().min(1),
+          why: z.string().min(1)
+        })
+      )
       .default([])
   })
 });

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const guidesDir = fileURLToPath(new URL('../src/content/guides/', import.meta.url));
 
-const guideFiles = ['most-important', 'where-to-start'] as const;
+const guideFiles = ['most-important', 'the-ratification-debate', 'where-to-start'] as const;
 const themeFiles = ['faction', 'separation-of-powers', 'the-judiciary', 'the-presidency'] as const;
 const allSlugs = [...guideFiles, ...themeFiles].sort();
 
@@ -21,14 +21,14 @@ function frontmatter(text: string): string {
 }
 
 describe('guides content collection', () => {
-  it('has all six guide markdown files', async () => {
+  it('has all seven guide markdown files', async () => {
     for (const slug of allSlugs) {
       const text = await readGuide(slug);
       expect(text.length).toBeGreaterThan(0);
     }
   });
 
-  it('marks the two guides with kind "guide"', async () => {
+  it('marks the three guides with kind "guide"', async () => {
     for (const slug of guideFiles) {
       const fm = frontmatter(await readGuide(slug));
       expect(fm).toMatch(/^kind:\s*guide\s*$/m);
@@ -44,8 +44,11 @@ describe('guides content collection', () => {
 
   it('gives every curated guide a papers block with at least one referenced paper and a why', async () => {
     // where-to-start is the hub: it routes to the companions instead of
-    // carrying a curated list of its own.
-    const curatedSlugs = allSlugs.filter((slug) => slug !== 'where-to-start');
+    // carrying a curated list of its own. The ratification debate carries
+    // exchanges instead of a flat papers list (see debate-guide.test.ts).
+    const curatedSlugs = allSlugs.filter(
+      (slug) => slug !== 'where-to-start' && slug !== 'the-ratification-debate'
+    );
 
     for (const slug of curatedSlugs) {
       const fm = frontmatter(await readGuide(slug));

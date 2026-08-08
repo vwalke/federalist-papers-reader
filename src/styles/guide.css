@@ -164,6 +164,73 @@
   }
 }
 
+/* Debate list: exchanges set as challenge and answer, one per rule. */
+.debate-list {
+  grid-template-columns: 1fr;
+}
+
+.debate-exchange {
+  grid-template-columns: 1fr;
+}
+
+.debate-side {
+  margin-block-start: var(--space-md);
+}
+
+.debate-side__marker {
+  font: 700 0.72rem/1.35 var(--font-utility);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.debate-side--challenge .debate-side__marker {
+  color: var(--color-oxblood);
+}
+
+.debate-side--answer .debate-side__marker {
+  color: var(--color-verdigris);
+}
+
+.debate-side__work {
+  margin-block-start: var(--space-2xs);
+  font: 400 1.15rem/1.35 var(--font-display);
+  text-wrap: balance;
+}
+
+.debate-answers {
+  margin-block-start: var(--space-2xs);
+  padding: 0;
+  list-style: none;
+}
+
+.debate-answers li + li {
+  margin-block-start: var(--space-2xs);
+}
+
+.debate-answers a {
+  font: 400 1.15rem/1.35 var(--font-display);
+}
+
+@media (min-width: 68rem) {
+  .curated-list.debate-list {
+    grid-template-columns: 1fr;
+  }
+
+  .debate-list > .curated-entry:nth-child(2) {
+    border-block-start: 1px solid var(--color-rule);
+  }
+
+  .debate-exchange .curated-entry__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-2xl);
+  }
+
+  .debate-exchange .curated-entry__topic {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Crosslinks: a centered closing notice. */
 .guide-crosslinks {
   margin-block-start: var(--space-xl);

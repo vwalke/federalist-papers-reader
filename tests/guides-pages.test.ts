@@ -37,11 +37,27 @@ describe('guide pages', () => {
     expect(start).not.toContain('"@type":"ItemList"'); // no curated list of its own
   });
 
+  it('renders the ratification debate as paired exchanges', async () => {
+    const debate = await read('guides/the-ratification-debate/index.html');
+    expect(debate).toContain('Can a republic be this large?');
+    expect(debate).toContain('href="/antifederalist/brutus-1/"');
+    expect(debate).toContain('href="/papers/10/"');
+    expect(debate).toContain('Publius answers');
+    expect(debate).toContain('"@type":"ItemList"');
+    expect(debate).toContain('Further companions');
+  });
+
+  it('lists the ratification debate on the guides hub', async () => {
+    const index = await read('guides/index.html');
+    expect(index).toContain('href="/guides/the-ratification-debate/"');
+  });
+
   it('includes guide URLs in the sitemap', async () => {
     const sitemap = await read('sitemap.xml');
     expect(sitemap).toContain('https://federalistreader.org/guides/');
     expect(sitemap).toContain('https://federalistreader.org/guides/where-to-start/');
     expect(sitemap).toContain('https://federalistreader.org/guides/the-judiciary/');
+    expect(sitemap).toContain('https://federalistreader.org/guides/the-ratification-debate/');
   });
 
   it('surfaces the where-to-start hub from the homepage', async () => {

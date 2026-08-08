@@ -1,0 +1,64 @@
+---
+import { getCollection } from 'astro:content';
+import { essayDisplayName, essaySlug } from '../lib/antifederalist';
+
+interface Props {
+  exchanges: { essay: string; papers: number[]; heading: string; why: string }[];
+}
+
+const { exchanges } = Astro.props;
+
+const essays = await getCollection('antifederalist');
+const essayBySlug = new Map(essays.map((e) => [essaySlug(e.data), e.data]));
+
+const papers = await getCollection('papers');
+const paperByNumber = new Map(papers.map((p) => [p.data.number, p.data]));
+
+const resolved = exchanges.map((exchange) => {
+  const essay = essayBySlug.get(exchange.essay);
+  if (!essay) {
+    throw new Error(`DebateList: no Anti-Federalist essay matches slug "${exchange.essay}"`);
+  }
+  const answers = exchange.papers.map((number) => {
+    const paper = paperByNumber.get(number);
+    if (!paper) {
+      throw new Error(
+        `DebateList: exchange "${exchange.essay}" cites Federalist No. ${number}, which does not exist`
+      );
+    }
+    return { number, paper };
+  });
+  return { ...exchange, essayData: essay, answers };
+});
+---
+
+<ol class="curated-list debate-list">
+  {resolved.map((exchange) => (
+    <li class="curated-entry debate-exchange">
+      <div class="curated-entry__body">
+        <h2 class="curated-entry__topic">{exchange.heading}</h2>
+
+        <div class="debate-side debate-side--challenge">
+          <p class="debate-side__marker">Greenleaf&rsquo;s Journal</p>
+          <p class="debate-side__work">
+            <a href={`/antifederalist/${exchange.essay}/`}>
+              {essayDisplayName(exchange.essayData)}: {exchange.essayData.title}
+            </a>
+          </p>
+          <p class="curated-entry__why">{exchange.why}</p>
+        </div>
+
+        <div class="debate-side debate-side--answer">
+          <p class="debate-side__marker">Publius answers</p>
+          <ul class="debate-answers">
+            {exchange.answers.map(({ number, paper }) => (
+              <li>
+                <a href={`/papers/${number}/`}>Federalist No. {number}: {paper.topic}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </li>
+  ))}
+</ol>
