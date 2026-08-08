@@ -34,7 +34,16 @@ describe('guide pages', () => {
     expect(start).toContain('href="/guides/most-important/"');
     expect(start).toContain('href="/guides/faction/"');
     expect(start).toContain('href="/guides/the-judiciary/"');
+    expect(start).toContain('href="/guides/the-ratification-debate/"');
     expect(start).not.toContain('"@type":"ItemList"'); // no curated list of its own
+
+    /* The companions note spells out the count; if a new guide lands, this
+       pins the copy to the actual list so "Six" can't silently go stale.
+       The page links itself once (canonical/nav), so exclude its own slug. */
+    const companionLinks = new Set(start.match(/href="\/guides\/[a-z-]+\/"/g) ?? []);
+    companionLinks.delete('href="/guides/where-to-start/"');
+    expect(companionLinks.size).toBe(6);
+    expect(start).toContain('Six short guides');
   });
 
   it('renders the ratification debate as paired exchanges', async () => {
