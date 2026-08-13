@@ -10,12 +10,12 @@ publicationDate: "1787-11-08"
 publicationDateLabel: "For the New-York Journal. Thursday, November 8, 1787"
 recipient: "To the Citizens of the State of New-York."
 indexSummary: "Warns the presidency’s term, powers, and patronage make it an elective monarchy in waiting."
-nutshell: "Cato reads Article II and sees a king by another name: a single magistrate with a long re-eligible term, command of the army, the pardon power, and a court of favorites around him. Ambition in such an office, he argues, will not stay caged."
+nutshell: "Cato reads Article II and sees a king by another name: a single magistrate with a long re-eligible term, command of the army, the pardon power, and a court of favorites around him. An office like that, he argues, invites the ambition it is meant to restrain."
 keyArguments:
   - "A four-year re-eligible term gives a president time and motive to entrench himself."
   - "Command of the military and the pardon power are royal prerogatives in republican dress."
   - "Patronage will gather a class of dependents around the executive."
-whyItMattered: "Hamilton wrote Federalist 67–69 largely against Cato—his footnote in No. 67 cites Cato No. V, the continuation of this argument—while cataloguing every way the presidency falls short of a monarchy."
+whyItMattered: "Hamilton wrote Federalist 67–69 largely against Cato—No. 67's footnote cites Cato No. V, this argument's continuation—comparing the presidency with the British crown clause by clause."
 talkItOver: "Which guardrails on the presidency matter more today: written limits, or the habits of the people who hold it?"
 repliesTo:
   - 67

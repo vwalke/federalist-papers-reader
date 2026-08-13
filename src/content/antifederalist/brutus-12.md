@@ -10,12 +10,12 @@ publicationDate: "1788-02-07"
 publicationDateLabel: "For the New-York Journal. Thursday, February 7, 1788"
 recipient: "To the People of the State of New-York."
 indexSummary: "Predicts federal courts will read the Constitution expansively and carry consolidation forward."
-nutshell: "The courts, Brutus argues, will do quietly what armies never could. Empowered to construe the Constitution “in equity”—by its spirit and reasoning, not its letter alone—federal judges will steadily enlarge national power, and every enlargement they bless becomes precedent for the next."
+nutshell: "The courts, Brutus argues, are where consolidation will actually happen. Empowered to construe the Constitution “in equity”—by its spirit and reasoning, not its letter alone—federal judges will steadily enlarge national power, and every enlargement they approve becomes precedent for the next."
 keyArguments:
   - "Judicial construction, not amendment, will settle what the Constitution means."
   - "Courts deciding by spirit rather than letter can extend power without appearing to."
   - "Legislatures will follow the judges’ lead, sheltered by their authority."
-whyItMattered: "Hamilton’s Federalist 78 answered with the judiciary as the “least dangerous” branch—the exchange that still frames every fight over judicial interpretation."
+whyItMattered: "Hamilton’s Federalist 78 answered with the judiciary as the “least dangerous” branch—an exchange still cited on both sides of arguments over judicial power."
 talkItOver: "Is a constitution what it says, or what its judges say it says?"
 repliesTo:
   - 78

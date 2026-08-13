@@ -15,7 +15,7 @@ keyArguments:
   - "Federal judges answer to no earthly correction short of impeachment for crimes."
   - "Even Britain lets Parliament overrule its courts’ constructions of law."
   - "Errors of the supreme court become permanent parts of the Constitution."
-whyItMattered: "Read beside Federalist 78 and 81, this is the ratification debate’s deepest exchange on judicial power—and the one law courses still assign."
+whyItMattered: "Read beside Federalist 78 and 81, this is the debate’s fullest exchange on judicial power, and the one classrooms still assign."
 talkItOver: "Who should have the last word on what a constitution means?"
 repliesTo:
   - 78

@@ -10,7 +10,7 @@ publicationDate: "1787-12-27"
 publicationDateLabel: "For the New-York Journal. Thursday, December 27, 1787"
 recipient: "To the People of the State of New-York."
 indexSummary: "Reads the taxing and necessary-and-proper powers as a grant of unlimited government."
-nutshell: "Brutus follows the money. The power to lay taxes “for the general welfare,” joined to the necessary-and-proper clause, is in his reading a power without bounds—one that will absorb every object of state government until the legislatures dwindle into ornament."
+nutshell: "Brutus turns to the money powers. The power to lay taxes “for the general welfare,” joined to the necessary-and-proper clause, reads to him as a power without limits—one that will absorb the states’ objects of government until their legislatures have little left to do."
 keyArguments:
   - "“General welfare” is a purpose so broad it excludes nothing."
   - "Necessary and proper lets Congress choose any means to its ends."

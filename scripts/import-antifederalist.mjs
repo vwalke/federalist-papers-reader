@@ -137,14 +137,14 @@ const ESSAYS = [
       indexSummary:
         'Warns the presidency’s term, powers, and patronage make it an elective monarchy in waiting.',
       nutshell:
-        'Cato reads Article II and sees a king by another name: a single magistrate with a long re-eligible term, command of the army, the pardon power, and a court of favorites around him. Ambition in such an office, he argues, will not stay caged.',
+        'Cato reads Article II and sees a king by another name: a single magistrate with a long re-eligible term, command of the army, the pardon power, and a court of favorites around him. An office like that, he argues, invites the ambition it is meant to restrain.',
       keyArguments: [
         'A four-year re-eligible term gives a president time and motive to entrench himself.',
         'Command of the military and the pardon power are royal prerogatives in republican dress.',
         'Patronage will gather a class of dependents around the executive.'
       ],
       whyItMattered:
-        'Hamilton wrote Federalist 67–69 largely against Cato—his footnote in No. 67 cites Cato No. V, the continuation of this argument—while cataloguing every way the presidency falls short of a monarchy.',
+        'Hamilton wrote Federalist 67–69 largely against Cato—No. 67’s footnote cites Cato No. V, this argument’s continuation—comparing the presidency with the British crown clause by clause.',
       talkItOver:
         'Which guardrails on the presidency matter more today: written limits, or the habits of the people who hold it?',
       repliesTo: [67, 68, 69],
@@ -219,7 +219,7 @@ const ESSAYS = [
       indexSummary:
         'Reads the taxing and necessary-and-proper powers as a grant of unlimited government.',
       nutshell:
-        'Brutus follows the money. The power to lay taxes “for the general welfare,” joined to the necessary-and-proper clause, is in his reading a power without bounds—one that will absorb every object of state government until the legislatures dwindle into ornament.',
+        'Brutus turns to the money powers. The power to lay taxes “for the general welfare,” joined to the necessary-and-proper clause, reads to him as a power without limits—one that will absorb the states’ objects of government until their legislatures have little left to do.',
       keyArguments: [
         '“General welfare” is a purpose so broad it excludes nothing.',
         'Necessary and proper lets Congress choose any means to its ends.',
@@ -299,14 +299,14 @@ const ESSAYS = [
       indexSummary:
         'Predicts federal courts will read the Constitution expansively and carry consolidation forward.',
       nutshell:
-        'The courts, Brutus argues, will do quietly what armies never could. Empowered to construe the Constitution “in equity”—by its spirit and reasoning, not its letter alone—federal judges will steadily enlarge national power, and every enlargement they bless becomes precedent for the next.',
+        'The courts, Brutus argues, are where consolidation will actually happen. Empowered to construe the Constitution “in equity”—by its spirit and reasoning, not its letter alone—federal judges will steadily enlarge national power, and every enlargement they approve becomes precedent for the next.',
       keyArguments: [
         'Judicial construction, not amendment, will settle what the Constitution means.',
         'Courts deciding by spirit rather than letter can extend power without appearing to.',
         'Legislatures will follow the judges’ lead, sheltered by their authority.'
       ],
       whyItMattered:
-        'Hamilton’s Federalist 78 answered with the judiciary as the “least dangerous” branch—the exchange that still frames every fight over judicial interpretation.',
+        'Hamilton’s Federalist 78 answered with the judiciary as the “least dangerous” branch—an exchange still cited on both sides of arguments over judicial power.',
       talkItOver: 'Is a constitution what it says, or what its judges say it says?',
       repliesTo: [78],
       loc: { lccn: 'sn83030566', date: '1788-02-07', page: 2 },
@@ -346,7 +346,7 @@ const ESSAYS = [
         'Errors of the supreme court become permanent parts of the Constitution.'
       ],
       whyItMattered:
-        'Read beside Federalist 78 and 81, this is the ratification debate’s deepest exchange on judicial power—and the one law courses still assign.',
+        'Read beside Federalist 78 and 81, this is the debate’s fullest exchange on judicial power, and the one classrooms still assign.',
       talkItOver: 'Who should have the last word on what a constitution means?',
       repliesTo: [78, 81],
       loc: { lccn: 'sn83030566', date: '1788-03-20', page: 2 },
