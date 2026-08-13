@@ -5,7 +5,7 @@ test.describe('the opposition shelf', () => {
   test('index lists eight essays and tracks read state', async ({ page }) => {
     await page.goto('/antifederalist/');
     await expect(page.getByRole('heading', { name: 'The Anti-Federalist Papers' })).toBeVisible();
-    await expect(page.locator('.journal-entry')).toHaveCount(8);
+    await expect(page.locator('.index-entry')).toHaveCount(8);
     await expect(page.locator('[data-journal-progress]')).toHaveText('0 of 8 read in this browser');
 
     await page.goto('/antifederalist/brutus-1/');
@@ -18,7 +18,31 @@ test.describe('the opposition shelf', () => {
 
     await page.goto('/antifederalist/');
     await expect(page.locator('[data-journal-progress]')).toHaveText('1 of 8 read in this browser');
-    await expect(page.locator('[data-journal-read]:visible')).toHaveCount(1);
+    const brutusOne = page.locator('[data-journal-entry="101"]');
+    await expect(brutusOne).toHaveAttribute('data-read', 'true');
+    const status = brutusOne.locator('[data-journal-status]');
+    await expect(status).toHaveAttribute('aria-pressed', 'true');
+    await expect(status).toHaveAttribute('aria-label', 'Mark Brutus No. I as unread');
+    await expect(status).toHaveText(/Read/);
+  });
+
+  test('a shelf row status toggle flips read state in place', async ({ page }) => {
+    await page.goto('/antifederalist/');
+    const catoFour = page.locator('[data-journal-entry="154"]');
+    const status = catoFour.locator('[data-journal-status]');
+    await expect(status).toHaveAttribute('aria-pressed', 'false');
+    await expect(status).toHaveAttribute('aria-label', 'Mark Cato No. IV as read');
+
+    await status.click();
+    await expect(status).toHaveAttribute('aria-pressed', 'true');
+    await expect(status).toHaveAttribute('aria-label', 'Mark Cato No. IV as unread');
+    await expect(catoFour).toHaveAttribute('data-read', 'true');
+    await expect(page.locator('[data-journal-progress]')).toHaveText('1 of 8 read in this browser');
+
+    await status.click();
+    await expect(status).toHaveAttribute('aria-pressed', 'false');
+    await expect(catoFour).toHaveAttribute('data-read', 'false');
+    await expect(page.locator('[data-journal-progress]')).toHaveText('0 of 8 read in this browser');
   });
 
   test('essay renders in both modes with the Journal identity', async ({ page }) => {

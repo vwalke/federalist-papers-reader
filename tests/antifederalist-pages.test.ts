@@ -43,6 +43,35 @@ describe('antifederalist built pages', () => {
     }
   });
 
+  it('sets the shelf in the main index ledger idiom', async () => {
+    const page = await readPage('antifederalist');
+
+    // Column labels row and one ledger row per essay, in publication order.
+    expect(page).toContain('index-ledger__labels');
+    expect(page.match(/class="index-entry"/g)).toHaveLength(8);
+    const order = SLUGS.map((slug) => page.indexOf(`href="/antifederalist/${slug}/"`));
+    expect(order.every((at) => at !== -1)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+
+    // No. column: roman numeral with a visually-hidden series prefix.
+    expect(page).toMatch(/<span class="visually-hidden"[^>]*>Brutus number <\/span>I</);
+    expect(page).toMatch(/<span class="visually-hidden"[^>]*>Cato number <\/span>IV</);
+
+    // Author and Published columns as printed in the Journal.
+    expect(page).toMatch(/<p class="index-entry__author"[^>]*>Brutus<\/p>/);
+    expect(page).toMatch(/<p class="index-entry__author"[^>]*>Cato<\/p>/);
+    expect(page).toMatch(/<time datetime="1787-10-18"[^>]*>Oct 18, 1787<\/time>/);
+
+    // Status toggles carry the main ledger's semantics from first paint.
+    expect(page.match(/data-journal-status/g)).toHaveLength(8);
+    expect(page).toContain('aria-label="Mark Brutus No. I as read"');
+    expect(page).toContain('aria-label="Mark Cato No. IV as read"');
+    expect(page).not.toContain('journal-entry__');
+
+    // Continue link defaults to the first essay; the script refines it.
+    expect(page).toMatch(/data-continue-link[\s\S]*?Begin with Brutus No\. I/);
+  });
+
   it('sets the Journal masthead and signs the essays', async () => {
     const page = await readPage('antifederalist/brutus-1');
     expect(page).toContain('/masthead-new-york-journal.svg');
