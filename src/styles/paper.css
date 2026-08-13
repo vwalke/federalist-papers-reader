@@ -984,6 +984,14 @@
   border-block-start: 1px solid var(--color-rule);
 }
 
+/* The commentary already closes with its own rule; directly after it the
+   section's top rule would double up. */
+.commentary + .essay-replies {
+  margin-block-start: var(--space-lg);
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
 .essay-replies .section-kicker,
 .essay-first-appearance .section-kicker {
   color: var(--color-muted-ink);
