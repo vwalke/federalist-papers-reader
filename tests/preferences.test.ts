@@ -63,6 +63,16 @@ describe('browser-only reading preferences', () => {
     expect(getNextUnread([1, 2], new Set([1, 2]), 1)).toBeNull();
   });
 
+  it('honors the caller-given reading order for the Journal shelf', () => {
+    /* The shelf passes PUBLICATION order, where Cato IV (154) sits between
+       Brutus II (102) and Brutus IV (104). A numeric sort here would skip
+       Cato — this pins the reading-order contract. */
+    const shelfOrder = [101, 102, 154, 104, 106, 110, 112, 115];
+    expect(getNextUnread(shelfOrder, new Set([101, 102]))).toBe(154);
+    expect(getNextUnread(shelfOrder, new Set([101, 102, 154]))).toBe(104);
+    expect(getNextUnread(shelfOrder, new Set(shelfOrder))).toBeNull();
+  });
+
   it('accepts Anti-Federalist progress ids (Brutus 100+n, Cato 150+n)', () => {
     const storage = new MemoryStorage();
     const preferences = createPreferences(storage);
