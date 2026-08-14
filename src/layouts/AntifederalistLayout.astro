@@ -1,6 +1,11 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 
+/* The Journal sets its columns in a different Fell cut than the Federalist's
+   DW Pica — same foundry, different face, loaded only on these pages. */
+import '@fontsource/im-fell-great-primer/latin-400.css';
+import '@fontsource/im-fell-great-primer/latin-400-italic.css';
+
 import Commentary from '../components/Commentary.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import PaperWear from '../components/PaperWear.astro';

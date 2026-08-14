@@ -29,6 +29,7 @@
     "@astrojs/markdown-satteri": "0.3.3",
     "@fontsource/im-fell-dw-pica": "^5.2.6",
     "@fontsource/im-fell-english": "5.2.6",
+    "@fontsource/im-fell-great-primer": "^5.3.0",
     "@fontsource/libre-caslon-display": "5.2.7",
     "@fontsource/libre-caslon-text": "5.2.7",
     "astro": "7.0.7",

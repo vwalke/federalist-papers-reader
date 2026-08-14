@@ -975,6 +975,16 @@
 .paper-page--journal {
   --color-verdigris: oklch(0.38 0.12 28); /* leads: oxblood */
   --color-oxblood: oklch(0.42 0.075 188); /* secondary: verdigris */
+
+  /* Greenleaf's compositor kept a different case of type: Fell Great Primer
+     against the Federalist's DW Pica — same foundry, visibly different face. */
+  --font-period-body: 'IM Fell Great Primer', 'IM FELL DW Pica', 'Libre Caslon Text', Georgia, serif;
+}
+
+/* Great Primer's x-height runs larger than DW Pica's, so its boost narrows
+   (46:42 at equal size) — the face differs, the apparent size matches. */
+[data-reading-mode='gazette'] .paper-page--journal .essay-body {
+  --essay-font-boost: 1.06;
 }
 
 .essay-replies,
