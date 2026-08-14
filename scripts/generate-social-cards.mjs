@@ -162,7 +162,7 @@ async function generate() {
         headline: 'THE FŒDERALIST',
         signature: 'Publius',
         roman: null,
-        title: 'All Eighty-Five Essays, Made for Reading Together'
+        title: 'All Eighty-Five Essays, and the Eight That Answered Them'
       }
     },
     ...papers.map((paper) => ({
