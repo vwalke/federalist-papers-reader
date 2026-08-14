@@ -81,7 +81,8 @@ export function readGuideContext(storage: Storage | null): GuideReadingContext |
     for (const item of context.items as unknown[]) {
       if (typeof item !== 'object' || item === null) return null;
       const { href, label } = item as Record<string, unknown>;
-      if (typeof href !== 'string' || typeof label !== 'string') return null;
+      // Blank labels would render empty nav titles; treat them as corrupt.
+      if (typeof href !== 'string' || typeof label !== 'string' || !label.trim()) return null;
       items.push({ href, label });
     }
     return { kind: 'guide', title: context.title, home: context.home, items };
@@ -125,10 +126,15 @@ export function bindGuideJourney(
   const title = heading?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
   if (!title || entries.length === 0) return;
   const home = normalizePath(window.location.pathname);
-  const items = entries.map(({ anchor, label }) => ({
-    href: normalizePath(new URL(anchor.href).pathname),
-    label
-  }));
+  const items = entries
+    .map(({ anchor, label }) => ({
+      href: normalizePath(new URL(anchor.href).pathname),
+      label: label.replace(/\s+/g, ' ').trim()
+    }))
+    // A markup refactor that loses an entry's heading must not produce
+    // blank nav titles — drop such entries rather than store them.
+    .filter((item) => item.label.length > 0);
+  if (items.length === 0) return;
   for (const { anchor } of entries) {
     anchor.addEventListener('click', () => rememberGuideJourney({ title, home, items }));
   }
