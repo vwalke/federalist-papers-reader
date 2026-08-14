@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import IndexLedger from '../components/IndexLedger.astro';
+import SiteNotice from '../components/SiteNotice.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getOrderedEssays } from '../lib/antifederalist';
 import { getOrderedPapers } from '../lib/papers';
@@ -24,6 +25,13 @@ const essays = getOrderedEssays(
   pageClass="home-page"
 >
   <article class="paper-sheet">
+    <SiteNotice id="antifederalist-2026" label="New to this edition">
+      The eight Anti-Federalist essays that answered Publius — Brutus and Cato, from
+      Greenleaf’s New-York Journal — now print beside the papers they answer.{' '}
+      <a class="site-notice__link" href="/antifederalist/">
+        Read the opposition <span aria-hidden="true">→</span>
+      </a>
+    </SiteNotice>
     <GazetteMasthead />
 
     <section class="home-intro" aria-labelledby="welcome-title">

@@ -109,3 +109,19 @@ test('runs chronologically with no sort control and announces the result count',
   await expect(page.locator('[data-index-paper]:visible').last()).toHaveAttribute('data-index-paper', '85');
   await expect(page.locator('[data-index-count]')).toHaveAttribute('aria-live', 'polite');
 });
+
+test('the printer’s notice announces the opposition and stays dismissed', async ({ page }) => {
+  await page.goto('/');
+
+  const notice = page.locator('[data-site-notice]');
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText('New to this edition');
+  await expect(notice.locator('a')).toHaveAttribute('href', '/antifederalist/');
+
+  await notice.locator('[data-site-notice-dismiss]').click();
+  await expect(notice).toBeHidden();
+
+  // The dismissal survives a reload, applied before first paint.
+  await page.reload();
+  await expect(page.locator('[data-site-notice]')).toBeHidden();
+});

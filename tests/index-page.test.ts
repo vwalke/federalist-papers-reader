@@ -64,4 +64,14 @@ describe('complete paper index', () => {
     expect(html).toContain('eight Anti-Federalist essays');
     expect(html).not.toContain('index-opposition-note');
   });
+
+  it('announces the opposition in a dismissible printer’s notice', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+
+    expect(html).toContain('data-site-notice');
+    expect(html).toContain('New to this edition');
+    expect(html).toMatch(/site-notice__link[^>]*href="\/antifederalist\/"/);
+    // The dismissal is keyed per news item, so a future notice reappears.
+    expect(html).toContain('publius:notice-dismissed:antifederalist-2026');
+  });
 });

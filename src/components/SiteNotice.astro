@@ -1,0 +1,61 @@
+---
+/**
+ * A dismissible printer's notice above the nameplate, in the run-in style
+ * the ReadPublius notice established: oxblood manicule, small-caps lead-in,
+ * centered text, a hairline rule below. Reusable for future news — give each
+ * item its own `id` and the dismissal persists per item, per browser.
+ */
+interface Props {
+  /** Storage identity for this news item, e.g. 'antifederalist-2026'. */
+  id: string;
+  /** The small-caps lead-in, e.g. 'New to this edition'. */
+  label: string;
+}
+
+const { id, label } = Astro.props;
+const storageKey = `publius:notice-dismissed:${id}`;
+---
+
+<script is:inline define:vars={{ storageKey }}>
+  try {
+    if (localStorage.getItem(storageKey) === '1') {
+      document.documentElement.dataset.siteNoticeDismissed = '';
+    }
+  } catch {
+    // The notice remains available when storage access is blocked.
+  }
+</script>
+
+<aside class="site-notice" aria-labelledby="site-notice-title" data-site-notice>
+  <p class="site-notice__body">
+    <span class="site-notice__hand" aria-hidden="true">&#x261E;&#xFE0E;</span>
+    <strong class="site-notice__label" id="site-notice-title">{label}</strong>.{' '}
+    <slot />
+  </p>
+  <button
+    class="site-notice__dismiss"
+    type="button"
+    aria-label="Dismiss notice"
+    data-site-notice-dismiss
+    hidden
+  >
+    <span aria-hidden="true">×</span>
+  </button>
+</aside>
+
+<script define:vars={{ storageKey }}>
+  const notice = document.querySelector('[data-site-notice]');
+  const dismiss = notice?.querySelector('[data-site-notice-dismiss]');
+
+  if (notice && dismiss) {
+    dismiss.addEventListener('click', () => {
+      document.documentElement.dataset.siteNoticeDismissed = '';
+      try {
+        window.localStorage.setItem(storageKey, '1');
+      } catch {
+        // The document marker still dismisses the notice for this page.
+      }
+    });
+    dismiss.hidden = false;
+  }
+</script>
