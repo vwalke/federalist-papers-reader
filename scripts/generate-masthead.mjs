@@ -4,6 +4,9 @@ import { fileURLToPath } from 'node:url';
 import opentype from 'opentype.js';
 
 const WIDTH = 1200;
+/* Both nameplates fill the same measure the Independent Journal title set:
+   its 68/5 run lands at ~1186 units inside the 1200 viewBox. */
+export const NAMEPLATE_MEASURE = 1186;
 
 export function measureRun(font, text, size, spacing) {
   return [...text].reduce((width, character, index) => {
@@ -29,17 +32,19 @@ function outlineRun(font, text, y, size, spacing) {
   return { data, left, right: left + width };
 }
 
-export function buildMastheadSvg(titleFont, subtitleFont = titleFont, options = {}) {
+/**
+ * The Federalist-side lockup: an idealized two-tier nameplate — all-caps
+ * title over an ornamented subtitle row with printer's diamonds and side
+ * rules. Kept exactly as first cut; the Independent Journal asset must stay
+ * byte-identical across regenerations.
+ */
+function buildTwoTierSvg(titleFont, subtitleFont, options) {
   const {
     titleText = 'THE INDEPENDENT JOURNAL',
     subtitleText = 'OR, THE GENERAL ADVERTISER',
     slug = 'independent-journal',
     // IM Fell English runs wider than Caslon; 68/5 fills the same measure
-    // the Caslon setting did at 76/6.5. Each masthead's title size/spacing
-    // is tuned per typeface+copy combination so the title run fills the
-    // nameplate edge-to-edge (see MASTHEADS below for the tuned values;
-    // new-york-journal's 78.19/5.75 was solved with measureRun so its run
-    // width matches independent-journal's within ±1%).
+    // the Caslon setting did at 76/6.5.
     titleSize = 68,
     titleSpacing = 5
   } = options;
@@ -66,9 +71,42 @@ export function buildMastheadSvg(titleFont, subtitleFont = titleFont, options = 
   ].join('');
 }
 
+/**
+ * The Journal-side lockup, after the surviving Greenleaf sheets (e.g. the
+ * Nov 1, 1787 front page in public/images/antifederalist/brutus-2/): the
+ * full name runs as ONE mixed-case line — "The New-York Journal, and Weekly
+ * Register." — with no ornaments, no diamonds, and no separate subtitle
+ * tier. The size is solved so the line fills the shared nameplate measure.
+ */
+function buildSingleLineSvg(titleFont, options) {
+  const { titleText, slug, titleSpacing = 2.5 } = options;
+  // Width is linear in size when spacing scales with it: solve directly.
+  const probeSize = 60;
+  const probeWidth = measureRun(titleFont, titleText, probeSize, titleSpacing * (probeSize / 60));
+  const size = probeSize * (NAMEPLATE_MEASURE / probeWidth);
+  const spacing = titleSpacing * (size / 60);
+  // Baseline sits low in the shared 145-unit box, as on the printed sheet,
+  // leaving the paper's headroom above the name.
+  const title = outlineRun(titleFont, titleText, 128, size, spacing);
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 35 1200 145" data-masthead-art="${slug}" data-title-size="${size.toFixed(2)}">`,
+    `<g fill="#28241f" stroke="#28241f" stroke-width="0.2"><path d="${title.data}"/></g>`,
+    '</svg>\n'
+  ].join('');
+}
+
+export function buildMastheadSvg(titleFont, subtitleFont = titleFont, options = {}) {
+  if (options.layout === 'single-line') {
+    return buildSingleLineSvg(titleFont, options);
+  }
+  return buildTwoTierSvg(titleFont, subtitleFont, options);
+}
+
 export const MASTHEADS = [
   {
     slug: 'independent-journal',
+    layout: 'two-tier',
     titleText: 'THE INDEPENDENT JOURNAL',
     subtitleText: 'OR, THE GENERAL ADVERTISER',
     titleSize: 68,
@@ -77,14 +115,8 @@ export const MASTHEADS = [
   },
   {
     slug: 'new-york-journal',
-    titleText: 'THE NEW-YORK JOURNAL',
-    subtitleText: 'AND WEEKLY REGISTER',
-    // Tuned via measureRun so this run's width lands within ±1% of the
-    // Independent Journal title's width at 68/5 (see the buildMastheadSvg
-    // comment above) — the shorter New-York Journal copy would otherwise
-    // under-fill the nameplate.
-    titleSize: 78.19,
-    titleSpacing: 5.75,
+    layout: 'single-line',
+    titleText: 'The New-York Journal, and Weekly Register.',
     output: 'masthead-new-york-journal.svg'
   }
 ];

@@ -3,7 +3,12 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildMastheadSvg, MASTHEADS, measureRun } from '../scripts/generate-masthead.mjs';
+import {
+  buildMastheadSvg,
+  MASTHEADS,
+  measureRun,
+  NAMEPLATE_MEASURE
+} from '../scripts/generate-masthead.mjs';
 
 describe('Masthead artwork', () => {
   it.each(MASTHEADS)(
@@ -25,37 +30,32 @@ describe('Masthead artwork', () => {
       expect(svg).toContain('viewBox="0 35 1200 145"');
       expect(svg).toContain(`data-masthead-art="${masthead.slug}"`);
       expect(svg).toContain('<path');
-      expect(svg).toContain('<line');
       expect(svg).not.toMatch(/<text/i);
 
-      const subtitleLeft = Number(svg.match(/data-subtitle-left="([\d.]+)"/)?.[1]);
-      const subtitleRight = Number(svg.match(/data-subtitle-right="([\d.]+)"/)?.[1]);
-      const leftAccentEnd = Number(svg.match(/data-left-accent-end="([\d.]+)"/)?.[1]);
-      const rightAccentStart = Number(svg.match(/data-right-accent-start="([\d.]+)"/)?.[1]);
+      if (masthead.layout === 'two-tier') {
+        // The Federalist lockup keeps its ornamented subtitle row.
+        expect(svg).toContain('<line');
 
-      expect(leftAccentEnd).toBeLessThan(subtitleLeft);
-      expect(rightAccentStart).toBeGreaterThan(subtitleRight);
+        const subtitleLeft = Number(svg.match(/data-subtitle-left="([\d.]+)"/)?.[1]);
+        const subtitleRight = Number(svg.match(/data-subtitle-right="([\d.]+)"/)?.[1]);
+        const leftAccentEnd = Number(svg.match(/data-left-accent-end="([\d.]+)"/)?.[1]);
+        const rightAccentStart = Number(svg.match(/data-right-accent-start="([\d.]+)"/)?.[1]);
 
-      // Every masthead's title run must fill the nameplate edge-to-edge like
-      // the Independent Journal's does — within ±1% of its measured width —
-      // so a shorter/narrower title never under-fills the measure.
-      if (masthead.slug !== 'independent-journal') {
-        const referenceMasthead = MASTHEADS.find((entry) => entry.slug === 'independent-journal');
-        if (!referenceMasthead) throw new Error('independent-journal masthead config not found');
-        const referenceWidth = measureRun(
-          titleFont,
-          referenceMasthead.titleText,
-          referenceMasthead.titleSize,
-          referenceMasthead.titleSpacing
-        );
-        const thisWidth = measureRun(
-          titleFont,
-          masthead.titleText,
-          masthead.titleSize,
-          masthead.titleSpacing
-        );
+        expect(leftAccentEnd).toBeLessThan(subtitleLeft);
+        expect(rightAccentStart).toBeGreaterThan(subtitleRight);
+      } else {
+        // The Journal lockup follows the surviving Greenleaf sheets: one
+        // mixed-case line, no ornaments, no rules, no subtitle tier.
+        expect(svg).not.toContain('<line');
+        expect(svg).not.toContain('data-subtitle-left');
 
-        expect(Math.abs(thisWidth - referenceWidth) / referenceWidth).toBeLessThan(0.01);
+        // Its solved size must fill the shared nameplate measure edge to
+        // edge, within ±1%, like every nameplate on the site.
+        const size = Number(svg.match(/data-title-size="([\d.]+)"/)?.[1]);
+        expect(size).toBeGreaterThan(0);
+        const spacing = 2.5 * (size / 60);
+        const width = measureRun(titleFont, masthead.titleText, size, spacing);
+        expect(Math.abs(width - NAMEPLATE_MEASURE) / NAMEPLATE_MEASURE).toBeLessThan(0.01);
       }
     }
   );

@@ -84,6 +84,9 @@ html,body{width:${WIDTH}px;height:${HEIGHT}px;}
   font:400 15px/1 'Libre Caslon Text',serif;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);}
 .plate .sub::before,.plate .sub::after{content:'';width:90px;border-top:1px solid var(--rule);}
 .plate .dia{color:var(--oxblood);}
+/* Greenleaf's nameplate, after the surviving sheets: one mixed-case line,
+   no ornament row. */
+.plate .name--line{font-size:36px;letter-spacing:0.03em;}
 .body{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;
   text-align:center;gap:18px;}
 .fed{font:400 74px/1 'IM Fell English',serif;letter-spacing:0.02em;color:var(--ink);}
@@ -96,8 +99,10 @@ html,body{width:${WIDTH}px;height:${HEIGHT}px;}
 </style></head><body>
 <div class="card">
   <div class="plate">
-    <div class="name">${card.plateName}</div>
-    <div class="sub"><span class="dia">&#10022;</span> ${card.plateSub} <span class="dia">&#10022;</span></div>
+    ${card.plateSub
+      ? `<div class="name">${card.plateName}</div>
+    <div class="sub"><span class="dia">&#10022;</span> ${card.plateSub} <span class="dia">&#10022;</span></div>`
+      : `<div class="name name--line">${card.plateName}</div>`}
   </div>
   <div class="body">${bodyMarkup(card)}</div>
   <div class="foot"><span class="url">federalistreader.org</span><span class="pub">${card.signature}</span></div>
@@ -136,8 +141,7 @@ async function loadAntifederalist() {
 }
 
 const JOURNAL_PLATE = {
-  plateName: 'THE NEW-YORK JOURNAL',
-  plateSub: 'AND WEEKLY REGISTER'
+  plateName: 'The New-York Journal, and Weekly Register.'
 };
 
 const INDEPENDENT_PLATE = {
