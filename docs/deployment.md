@@ -104,6 +104,34 @@ pnpm migrate:remote
 pnpm run deploy
 ```
 
+For purely additive migrations (new tables or columns the old Worker ignores)
+that ordering is the whole story. A migration that changes the *meaning* of
+existing data needs the stricter procedure below, because the old Worker keeps
+running between `migrate:remote` and `deploy` and will read the migrated rows
+with its old semantics.
+
+### Semantic migrations (0004 and any like it)
+
+Migration `0004_debate.sql` remaps weekly `progress_index` from "last paper
+number sent" to "merged debate items consumed". If the daily cron (11:00 UTC)
+fires after the migration but before the new Worker deploys, the old Worker's
+`progress_index + 1` arithmetic sends the wrong paper and writes corrupted
+progress. Apply such migrations like this:
+
+1. Confirm today's cron already completed: check `ops_meta.last_daily_run`
+   equals today's date (`wrangler d1 execute publius-post --remote --command
+   "SELECT value FROM ops_meta WHERE key='last_daily_run'"`).
+2. Take a D1 backup/export first (the operational backup commands live outside
+   this repository), so a botched window can be rolled back.
+3. Run `pnpm migrate:remote` and `pnpm run deploy` back-to-back, well clear of
+   the 11:00 UTC cron — anywhere in the 12:00–10:00 UTC window. If a wider
+   safety margin is wanted, first deploy a configuration with the cron trigger
+   removed, migrate, deploy the new Worker, then restore the trigger.
+4. Verify after the next cron run: `deliveries` rows with `paper_number > 85`
+   appear for the make-up sends, `last_daily_run` advances, and spot-check
+   `SELECT progress_index, makeup_pending FROM subscribers WHERE program =
+   'weekly'` against the migration's CASE table.
+
 The Worker and its account-level dependencies must exist before a static-site
 change begins sending visitors to a new Worker route. Conversely, Cloudflare
 Access must protect `/post-office*` before deploying a Worker version that
@@ -119,15 +147,19 @@ subscription-history, and sent-mail figures remain visible.
 
 ## Generated email content
 
-The Worker bundles its own copy of paper metadata and excerpts. After changing
-paper frontmatter, regenerate that copy from the repository root:
+The Worker bundles its own copy of the debate — paper and essay metadata and
+excerpts plus the merged sequence. After changing paper or essay frontmatter,
+regenerate that copy from the repository root:
 
 ```bash
 pnpm generate:email-content
 ```
 
-Commit the regenerated output and redeploy the Worker; a Pages deployment alone
-does not update the Worker's bundled content.
+The command also regenerates migration `0004_debate.sql`'s progress-remapping
+CASE table from the content; the root test suite cross-checks the committed SQL
+against the content and fails on drift. Commit the regenerated output and
+redeploy the Worker; a Pages deployment alone does not update the Worker's
+bundled content.
 
 ## Operations
 

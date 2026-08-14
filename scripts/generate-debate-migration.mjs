@@ -13,13 +13,29 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const contentFile = join(root, 'workers/post/content/debate.json');
 const outFile = join(root, 'workers/post/migrations/0004_debate.sql');
 
-/** old weekly progress (last paper number sent) -> new (merged items consumed). */
+/**
+ * old weekly progress (last paper number sent) -> new (merged items consumed).
+ *
+ * The old course ran in numeric order; the merged sequence runs in date order,
+ * and the two disagree around out-of-order printings (paper 29 ran 1788-01-09,
+ * after papers 30-36). The naive position+1 would credit an old-progress-29
+ * reader with papers 30-36 they never received, so the mapping caps at the
+ * merged position of the earliest still-owed paper. The reverse anomaly —
+ * readers at old progress 30-36 meeting Federalist 29 again when the sequence
+ * reaches it — is an accepted duplicate; a skip would break the restart and
+ * program-switch flows, which legitimately re-send delivered items.
+ */
 export function progressMapping(sequence) {
+  const positionOf = new Map(sequence.map((id, index) => [id, index]));
   const mapping = new Map();
   for (let paper = 1; paper <= 85; paper++) {
-    const position = sequence.indexOf(paper);
-    if (position === -1) throw new Error(`paper ${paper} missing from the sequence`);
-    mapping.set(paper, position + 1);
+    const position = positionOf.get(paper);
+    if (position === undefined) throw new Error(`paper ${paper} missing from the sequence`);
+    let earliestOwed = sequence.length;
+    for (let owed = paper + 1; owed <= 85; owed++) {
+      earliestOwed = Math.min(earliestOwed, positionOf.get(owed));
+    }
+    mapping.set(paper, Math.min(position + 1, earliestOwed));
   }
   return mapping;
 }

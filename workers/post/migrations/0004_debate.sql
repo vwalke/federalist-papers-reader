@@ -69,7 +69,7 @@ UPDATE subscribers SET progress_index = CASE progress_index
   WHEN 26 THEN 30
   WHEN 27 THEN 31
   WHEN 28 THEN 32
-  WHEN 29 THEN 41
+  WHEN 29 THEN 33
   WHEN 30 THEN 34
   WHEN 31 THEN 35
   WHEN 32 THEN 36
