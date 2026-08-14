@@ -58,6 +58,11 @@ describe('static site shell', () => {
     expect(html).toContain('href="/guides/">Guides</a>');
   });
 
+  it('links the opposition shelf from the header nav', async () => {
+    const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    expect(html).toContain('href="/antifederalist/">The opposition</a>');
+  });
+
   it('links the For Teachers page from the footer nav', async () => {
     const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
     expect(html).toContain('href="/teachers/">For teachers</a>');

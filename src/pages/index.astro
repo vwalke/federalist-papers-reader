@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
 import IndexLedger from '../components/IndexLedger.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getOrderedEssays } from '../lib/antifederalist';
 import { getOrderedPapers } from '../lib/papers';
 
 import '../styles/index.css';
@@ -11,6 +12,10 @@ import '../styles/index.css';
 const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
   entries.map((entry) => ({ ...entry, number: entry.data.number }))
 ));
+
+const essays = getOrderedEssays(
+  (await getCollection('antifederalist')).map((entry) => ({ ...entry, ...entry.data }))
+);
 ---
 
 <BaseLayout
@@ -35,6 +40,10 @@ const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
         <a class="button-link" href="/papers/1/" data-continue-link>
           <span data-continue-label>Begin with Paper No. 1</span> <span aria-hidden="true">→</span>
         </a>
+      </p>
+      <p class="home-intro__aside">
+        Publius had opponents: read the{' '}
+        <a href="/antifederalist/">eight Anti-Federalist essays</a> beside the papers they answer.
       </p>
     </section>
 
@@ -78,15 +87,6 @@ const papers = getOrderedPapers(await getCollection('papers').then((entries) =>
       </div>
     </section>
 
-    <IndexLedger papers={papers} />
-
-    <aside class="index-opposition-note" aria-label="The opposition press">
-      <span class="section-kicker">The other side of the argument</span>
-      <p>
-        Publius did not write unopposed. Eight essays from Greenleaf&rsquo;s
-        New-York Journal &mdash; Brutus and Cato &mdash; now sit on{' '}
-        <a href="/antifederalist/">the opposition shelf</a>.
-      </p>
-    </aside>
+    <IndexLedger papers={papers} essays={essays} />
   </article>
 </BaseLayout>

@@ -43,6 +43,22 @@ describe('browser-only reading preferences', () => {
     expect(preferences.getTextScale()).toBe(1);
   });
 
+  it('persists the index view and falls back to the eighty-five', () => {
+    const storage = new MemoryStorage();
+    const preferences = createPreferences(storage);
+
+    expect(preferences.getIndexView()).toBe('papers');
+
+    preferences.setIndexView('debate');
+    expect(preferences.getIndexView()).toBe('debate');
+
+    preferences.setIndexView('papers');
+    expect(preferences.getIndexView()).toBe('papers');
+
+    storage.setItem('publius:index-view', 'sideways');
+    expect(preferences.getIndexView()).toBe('papers');
+  });
+
   it('recovers from unavailable or malformed storage', () => {
     const brokenStorage = {
       getItem() { throw new Error('blocked'); },
@@ -51,6 +67,7 @@ describe('browser-only reading preferences', () => {
     const preferences = createPreferences(brokenStorage);
 
     expect(preferences.getReadingMode()).toBe('gazette');
+    expect(preferences.getIndexView()).toBe('papers');
     expect(preferences.getReadPapers()).toEqual(new Set());
     expect(preferences.getTextScale()).toBe(1);
     expect(() => preferences.setPaperRead(1, true)).not.toThrow();

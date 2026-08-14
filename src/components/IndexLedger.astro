@@ -1,11 +1,16 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 
+import { essayDisplayName, essaySlug, progressId } from '../lib/antifederalist';
+import { toRomanNumeral } from '../lib/paper-display';
+
 interface Props {
   papers: CollectionEntry<'papers'>[];
+  /** Journal essays, already in publication order, for the combined view. */
+  essays?: CollectionEntry<'antifederalist'>[];
 }
 
-const { papers } = Astro.props;
+const { papers, essays = [] } = Astro.props;
 
 function formatDate(value: string): string {
   const [year, month, day] = value.split('-').map(Number);
@@ -21,18 +26,27 @@ function formatDate(value: string): string {
 <section class="index-ledger" id="all-papers" aria-labelledby="index-heading">
   <header class="index-ledger__heading">
     <div>
-      <p class="section-kicker">The complete collection</p>
+      <p class="section-kicker" data-index-kicker>The complete collection</p>
       <h2 id="index-heading">All eighty-five papers</h2>
     </div>
     <p class="index-ledger__progress" data-progress-summary>0 of 85 read in this browser</p>
   </header>
+
+  {essays.length > 0 && (
+    <div class="index-view" data-index-view hidden>
+      <div class="index-view__modes" role="group" aria-label="Collection view">
+        <button type="button" data-view="papers" aria-pressed="true">The eighty-five</button>
+        <button type="button" data-view="debate" aria-pressed="false">With the opposition</button>
+      </div>
+    </div>
+  )}
 
   <form class="index-tools" data-index-tools hidden>
     <label class="index-tools__search">
       <span>Search all papers</span>
       <input type="search" name="query" autocomplete="off" placeholder="A phrase, author, or number…" />
     </label>
-    <label>
+    <label data-sort-field>
       <span>Sort by</span>
       <select name="sort">
         <option value="number">Paper order</option>
@@ -68,6 +82,7 @@ function formatDate(value: string): string {
     {papers.map(({ data }) => (
       <li
         class="index-entry"
+        data-index-kind="paper"
         data-index-paper={String(data.number)}
         data-title={data.title}
         data-author={data.author}
@@ -94,6 +109,40 @@ function formatDate(value: string): string {
         </button>
       </li>
     ))}
+    {essays.map(({ data }) => (
+      <li
+        class="index-entry"
+        data-index-kind="essay"
+        data-index-essay={String(progressId(data))}
+        data-display-name={essayDisplayName(data)}
+        data-title={data.title}
+        data-author={data.series}
+        data-date={data.publicationDate}
+        data-summary={data.indexSummary}
+        hidden
+      >
+        <p class="index-entry__number">
+          <span class="visually-hidden">{data.series} number </span>{toRomanNumeral(data.seriesNumber)}
+        </p>
+        <div class="index-entry__message">
+          <h3><a href={`/antifederalist/${essaySlug(data)}/`}>{data.title}</a></h3>
+          <p>{data.indexSummary}</p>
+        </div>
+        <p class="index-entry__author">{data.series}</p>
+        <p class="index-entry__date"><time datetime={data.publicationDate}>{formatDate(data.publicationDate)}</time></p>
+        <button
+          class="index-entry__status"
+          type="button"
+          data-index-status
+          aria-pressed="false"
+          aria-label={`Mark ${essayDisplayName(data)} as read`}
+          hidden
+        >
+          <span class="index-entry__printer-mark" aria-hidden="true">○</span>
+          <span data-index-status-label>Unread</span>
+        </button>
+      </li>
+    ))}
   </ol>
 
   <p class="index-ledger__empty" data-index-empty hidden>
@@ -102,14 +151,22 @@ function formatDate(value: string): string {
 </section>
 
 <script>
-  import { selectIndexPapers, type IndexPaper, type IndexSort, type IndexStatus } from '../lib/index-state';
-  import { createPreferences, getNextUnread } from '../lib/preferences';
+  import {
+    selectDebateIndex,
+    selectIndexPapers,
+    type IndexEssay,
+    type IndexPaper,
+    type IndexSort,
+    type IndexStatus
+  } from '../lib/index-state';
+  import { createPreferences, getNextUnread, type IndexView } from '../lib/preferences';
 
   const tools = document.querySelector<HTMLFormElement>('[data-index-tools]');
   const list = document.querySelector<HTMLOListElement>('[data-index-list]');
   const count = document.querySelector<HTMLElement>('[data-index-count]');
   const empty = document.querySelector<HTMLElement>('[data-index-empty]');
   const progressSummary = document.querySelector<HTMLElement>('[data-progress-summary]');
+  const viewSwitch = document.querySelector<HTMLElement>('[data-index-view]');
 
   if (tools && list && count && empty) {
     const form = tools;
@@ -123,20 +180,38 @@ function formatDate(value: string): string {
       // Search and sort still work when storage is blocked.
     }
     const preferences = createPreferences(storage);
-    const elements = new Map<number, HTMLElement>();
-    const papers: IndexPaper[] = [];
 
-    for (const element of paperList.querySelectorAll<HTMLElement>('[data-index-paper]')) {
-      const number = Number(element.dataset.indexPaper);
-      elements.set(number, element);
-      papers.push({
-        number,
-        title: element.dataset.title ?? '',
-        author: element.dataset.author ?? '',
-        publicationDate: element.dataset.date ?? '',
-        indexSummary: element.dataset.summary ?? ''
+    interface LedgerRow {
+      kind: 'paper' | 'essay';
+      /** Accessible name: "No. 10" for Publius, "Brutus No. I" for the Journal. */
+      name: string;
+      element: HTMLElement;
+    }
+
+    const rows = new Map<number, LedgerRow>();
+    const papers: IndexPaper[] = [];
+    const essays: IndexEssay[] = [];
+
+    for (const element of paperList.querySelectorAll<HTMLElement>('[data-index-paper], [data-index-essay]')) {
+      const kind = element.dataset.indexKind === 'essay' ? 'essay' : 'paper';
+      const number = Number(kind === 'essay' ? element.dataset.indexEssay : element.dataset.indexPaper);
+      const title = element.dataset.title ?? '';
+      const author = element.dataset.author ?? '';
+      const publicationDate = element.dataset.date ?? '';
+      const indexSummary = element.dataset.summary ?? '';
+      if (kind === 'essay') {
+        essays.push({ progressId: number, title, series: author, publicationDate, indexSummary });
+      } else {
+        papers.push({ number, title, author, publicationDate, indexSummary });
+      }
+      rows.set(number, {
+        kind,
+        name: kind === 'essay' ? element.dataset.displayName ?? '' : `No. ${number}`,
+        element
       });
     }
+
+    let view: IndexView = 'papers';
 
     function render() {
       const formData = new FormData(form);
@@ -144,35 +219,54 @@ function formatDate(value: string): string {
       const sort = String(formData.get('sort') ?? 'number') as IndexSort;
       const status = String(formData.get('status') ?? 'all') as IndexStatus;
       const readNumbers = preferences.getReadPapers();
-      const visible = selectIndexPapers(papers, { query, sort, status, readNumbers });
+      const debate = view === 'debate';
+      const visible = debate
+        ? selectDebateIndex(papers, essays, { query, status, readNumbers })
+        : selectIndexPapers(papers, { query, sort, status, readNumbers });
       const visibleNumbers = new Set(visible.map(({ number }) => number));
-      const ordered = selectIndexPapers(papers, { sort });
+      const ordered = debate ? selectDebateIndex(papers, essays) : selectIndexPapers(papers, { sort });
+      const total = debate ? papers.length + essays.length : papers.length;
 
-      for (const paper of ordered) {
-        const element = elements.get(paper.number);
-        if (!element) continue;
-        const read = readNumbers.has(paper.number);
-        element.hidden = !visibleNumbers.has(paper.number);
-        element.dataset.read = String(read);
-        const toggle = element.querySelector<HTMLButtonElement>('[data-index-status]');
-        const statusLabel = element.querySelector<HTMLElement>('[data-index-status-label]');
-        const mark = element.querySelector<HTMLElement>('.index-entry__printer-mark');
+      for (const entry of ordered) {
+        const row = rows.get(entry.number);
+        if (!row) continue;
+        const read = readNumbers.has(entry.number);
+        row.element.hidden = !visibleNumbers.has(entry.number);
+        row.element.dataset.read = String(read);
+        const toggle = row.element.querySelector<HTMLButtonElement>('[data-index-status]');
+        const statusLabel = row.element.querySelector<HTMLElement>('[data-index-status-label]');
+        const mark = row.element.querySelector<HTMLElement>('.index-entry__printer-mark');
         if (toggle) {
           toggle.setAttribute('aria-pressed', String(read));
-          toggle.setAttribute('aria-label', `Mark No. ${paper.number} as ${read ? 'unread' : 'read'}`);
+          toggle.setAttribute('aria-label', `Mark ${row.name} as ${read ? 'unread' : 'read'}`);
         }
         if (statusLabel) statusLabel.textContent = read ? 'Read' : 'Unread';
         if (mark) mark.textContent = read ? '✓' : '○';
-        paperList.append(element);
+        paperList.append(row.element);
       }
 
-      resultCount.textContent = visible.length === 85 ? 'Showing all 85 papers' : `Showing ${visible.length} of 85 papers`;
-      emptyMessage.hidden = visible.length !== 0;
-      /* The read set is shared with the Journal essays (ids 101+), so count
-         only the papers on this ledger rather than the whole set. */
-      const readPaperCount = papers.filter((paper) => readNumbers.has(paper.number)).length;
-      if (progressSummary) progressSummary.textContent = `${readPaperCount} of 85 read in this browser`;
+      if (!debate) {
+        // The eighty-five stand alone: the Journal rows stay off the ledger.
+        for (const row of rows.values()) {
+          if (row.kind === 'essay') row.element.hidden = true;
+        }
+      }
 
+      const noun = debate ? 'papers and essays' : 'papers';
+      resultCount.textContent =
+        visible.length === total
+          ? `Showing all ${total} ${noun}`
+          : `Showing ${visible.length} of ${total} ${noun}`;
+      emptyMessage.hidden = visible.length !== 0;
+      /* The read set is shared beyond this ledger, so count only the rows the
+         current view shows: the 85 papers alone, or all 93 with the essays. */
+      const readCount =
+        papers.filter((paper) => readNumbers.has(paper.number)).length +
+        (debate ? essays.filter((essay) => readNumbers.has(essay.progressId)).length : 0);
+      if (progressSummary) progressSummary.textContent = `${readCount} of ${total} read in this browser`;
+
+      /* The continue link is the site's primary journey and stays on the
+         eighty-five in both views. */
       const nextUnread = getNextUnread(papers.map(({ number }) => number).sort((a, b) => a - b), readNumbers);
       for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-continue-link]')) {
         if (nextUnread) {
@@ -185,20 +279,69 @@ function formatDate(value: string): string {
       }
     }
 
-    for (const [number, element] of elements) {
-      const toggle = element.querySelector<HTMLButtonElement>('[data-index-status]');
+    for (const [number, row] of rows) {
+      const toggle = row.element.querySelector<HTMLButtonElement>('[data-index-status]');
       if (!toggle) continue;
       toggle.hidden = false;
+      /* Same contract as the shelf and ProgressControl: a toggle writes the
+         preference and announces it; anything listening re-renders. */
       toggle.addEventListener('click', () => {
-        preferences.setPaperRead(number, !preferences.isPaperRead(number));
-        render();
+        const read = !preferences.isPaperRead(number);
+        preferences.setPaperRead(number, read);
+        document.dispatchEvent(new CustomEvent('paper-read-change', { detail: { number, read } }));
       });
+    }
+    document.addEventListener('paper-read-change', render);
+
+    const sortField = form.querySelector<HTMLElement>('[data-sort-field]');
+    const sortNote = form.querySelector<HTMLElement>('[data-sort-note]');
+    const searchLabel = form.querySelector<HTMLElement>('.index-tools__search span');
+    const kicker = document.querySelector<HTMLElement>('[data-index-kicker]');
+    const heading = document.querySelector<HTMLElement>('#index-heading');
+    const viewButtons = viewSwitch
+      ? [...viewSwitch.querySelectorAll<HTMLButtonElement>('[data-view]')]
+      : [];
+
+    function applyView(next: IndexView) {
+      view = next;
+      const debate = next === 'debate';
+      for (const button of viewButtons) {
+        button.setAttribute('aria-pressed', String(button.dataset.view === next));
+      }
+      /* The section renames itself with the view; the h2 is also the
+         section's accessible name through aria-labelledby. */
+      if (kicker) kicker.textContent = debate ? 'The whole debate' : 'The complete collection';
+      if (heading) heading.textContent = debate ? 'Both sides, in order' : 'All eighty-five papers';
+      /* Combined order is the debate's chronology; the select keeps its value
+         quietly so the prior sort returns with the eighty-five. The note
+         explains "Paper order", so it steps aside with the field. */
+      if (sortField) sortField.hidden = debate;
+      if (sortNote) sortNote.hidden = debate;
+      if (searchLabel) searchLabel.textContent = debate ? 'Search the collection' : 'Search all papers';
+      emptyMessage.textContent = debate
+        ? 'Nothing matches that search. Try fewer words or show the whole collection again.'
+        : 'No papers match that search. Try fewer words or show the complete collection again.';
+      render();
     }
 
     form.hidden = false;
     form.addEventListener('input', render);
     form.addEventListener('change', render);
     form.addEventListener('submit', (event) => event.preventDefault());
-    render();
+
+    if (viewSwitch && essays.length > 0) {
+      viewSwitch.hidden = false;
+      for (const button of viewButtons) {
+        button.addEventListener('click', () => {
+          const next: IndexView = button.dataset.view === 'debate' ? 'debate' : 'papers';
+          if (next === view) return;
+          preferences.setIndexView(next);
+          applyView(next);
+        });
+      }
+      applyView(preferences.getIndexView());
+    } else {
+      render();
+    }
   }
 </script>

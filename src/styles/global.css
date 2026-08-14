@@ -256,6 +256,14 @@ a:hover {
   line-height: 1.55;
 }
 
+/* One quiet line under the continue button: the opposition, in passing. */
+.home-intro__aside {
+  max-inline-size: 48ch;
+  color: var(--color-muted-ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .button-link {
   display: inline-flex;
   align-items: center;
@@ -805,7 +813,8 @@ a:hover {
     align-items: end;
   }
 
-  .home-intro__action {
+  .home-intro__action,
+  .home-intro__aside {
     grid-column: 2;
   }
 }

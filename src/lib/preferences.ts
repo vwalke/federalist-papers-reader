@@ -1,4 +1,5 @@
 export type ReadingMode = 'gazette' | 'reader';
+export type IndexView = 'papers' | 'debate';
 
 export const TEXT_SCALE_STEPS = [1, 1.12, 1.25, 1.4, 1.55] as const;
 export type TextScale = (typeof TEXT_SCALE_STEPS)[number];
@@ -6,6 +7,7 @@ export type TextScale = (typeof TEXT_SCALE_STEPS)[number];
 const MODE_KEY = 'publius:reading-mode';
 const READ_KEY = 'publius:read-papers';
 const SCALE_KEY = 'publius:text-scale';
+const INDEX_VIEW_KEY = 'publius:index-view';
 
 // Read-state ids span three ranges, matching the shared number space in
 // src/lib/antifederalist.ts: 1–85 is Publius (The Federalist), 101–116 is
@@ -59,6 +61,12 @@ export function createPreferences(storage: Storage | null | undefined) {
     },
     setReadingMode(mode: ReadingMode): void {
       safeSet(MODE_KEY, mode);
+    },
+    getIndexView(): IndexView {
+      return safeGet(INDEX_VIEW_KEY) === 'debate' ? 'debate' : 'papers';
+    },
+    setIndexView(view: IndexView): void {
+      safeSet(INDEX_VIEW_KEY, view);
     },
     getTextScale(): TextScale {
       const parsed = Number(safeGet(SCALE_KEY));
