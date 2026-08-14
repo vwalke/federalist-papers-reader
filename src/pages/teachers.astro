@@ -30,11 +30,19 @@ const papers = await getCollection('papers');
 const byNumber = new Map(papers.map((p) => [p.data.number, p.data]));
 const ledger = required.map((entry) => ({ ...entry, paper: byNumber.get(entry.number)! }));
 
+/* The fifth required document is the opposition's: Brutus No. 1 gets the
+   same billing as the four Federalist essays. */
+const brutusOne = (await getCollection('antifederalist')).find(
+  (entry) => entry.data.series === 'Brutus' && entry.data.seriesNumber === 1
+)!.data;
+const brutusHook =
+  'The other half of the Federalist 10 exchange: why no republic this large can stay free. Assign them together and the debate teaches itself.';
+
 const questionExample = byNumber.get(10)!.talkItOver;
 
 const pageURL = Astro.site ? new URL('/teachers/', Astro.site).href : undefined;
 const description =
-  'The Federalist Papers for students: the AP Gov required documents — Federalist Nos. 10, 51, 70, and 78 — full text with plain-English notes and discussion questions. Free, no logins, no ads.';
+  'The Federalist Papers for students: the AP Gov required documents — Federalist Nos. 10, 51, 70, and 78, and Brutus No. 1 — full text with plain-English notes and discussion questions. Free, no logins, no ads.';
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',
@@ -84,8 +92,9 @@ const jsonLd = {
       <div class="guide-rule" aria-hidden="true"><span class="guide-rule__mark"></span></div>
       <h2 class="guide-group__title" id="required-title">The required documents, one click each</h2>
       <p class="guide-group__note">
-        Four of the AP U.S. Government required foundational documents are Federalist essays. All
-        four are below, complete, with companion notes.
+        Five of the AP U.S. Government required foundational documents live on this site: four
+        Federalist essays and Brutus No. 1, the Anti-Federalist response. All five are below,
+        complete, with companion notes.
       </p>
       <ol class="curated-list teachers-required">
         {ledger.map((entry) => (
@@ -103,13 +112,24 @@ const jsonLd = {
             </div>
           </li>
         ))}
+        <li class="curated-entry">
+          <p class="curated-entry__number" aria-hidden="true">I</p>
+          <div class="curated-entry__body">
+            <h3 class="curated-entry__topic">
+              <span class="visually-hidden">Brutus No. I: </span>{brutusOne.topic}
+            </h3>
+            <p class="curated-entry__meta">Brutus No. I · The New-York Journal</p>
+            <p class="curated-entry__why">{brutusHook}</p>
+            <p class="curated-entry__link">
+              <a href="/antifederalist/brutus-1/">Read the essay <span aria-hidden="true">→</span></a>
+            </p>
+          </div>
+        </li>
       </ol>
       <p class="teachers-brutus">
-        The required list pairs these four with <strong>Brutus No. 1</strong>, the Anti-Federalist
-        response. Read it here in its original New-York Journal setting:{' '}
-        <a href="/antifederalist/brutus-1/">Brutus No. I on this site</a>.
-        Cato No. IV — the opposition’s case against the presidency — is{' '}
-        <a href="/antifederalist/cato-4/">also available</a>.
+        Beyond the required list: Cato No. IV — the opposition’s case against the presidency —
+        pairs naturally with Federalist 70.{' '}
+        <a href="/antifederalist/cato-4/">Read Cato No. IV</a>.
       </p>
     </section>
 
