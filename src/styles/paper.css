@@ -18,6 +18,12 @@
 .paper-wear__fold {
   position: absolute;
   background-repeat: no-repeat;
+  /* Fold sizes were drawn against the full 82rem sheet. On narrower sheets
+     the lift scales at the page's own rate — anchored to its corner via the
+     inline transform-origin — so it can never reach the text block. The
+     trig pair derives the unitless width ratio; browsers without CSS trig
+     drop the declaration and keep today's full-size fold. */
+  transform: scale(min(1, tan(atan2(100vw, 82rem))));
 }
 
 .paper-wear__edge,

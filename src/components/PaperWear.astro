@@ -150,6 +150,8 @@ function foldStyle(fold: PaperCornerFold): string {
   return [
     `inset-block-${fold.corner.startsWith('top') ? 'start' : 'end'}: 0`,
     `inset-inline-${fold.corner.endsWith('left') ? 'start' : 'end'}: 0`,
+    /* Anchor the responsive scale to the corner the fold hangs from. */
+    `transform-origin: ${fold.corner.startsWith('top') ? 'top' : 'bottom'} ${fold.corner.endsWith('left') ? 'left' : 'right'}`,
     `inline-size: ${block}px`,
     `block-size: ${block}px`,
     `background-image: linear-gradient(${angle}deg, ` +
