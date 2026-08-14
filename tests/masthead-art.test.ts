@@ -27,7 +27,9 @@ describe('Masthead artwork', () => {
       const subtitleFont = await opentype.load(fileURLToPath(subtitleFontPath));
       const svg = buildMastheadSvg(titleFont, subtitleFont, masthead);
 
-      expect(svg).toContain('viewBox="0 35 1200 145"');
+      // Every lockup shares the 1200-unit measure; heights vary per layout
+      // (the ornamented two-tier box, the hugged single line, the stack).
+      expect(svg).toMatch(/viewBox="0 35 1200 \d+"/);
       expect(svg).toContain(`data-masthead-art="${masthead.slug}"`);
       expect(svg).toContain('<path');
       expect(svg).not.toMatch(/<text/i);
@@ -77,5 +79,16 @@ describe('Masthead artwork', () => {
     );
     expect(svg).toContain('data-masthead-art="new-york-journal"');
     expect(svg).not.toMatch(/<text/i);
+  });
+
+  it('commits the stacked narrow-viewport Journal lockup', async () => {
+    const svg = await readFile(
+      new URL('../public/masthead-new-york-journal-stacked.svg', import.meta.url),
+      'utf8'
+    );
+    expect(svg).toContain('data-masthead-art="new-york-journal-stacked"');
+    expect(svg).not.toMatch(/<text/i);
+    // Two lines drawn as two paths in one group.
+    expect(svg.match(/<path/g)).toHaveLength(2);
   });
 });

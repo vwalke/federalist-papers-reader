@@ -78,20 +78,46 @@ function buildTwoTierSvg(titleFont, subtitleFont, options) {
  * Register." — with no ornaments, no diamonds, and no separate subtitle
  * tier. The size is solved so the line fills the shared nameplate measure.
  */
-function buildSingleLineSvg(titleFont, options) {
-  const { titleText, slug, titleSpacing = 2.5 } = options;
+function solveLineSize(titleFont, text, baseSpacing) {
   // Width is linear in size when spacing scales with it: solve directly.
   const probeSize = 60;
-  const probeWidth = measureRun(titleFont, titleText, probeSize, titleSpacing * (probeSize / 60));
+  const probeWidth = measureRun(titleFont, text, probeSize, baseSpacing);
   const size = probeSize * (NAMEPLATE_MEASURE / probeWidth);
-  const spacing = titleSpacing * (size / 60);
-  // Baseline sits low in the shared 145-unit box, as on the printed sheet,
-  // leaving the paper's headroom above the name.
+  return { size, spacing: baseSpacing * (size / 60) };
+}
+
+function buildSingleLineSvg(titleFont, options) {
+  const { titleText, slug, titleSpacing = 2.5 } = options;
+  const { size, spacing } = solveLineSize(titleFont, titleText, titleSpacing);
+  // Baseline sits low in the box, as on the printed sheet; the box bottom
+  // hugs the descenders so the rule below sits close to the name.
   const title = outlineRun(titleFont, titleText, 128, size, spacing);
 
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 35 1200 145" data-masthead-art="${slug}" data-title-size="${size.toFixed(2)}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 35 1200 126" data-masthead-art="${slug}" data-title-size="${size.toFixed(2)}">`,
     `<g fill="#28241f" stroke="#28241f" stroke-width="0.2"><path d="${title.data}"/></g>`,
+    '</svg>\n'
+  ].join('');
+}
+
+/**
+ * The narrow-viewport lockup: the same Greenleaf line broken after the
+ * comma — "The New-York Journal," over "and Weekly Register." — both at the
+ * size the first line solves to, so the name stays commanding on phones
+ * instead of shrinking beneath the motto.
+ */
+function buildStackedSvg(titleFont, options) {
+  const { titleText, titleText2, slug, titleSpacing = 2.5 } = options;
+  const { size, spacing } = solveLineSize(titleFont, titleText, titleSpacing);
+  const baselineOne = 35 + Math.round(size * 0.82);
+  const baselineTwo = baselineOne + Math.round(size * 1.04);
+  const height = baselineTwo + Math.round(size * 0.24) - 35;
+  const lineOne = outlineRun(titleFont, titleText, baselineOne, size, spacing);
+  const lineTwo = outlineRun(titleFont, titleText2, baselineTwo, size, spacing);
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 35 1200 ${height}" data-masthead-art="${slug}" data-title-size="${size.toFixed(2)}" data-height="${height}">`,
+    `<g fill="#28241f" stroke="#28241f" stroke-width="0.2"><path d="${lineOne.data}"/><path d="${lineTwo.data}"/></g>`,
     '</svg>\n'
   ].join('');
 }
@@ -99,6 +125,9 @@ function buildSingleLineSvg(titleFont, options) {
 export function buildMastheadSvg(titleFont, subtitleFont = titleFont, options = {}) {
   if (options.layout === 'single-line') {
     return buildSingleLineSvg(titleFont, options);
+  }
+  if (options.layout === 'stacked') {
+    return buildStackedSvg(titleFont, options);
   }
   return buildTwoTierSvg(titleFont, subtitleFont, options);
 }
@@ -118,6 +147,13 @@ export const MASTHEADS = [
     layout: 'single-line',
     titleText: 'The New-York Journal, and Weekly Register.',
     output: 'masthead-new-york-journal.svg'
+  },
+  {
+    slug: 'new-york-journal-stacked',
+    layout: 'stacked',
+    titleText: 'The New-York Journal,',
+    titleText2: 'and Weekly Register.',
+    output: 'masthead-new-york-journal-stacked.svg'
   }
 ];
 

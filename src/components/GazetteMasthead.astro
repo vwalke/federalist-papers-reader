@@ -30,13 +30,34 @@ const mottoSource = Astro.props.mottoSource ?? (Astro.props.motto ? undefined : 
 ---
 
 <header class:list={['gazette-masthead', { 'gazette-masthead--compact': compact }] }>
-  <img
-    class="gazette-masthead__art"
-    src={`/masthead-${variant}.svg`}
-    alt=""
-    width="1200"
-    height="145"
-  />
+  {variant === 'new-york-journal' ? (
+    <picture>
+      {/* Below the single-column breakpoint the one-line nameplate would
+          shrink beneath the motto, so the same line breaks after the comma
+          into a stacked lockup that keeps the name commanding. */}
+      <source
+        media="(max-width: 45.9375rem)"
+        srcset="/masthead-new-york-journal-stacked.svg"
+        width="1200"
+        height="228"
+      />
+      <img
+        class="gazette-masthead__art"
+        src="/masthead-new-york-journal.svg"
+        alt=""
+        width="1200"
+        height="126"
+      />
+    </picture>
+  ) : (
+    <img
+      class="gazette-masthead__art"
+      src={`/masthead-${variant}.svg`}
+      alt=""
+      width="1200"
+      height="145"
+    />
+  )}
   {variant === 'new-york-journal' ? (
     <>
       {/* The Greenleaf stack, after the surviving sheets: thin rules between
