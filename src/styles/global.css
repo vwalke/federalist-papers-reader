@@ -153,6 +153,14 @@ a:hover {
   opacity: 0.8;
 }
 
+/* Greenleaf bought from a different mill: the Journal's sheets run a step
+   lighter and fractionally cooler than the Independent Journal's stock, so a
+   reader knows by the paper alone which side they are holding. Ink contrast
+   only improves on the lighter ground. */
+.paper-sheet--journal {
+  --color-newsprint: oklch(0.93 0.014 86);
+}
+
 .paper-sheet {
   position: relative;
   isolation: isolate;

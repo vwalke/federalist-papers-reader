@@ -79,6 +79,13 @@ describe('antifederalist built pages', () => {
     expect(page).toMatch(/class="essay-signature"[^>]*>BRUTUS</);
   });
 
+  it('prints the Journal on its own lighter sheet stock', async () => {
+    await expect(readPage('antifederalist/brutus-1')).resolves.toContain('paper-sheet--journal');
+    await expect(readPage('antifederalist')).resolves.toContain('paper-sheet--journal');
+    // The Federalist keeps its own stock.
+    await expect(readPage('papers/1')).resolves.not.toContain('paper-sheet--journal');
+  });
+
   it('carries the Greenleaf motto on the shelf and the essays', async () => {
     // "TRUTH unlicens" sidesteps the curly apostrophe in "unlicens’d".
     await expect(readPage('antifederalist')).resolves.toContain('TRUTH unlicens');
