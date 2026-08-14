@@ -34,7 +34,9 @@ test('interleaves the opposition on demand and remembers the choice', async ({ p
   await expect(page.locator('#index-heading')).toHaveText('All eighty-five papers');
   await expect(page.locator('[data-index-count]')).toHaveText('Showing all 85 papers');
   await expect(page.locator('[data-progress-summary]')).toHaveText('0 of 85 read in this browser');
-  await expect(page.getByLabel('Sort by')).toBeVisible();
+  const soloOrder = await page.$$eval('.index-entry:not([hidden])', (rows) =>
+    rows.map((row) => row.getAttribute('data-index-paper'))
+  );
 
   await page.getByRole('button', { name: 'With the opposition' }).click();
   await expect(page.locator('.index-entry:visible')).toHaveCount(93);
@@ -48,9 +50,12 @@ test('interleaves the opposition on demand and remembers the choice', async ({ p
   await expect(firstRow).toHaveAttribute('data-index-essay', '101');
   await expect(page.locator('.index-entry:visible').nth(1)).toHaveAttribute('data-index-paper', '1');
 
-  // Order is the debate's chronology; the sort select and its note step aside.
-  await expect(page.getByLabel('Sort by')).toBeHidden();
-  await expect(page.locator('[data-sort-note]')).toBeHidden();
+  // The essays slot into the same chronology: the papers keep their exact order.
+  const combinedOrder = await page.$$eval('.index-entry:not([hidden])', (rows) =>
+    rows.map((row) => row.getAttribute('data-index-paper'))
+  );
+  expect(combinedOrder).toHaveLength(93);
+  expect(combinedOrder.filter((number) => number !== null)).toEqual(soloOrder);
 
   // Search runs across both collections, under the view's own label.
   const search = page.getByRole('searchbox', { name: 'Search the collection' });
@@ -74,32 +79,33 @@ test('interleaves the opposition on demand and remembers the choice', async ({ p
   await page.reload();
   await expect(page.locator('.index-entry:visible')).toHaveCount(93);
   await expect(page.locator('.index-entry:visible').first()).toHaveAttribute('data-index-essay', '101');
-  await expect(page.getByLabel('Sort by')).toBeHidden();
+  await expect(page.locator('#index-heading')).toHaveText('Both sides, in order');
 
-  // And the eighty-five return untouched: heading, sort field, and copy restored.
+  // And the eighty-five return untouched: heading and copy restored.
   await page.getByRole('button', { name: 'The eighty-five' }).click();
   await expect(page.locator('.index-entry:visible')).toHaveCount(85);
   await expect(page.locator('#index-heading')).toHaveText('All eighty-five papers');
   await expect(page.locator('[data-index-kicker]')).toHaveText('The complete collection');
   await expect(page.locator('[data-index-count]')).toHaveText('Showing all 85 papers');
   await expect(page.locator('[data-progress-summary]')).toHaveText('0 of 85 read in this browser');
-  await expect(page.getByLabel('Sort by')).toBeVisible();
-  await expect(page.locator('[data-sort-note]')).toBeVisible();
   await expect(page.getByRole('searchbox', { name: 'Search all papers' })).toBeVisible();
   await expect(page.locator('[data-index-empty]')).toContainText('No papers match that search');
 });
 
-test('sorts the ledger and announces the result count', async ({ page }) => {
+test('runs chronologically with no sort control and announces the result count', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByLabel('Sort by').locator('option')).toHaveText([
-    'Paper order',
-    'Author',
-    'First publication'
-  ]);
+
+  // There is one order — publication — so the sort select is gone entirely.
+  await expect(page.locator('select[name="sort"]')).toHaveCount(0);
+  await expect(page.locator('[data-sort-note]')).toBeVisible();
+  await expect(page.locator('[data-sort-note]')).toContainText('the order they reached readers');
   await expect(page.locator('[data-sort-note]')).toContainText('No. 29 appeared after Nos. 30–36');
-  await page.getByLabel('Sort by').selectOption('date');
+
+  // Publication order: No. 1 first, No. 29 after Nos. 30–36 (its true date).
   await expect(page.locator('[data-index-paper]:visible').first()).toHaveAttribute('data-index-paper', '1');
   await expect(page.locator('[data-index-paper]:visible').nth(28)).toHaveAttribute('data-index-paper', '30');
   await expect(page.locator('[data-index-paper]:visible').nth(35)).toHaveAttribute('data-index-paper', '29');
+  // Nos. 78–85 close the run at their bound-edition date.
+  await expect(page.locator('[data-index-paper]:visible').last()).toHaveAttribute('data-index-paper', '85');
   await expect(page.locator('[data-index-count]')).toHaveAttribute('aria-live', 'polite');
 });

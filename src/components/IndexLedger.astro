@@ -12,6 +12,14 @@ interface Props {
 
 const { papers, essays = [] } = Astro.props;
 
+/* Both views share one ordering: publication date, with the paper number
+   breaking ties. The ledger reads this way before JavaScript arrives too. */
+const orderedPapers = [...papers].sort(
+  (left, right) =>
+    left.data.publicationDate.localeCompare(right.data.publicationDate) ||
+    left.data.number - right.data.number
+);
+
 function formatDate(value: string): string {
   const [year, month, day] = value.split('-').map(Number);
   return new Intl.DateTimeFormat('en-US', {
@@ -46,14 +54,6 @@ function formatDate(value: string): string {
       <span>Search all papers</span>
       <input type="search" name="query" autocomplete="off" placeholder="A phrase, author, or number…" />
     </label>
-    <label data-sort-field>
-      <span>Sort by</span>
-      <select name="sort">
-        <option value="number">Paper order</option>
-        <option value="author">Author</option>
-        <option value="date">First publication</option>
-      </select>
-    </label>
     <label>
       <span>Show</span>
       <select name="status">
@@ -63,8 +63,8 @@ function formatDate(value: string): string {
       </select>
     </label>
     <p class="index-tools__note" data-sort-note>
-      Paper order is almost chronological, but No. 29 appeared after Nos. 30–36; Nos. 78–85
-      first appeared together in the bound edition.
+      The papers run in the order they reached readers: No. 29 appeared after Nos. 30–36,
+      and Nos. 78–85 first appeared together in the bound edition.
     </p>
   </form>
 
@@ -79,7 +79,7 @@ function formatDate(value: string): string {
   </div>
 
   <ol class="index-ledger__list" data-index-list>
-    {papers.map(({ data }) => (
+    {orderedPapers.map(({ data }) => (
       <li
         class="index-entry"
         data-index-kind="paper"
@@ -156,7 +156,6 @@ function formatDate(value: string): string {
     selectIndexPapers,
     type IndexEssay,
     type IndexPaper,
-    type IndexSort,
     type IndexStatus
   } from '../lib/index-state';
   import { createPreferences, getNextUnread, type IndexView } from '../lib/preferences';
@@ -213,18 +212,23 @@ function formatDate(value: string): string {
 
     let view: IndexView = 'papers';
 
+    /* One ordering everywhere: publication date. It is also the reading
+       order the continue link walks. */
+    const readingOrder = selectIndexPapers(papers, { sort: 'date' }).map(({ number }) => number);
+
     function render() {
       const formData = new FormData(form);
       const query = String(formData.get('query') ?? '');
-      const sort = String(formData.get('sort') ?? 'number') as IndexSort;
       const status = String(formData.get('status') ?? 'all') as IndexStatus;
       const readNumbers = preferences.getReadPapers();
       const debate = view === 'debate';
       const visible = debate
         ? selectDebateIndex(papers, essays, { query, status, readNumbers })
-        : selectIndexPapers(papers, { query, sort, status, readNumbers });
+        : selectIndexPapers(papers, { query, status, readNumbers, sort: 'date' });
       const visibleNumbers = new Set(visible.map(({ number }) => number));
-      const ordered = debate ? selectDebateIndex(papers, essays) : selectIndexPapers(papers, { sort });
+      const ordered = debate
+        ? selectDebateIndex(papers, essays)
+        : selectIndexPapers(papers, { sort: 'date' });
       const total = debate ? papers.length + essays.length : papers.length;
 
       for (const entry of ordered) {
@@ -266,8 +270,8 @@ function formatDate(value: string): string {
       if (progressSummary) progressSummary.textContent = `${readCount} of ${total} read in this browser`;
 
       /* The continue link is the site's primary journey and stays on the
-         eighty-five in both views. */
-      const nextUnread = getNextUnread(papers.map(({ number }) => number).sort((a, b) => a - b), readNumbers);
+         eighty-five in both views, walking the same order the ledger shows. */
+      const nextUnread = getNextUnread(readingOrder, readNumbers);
       for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-continue-link]')) {
         if (nextUnread) {
           link.href = `/papers/${nextUnread}/`;
@@ -293,8 +297,6 @@ function formatDate(value: string): string {
     }
     document.addEventListener('paper-read-change', render);
 
-    const sortField = form.querySelector<HTMLElement>('[data-sort-field]');
-    const sortNote = form.querySelector<HTMLElement>('[data-sort-note]');
     const searchLabel = form.querySelector<HTMLElement>('.index-tools__search span');
     const kicker = document.querySelector<HTMLElement>('[data-index-kicker]');
     const heading = document.querySelector<HTMLElement>('#index-heading');
@@ -312,11 +314,6 @@ function formatDate(value: string): string {
          section's accessible name through aria-labelledby. */
       if (kicker) kicker.textContent = debate ? 'The whole debate' : 'The complete collection';
       if (heading) heading.textContent = debate ? 'Both sides, in order' : 'All eighty-five papers';
-      /* Combined order is the debate's chronology; the select keeps its value
-         quietly so the prior sort returns with the eighty-five. The note
-         explains "Paper order", so it steps aside with the field. */
-      if (sortField) sortField.hidden = debate;
-      if (sortNote) sortNote.hidden = debate;
       if (searchLabel) searchLabel.textContent = debate ? 'Search the collection' : 'Search all papers';
       emptyMessage.textContent = debate
         ? 'Nothing matches that search. Try fewer words or show the whole collection again.'

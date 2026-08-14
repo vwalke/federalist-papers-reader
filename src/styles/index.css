@@ -80,10 +80,6 @@
   text-transform: uppercase;
 }
 
-/* The combined view forces publication order, so the sort field steps aside. */
-.index-tools label[hidden] {
-  display: none;
-}
 
 .index-tools input,
 .index-tools select {
@@ -223,7 +219,7 @@
 
 @media (min-width: 46rem) {
   .index-tools {
-    grid-template-columns: minmax(15rem, 1fr) repeat(2, minmax(9rem, 0.34fr));
+    grid-template-columns: minmax(15rem, 1fr) minmax(9rem, 0.34fr);
     align-items: end;
   }
 
