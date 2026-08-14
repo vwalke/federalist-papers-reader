@@ -6,7 +6,8 @@ import type { Env, Subscriber } from '../src/types';
 
 const SUB: Subscriber = {
   id: 7, email: 'reader@example.com', program: 'weekly', status: 'pending',
-  progress_index: 0, send_dow: 6, paused_until: null, token_secret: 'subsecret', confirmed_at: null
+  progress_index: 0, send_dow: 6, paused_until: null, token_secret: 'subsecret', confirmed_at: null,
+  makeup_pending: 0
 };
 
 function makeStubDb(overrides: Partial<Db> = {}): Db {
@@ -26,6 +27,7 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     setStatus: vi.fn(async () => {}),
     setProgram: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
+    clearMakeupPending: vi.fn(async () => {}),
     setSendDow: vi.fn(async () => {}),
     unsubscribe: vi.fn(async () => {}),
     unsubscribeByEmail: vi.fn(async () => {}),
@@ -480,7 +482,7 @@ describe('manage', () => {
     const res = await handleRequest(
       new Request(`https://federalistreader.org/manage?token=${await manageToken()}`), ENV, db, sender);
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain('Paper 23 of 85');
+    expect(await res.text()).toContain('23 of 93 in the debate');
   });
 
   it('pauses with an optional resume date', async () => {

@@ -1,14 +1,18 @@
-// workers/post/test/migration.test.ts
+// tests/debate-migration.test.ts
 //
 // Keeps migration 0004 honest: its progress-remapping CASE table is generated
 // from the debate content, and this test re-derives the mapping from the
 // content and cross-checks it against the committed SQL.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import debate from '../content/debate.json';
 
-const sql = readFileSync(new URL('../migrations/0004_debate.sql', import.meta.url), 'utf8');
-const { sequence } = debate as { sequence: number[] };
+const sql = readFileSync(
+  new URL('../workers/post/migrations/0004_debate.sql', import.meta.url),
+  'utf8'
+);
+const { sequence } = JSON.parse(
+  readFileSync(new URL('../workers/post/content/debate.json', import.meta.url), 'utf8')
+) as { sequence: number[] };
 
 describe('migration 0004', () => {
   it('remaps every weekly progress value to its merged-sequence position', () => {

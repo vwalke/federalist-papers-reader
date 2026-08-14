@@ -59,6 +59,7 @@ export interface Db {
   setStatus(id: number, status: 'active' | 'paused', pausedUntil?: string | null): Promise<void>;
   setProgram(id: number, program: Program, progressIndex: number): Promise<void>;
   setProgress(id: number, progressIndex: number): Promise<void>;
+  clearMakeupPending(id: number): Promise<void>;
   setSendDow(id: number, dow: number): Promise<void>;
   unsubscribe(id: number): Promise<void>;
   unsubscribeByEmail(email: string): Promise<void>;
@@ -176,6 +177,9 @@ export function makeDb(d1: D1Database): Db {
     async setProgress(id, progressIndex) {
       await d1.prepare('UPDATE subscribers SET progress_index = ? WHERE id = ?')
         .bind(progressIndex, id).run();
+    },
+    async clearMakeupPending(id) {
+      await d1.prepare('UPDATE subscribers SET makeup_pending = 0 WHERE id = ?').bind(id).run();
     },
     async setSendDow(id, dow) {
       await d1.prepare('UPDATE subscribers SET send_dow = ? WHERE id = ?').bind(dow, id).run();

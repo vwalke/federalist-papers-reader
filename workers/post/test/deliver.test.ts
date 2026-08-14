@@ -13,7 +13,7 @@ const ENV = {
 function sub(overrides: Partial<Subscriber>): Subscriber {
   return {
     id: 1, email: 'a@example.com', program: 'weekly', status: 'active',
-    progress_index: 0, send_dow: 6, paused_until: null,
+    progress_index: 0, send_dow: 6, paused_until: null, makeup_pending: 0,
     token_secret: 'ts', confirmed_at: '2026-07-01T00:00:00Z', ...overrides
   };
 }
@@ -34,11 +34,12 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     unsubscribe: vi.fn(), unsubscribeByEmail: vi.fn(), purgeUnsubscribed: vi.fn(async () => {}),
     purgeStalePending: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
+    clearMakeupPending: vi.fn(async () => {}),
     setSendDow: vi.fn(async () => {}),
     listDeliverable: vi.fn(async () => subscribers.filter((s) => s.status === 'active')),
     autoResume: vi.fn(async () => {}),
-    claimDelivery: vi.fn(async (id, paper, date) => {
-      const key = `${id}:${paper}:${date}`;
+    claimDelivery: vi.fn(async (id, item, date) => {
+      const key = `${id}:${item}:${date}`;
       if (claimed.includes(key)) return false;
       claimed.push(key);
       return true;
@@ -75,11 +76,22 @@ describe('runDaily', () => {
     expect(db.purgeEmailSends).toHaveBeenCalledWith(45);
   });
 
-  it('sends the next weekly paper on Saturday and advances progress', async () => {
+  it('opens a brand-new weekly subscriber with Brutus No. I', async () => {
+    // Deliberate: progress 0 means sequence[0], and the debate begins with the
+    // opposition — new readers meet Brutus before Publius answers.
+    const db = makeStubDb([sub({ progress_index: 0 })]);
+    await runDaily(ENV, db, batchSender, '2026-07-18'); // a Saturday
+    expect(sent).toHaveLength(1);
+    expect(sent[0].subject).toContain('Brutus No. I');
+    expect(db.setProgress).toHaveBeenCalledWith(1, 1);
+  });
+
+  it('sends the next merged item on Saturday and advances progress', async () => {
+    // progress 4 = [Brutus I, Fed 1, Fed 2, Brutus II] consumed → Fed 3 is next.
     const db = makeStubDb([sub({ progress_index: 4 })]);
     await runDaily(ENV, db, batchSender, '2026-07-18'); // a Saturday
     expect(sent).toHaveLength(1);
-    expect(sent[0].subject).toContain('No. 5');
+    expect(sent[0].subject).toContain('Federalist No. 3');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
     expect(db.recordEmailSend).toHaveBeenCalledWith('msg_1', expect.any(String), 1);
   });
@@ -97,30 +109,78 @@ describe('runDaily', () => {
     expect(sent).toHaveLength(0);
   });
 
-  it('sends one combined issue to calendar subscribers on the season opener', async () => {
+  it('sends one combined issue to calendar subscribers on a paper anniversary', async () => {
     const db = makeStubDb([sub({ program: 'calendar' })]);
     await runDaily(ENV, db, batchSender, '2026-10-27');
     expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('No. 1');
   });
 
+  it('sends Brutus No. I to calendar subscribers on October 18', async () => {
+    const db = makeStubDb([sub({ program: 'calendar' })]);
+    await runDaily(ENV, db, batchSender, '2026-10-18');
+    expect(sent).toHaveLength(1);
+    expect(sent[0].subject).toContain('Brutus No. I');
+    expect(db.setProgress).not.toHaveBeenCalled();
+  });
+
+  describe('the make-up issue', () => {
+    it('sends one catch-up email, records a delivery per essay, and clears the flag', async () => {
+      // Migrated old progress 5 → 8; Brutus I & II and Cato IV ran behind.
+      const db = makeStubDb([sub({ progress_index: 8, makeup_pending: 1 })]);
+      await runDaily(ENV, db, batchSender, '2026-07-18');
+      expect(sent).toHaveLength(1);
+      expect(sent[0].subject).toBe('The other side of the argument — a catch-up from the New-York Journal');
+      for (const essayId of [101, 102, 154]) {
+        expect(db.claimDelivery).toHaveBeenCalledWith(1, essayId, '2026-07-18');
+        expect(db.markDelivery).toHaveBeenCalledWith(1, essayId, '2026-07-18', 'sent', 'msg_1');
+      }
+      expect(db.clearMakeupPending).toHaveBeenCalledWith(1);
+      expect(db.setProgress).not.toHaveBeenCalled();
+    });
+
+    it('does not double the make-up on a same-day rerun', async () => {
+      const db = makeStubDb([sub({ progress_index: 8, makeup_pending: 1 })]);
+      await runDaily(ENV, db, batchSender, '2026-07-18');
+      await runDaily(ENV, db, batchSender, '2026-07-18');
+      expect(sent).toHaveLength(1);
+    });
+
+    it('clears the flag even when the send fails, leaving retries to the failed rows', async () => {
+      const db = makeStubDb([sub({ progress_index: 8, makeup_pending: 1 })]);
+      const failing = async () => { throw new Error('resend down'); };
+      await runDaily(ENV, db, failing, '2026-07-18');
+      expect(db.clearMakeupPending).toHaveBeenCalledWith(1);
+      expect(db.markDelivery).toHaveBeenCalledWith(1, 101, '2026-07-18', 'failed', undefined);
+      expect(db.setProgress).not.toHaveBeenCalled();
+    });
+
+    it('resumes the merged sequence the week after the make-up', async () => {
+      const db = makeStubDb([sub({ progress_index: 8, makeup_pending: 0 })]);
+      await runDaily(ENV, db, batchSender, '2026-07-18');
+      expect(sent).toHaveLength(1);
+      expect(sent[0].subject).toContain('Federalist No. 6'); // sequence[8]
+      expect(db.setProgress).toHaveBeenCalledWith(1, 9);
+    });
+  });
+
   it('marks a delivery failed when the sender throws, without advancing progress', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
     const failing = async () => { throw new Error('resend down'); };
     await runDaily(ENV, db, failing, '2026-07-18');
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'failed', undefined);
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-18', 'failed', undefined);
     expect(db.setProgress).not.toHaveBeenCalled();
   });
 
   it('retries a failed delivery, marks it sent, and advances weekly progress', async () => {
     const db = makeStubDb([sub({ progress_index: 4 })]);
     vi.mocked(db.listRetryable).mockResolvedValue([
-      { subscriber_id: 1, paper_number: 5, scheduled_for: '2026-07-18' }
+      { subscriber_id: 1, paper_number: 3, scheduled_for: '2026-07-18' }
     ]);
     await runDaily(ENV, db, batchSender, '2026-07-20'); // Monday: main loop no-ops
     expect(sent).toHaveLength(1);
-    expect(sent[0].subject).toContain('No. 5');
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg_1');
+    expect(sent[0].subject).toContain('Federalist No. 3');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-18', 'sent', 'msg_1');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
     expect(db.recordEmailSend).toHaveBeenCalledWith('msg_1', expect.any(String), 1);
   });
@@ -132,18 +192,19 @@ describe('runDaily', () => {
     await runDaily(ENV, db, batchSender, '2026-07-18');
 
     expect(sent).toHaveLength(1);
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 5, '2026-07-18', 'sent', 'msg_1');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-18', 'sent', 'msg_1');
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
   });
 
-  it('retries without advancing progress when the paper is not ahead of it', async () => {
-    const db = makeStubDb([sub({ progress_index: 4 })]);
+  it('retries a make-up essay as its own issue without advancing progress', async () => {
+    const db = makeStubDb([sub({ progress_index: 8 })]);
     vi.mocked(db.listRetryable).mockResolvedValue([
-      { subscriber_id: 1, paper_number: 3, scheduled_for: '2026-07-04' }
+      { subscriber_id: 1, paper_number: 101, scheduled_for: '2026-07-18' }
     ]);
     await runDaily(ENV, db, batchSender, '2026-07-20');
     expect(sent).toHaveLength(1);
-    expect(db.markDelivery).toHaveBeenCalledWith(1, 3, '2026-07-04', 'sent', 'msg_1');
+    expect(sent[0].subject).toContain('Brutus No. I');
+    expect(db.markDelivery).toHaveBeenCalledWith(1, 101, '2026-07-18', 'sent', 'msg_1');
     expect(db.setProgress).not.toHaveBeenCalled();
   });
 
@@ -163,7 +224,7 @@ describe('runDaily', () => {
   it('skips a retry whose subscriber has since unsubscribed', async () => {
     const db = makeStubDb([sub({ status: 'unsubscribed', progress_index: 4 })]);
     vi.mocked(db.listRetryable).mockResolvedValue([
-      { subscriber_id: 1, paper_number: 5, scheduled_for: '2026-07-18' }
+      { subscriber_id: 1, paper_number: 3, scheduled_for: '2026-07-18' }
     ]);
     await runDaily(ENV, db, batchSender, '2026-07-20');
     expect(sent).toHaveLength(0);
@@ -251,10 +312,10 @@ describe('runDaily', () => {
     await runDaily(ENV, db, partial, '2026-07-18');
 
     expect(db.markDelivery).toHaveBeenCalledWith(
-      1, 5, '2026-07-18', 'sent', 'msg_ok'
+      1, 3, '2026-07-18', 'sent', 'msg_ok'
     );
     expect(db.markDelivery).toHaveBeenCalledWith(
-      2, 5, '2026-07-18', 'failed', undefined
+      2, 3, '2026-07-18', 'failed', undefined
     );
     expect(db.setProgress).toHaveBeenCalledWith(1, 5);
     expect(db.setProgress).not.toHaveBeenCalledWith(2, 5);
@@ -273,10 +334,10 @@ describe('runDaily', () => {
     await runDaily(ENV, db, rejected, '2026-07-18');
 
     expect(db.markDelivery).toHaveBeenCalledWith(
-      1, 5, '2026-07-18', 'failed', undefined
+      1, 3, '2026-07-18', 'failed', undefined
     );
     expect(db.markDelivery).toHaveBeenCalledWith(
-      2, 5, '2026-07-18', 'failed', undefined
+      2, 3, '2026-07-18', 'failed', undefined
     );
     expect(db.setProgress).not.toHaveBeenCalled();
   });

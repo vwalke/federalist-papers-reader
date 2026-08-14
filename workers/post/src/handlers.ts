@@ -1,6 +1,7 @@
 // workers/post/src/handlers.ts
 import type { Db } from './db';
 import type { Env, Program, Subscriber } from './types';
+import { sequence } from './content';
 import { DOW_NAMES, nextDayDowEastern } from './schedule';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
 import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
@@ -155,7 +156,7 @@ function humanDate(iso: string): string {
   return `${MONTHS[month - 1]} ${day}, ${year}`;
 }
 
-/** Next occurrence of sendDow strictly after fromIso — mirrors weeklyPaperDue's 1-day guard. */
+/** Next occurrence of sendDow strictly after fromIso — mirrors weeklyItemDue's 1-day guard. */
 function nextSendDate(fromIso: string, sendDow: number): string {
   const date = new Date(`${fromIso}T00:00:00Z`);
   do { date.setUTCDate(date.getUTCDate() + 1); } while (date.getUTCDay() !== sendDow);
@@ -179,7 +180,7 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
   const ctx = await emailContext(env, sub);
   const today = new Date().toISOString().slice(0, 10);
   const firstDelivery = sub.program === 'weekly'
-    ? humanDate(nextSendDate(today, sub.send_dow)) : 'October 27';
+    ? humanDate(nextSendDate(today, sub.send_dow)) : 'October 18';
   await deliver(env, db, send, sub,
     renderWelcome(sub.program, firstDelivery, DOW_NAMES[sub.send_dow], ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
@@ -187,8 +188,8 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
 
 function managePage(sub: Subscriber, token: string): string {
   const progress = sub.program === 'weekly'
-    ? `Paper ${sub.progress_index} of 85 — The Weekly Course, arriving ${DOW_NAMES[sub.send_dow]}s`
-    : 'As It Happened — papers arrive on their original dates';
+    ? `${sub.progress_index} of ${sequence.length} in the debate — The Weekly Course, arriving ${DOW_NAMES[sub.send_dow]}s`
+    : 'As It Happened — papers and essays arrive on their original dates';
   const status = sub.status === 'paused'
     ? `<p><strong>Paused${sub.paused_until ? ` until ${escapeHtml(sub.paused_until)}` : ''}.</strong></p>` : '';
   const field = `<input type="hidden" name="token" value="${escapeHtml(token)}">`;
@@ -210,7 +211,7 @@ ${dayForm}
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="pause"><button>Pause</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="resume"><button>Resume</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="switch"><button>Switch program</button></form>
-<form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="restart"><button>Restart from Paper 1</button></form>
+<form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="restart"><button>Restart from the beginning</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="unsubscribe"><button class="quit">Unsubscribe</button></form>
 <p style="font-size:0.85rem;color:#6E6353;">To pause until a date, use Pause and reply to any paper email — or unsubscribe and return any time.</p>
 </body></html>`;

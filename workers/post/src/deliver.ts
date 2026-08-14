@@ -1,9 +1,9 @@
 // workers/post/src/deliver.ts
-import papersJson from '../content/papers.json';
+import { byId, items, sequence, sequencePosition } from './content';
 import type { Db } from './db';
-import type { Env, PaperContent, Subscriber } from './types';
-import { papersDueOnDate, weeklyPaperDue } from './schedule';
-import { renderPaperIssue, type EmailContext } from './email';
+import type { DebateItem, EssayContent, Env, Subscriber } from './types';
+import { itemsDueOnDate, weeklyItemDue } from './schedule';
+import { renderIssue, renderMakeupIssue, type EmailContext, type RenderedEmail } from './email';
 import { signToken } from './tokens';
 import type {
   BatchEmailOutcome,
@@ -11,14 +11,15 @@ import type {
   OutboundEmail
 } from './resend';
 
-const papers = papersJson as PaperContent[];
-const byNumber = new Map(papers.map((p) => [p.number, p]));
 const BATCH_SIZE = 100;
+
+type DeliveryKind = 'issue' | 'makeup';
 
 interface PreparedDelivery {
   sub: Subscriber;
-  paperNumbers: number[];
+  itemIds: number[];
   scheduledFor: string;
+  kind: DeliveryKind;
   mail: OutboundEmail;
 }
 
@@ -42,7 +43,7 @@ function chunks<T>(items: T[], size: number): T[][] {
 
 async function batchIdempotencyKey(deliveries: PreparedDelivery[]): Promise<string> {
   const identity = deliveries.map((delivery) =>
-    `${delivery.sub.id}:${delivery.scheduledFor}:${delivery.paperNumbers.join(',')}`
+    `${delivery.sub.id}:${delivery.scheduledFor}:${delivery.itemIds.join(',')}`
   ).join('|');
   const digest = await crypto.subtle.digest(
     'SHA-256',
@@ -57,24 +58,38 @@ async function batchIdempotencyKey(deliveries: PreparedDelivery[]): Promise<stri
 async function renderDelivery(
   env: Env,
   sub: Subscriber,
-  paperNumbers: number[],
-  scheduledFor: string
+  itemIds: number[],
+  scheduledFor: string,
+  kind: DeliveryKind = 'issue'
 ): Promise<PreparedDelivery> {
-  const issue = paperNumbers
-    .map((number) => byNumber.get(number))
-    .filter((paper): paper is PaperContent => paper !== undefined);
-  if (issue.length !== paperNumbers.length) {
-    throw new Error('claimed papers have no content');
+  const issue = itemIds
+    .map((id) => byId.get(id))
+    .filter((item): item is DebateItem => item !== undefined);
+  if (issue.length !== itemIds.length) {
+    throw new Error('claimed items have no content');
   }
   const ctx = await contextFor(env, sub);
-  if (sub.program === 'weekly') {
-    ctx.progressLine = `Paper ${paperNumbers[0]} of 85 · The Weekly Course`;
+  let mail: RenderedEmail;
+  if (kind === 'makeup') {
+    const essays = issue.filter((item): item is EssayContent => item.kind === 'essay');
+    if (essays.length !== issue.length) {
+      throw new Error('make-up issues carry only essays');
+    }
+    mail = renderMakeupIssue(essays, ctx);
+  } else {
+    if (sub.program === 'weekly') {
+      const position = sequencePosition.get(itemIds[0]);
+      if (position !== undefined) {
+        ctx.progressLine = `${position + 1} of ${sequence.length} · The Weekly Course`;
+      }
+    }
+    mail = renderIssue(issue, ctx);
   }
-  const mail = renderPaperIssue(issue, ctx);
   return {
     sub,
-    paperNumbers,
+    itemIds,
     scheduledFor,
+    kind,
     mail: {
       from: env.FROM_ADDRESS,
       to: sub.email,
@@ -89,13 +104,13 @@ async function renderDelivery(
 async function markFailed(
   db: Db,
   sub: Subscriber,
-  paperNumbers: number[],
+  itemIds: number[],
   scheduledFor: string
 ): Promise<void> {
-  for (const paperNumber of paperNumbers) {
+  for (const itemId of itemIds) {
     await db.markDelivery(
       sub.id,
-      paperNumber,
+      itemId,
       scheduledFor,
       'failed',
       undefined
@@ -112,12 +127,12 @@ async function applyOutcome(
     await markFailed(
       db,
       delivery.sub,
-      delivery.paperNumbers,
+      delivery.itemIds,
       delivery.scheduledFor
     );
     console.error('deliver batch item failed', {
       subscriberId: delivery.sub.id,
-      papers: delivery.paperNumbers,
+      items: delivery.itemIds,
       error: outcome.error
     });
     return 'failed';
@@ -128,18 +143,24 @@ async function applyOutcome(
   } catch {
     console.error('accepted email activity could not be recorded');
   }
-  for (const paperNumber of delivery.paperNumbers) {
+  for (const itemId of delivery.itemIds) {
     await db.markDelivery(
       delivery.sub.id,
-      paperNumber,
+      itemId,
       delivery.scheduledFor,
       'sent',
       outcome.id
     );
   }
-  const lastPaper = Math.max(...delivery.paperNumbers);
-  if (delivery.sub.program === 'weekly' && lastPaper > delivery.sub.progress_index) {
-    await db.setProgress(delivery.sub.id, lastPaper);
+  // A make-up never advances progress: the next regular send resumes the
+  // merged sequence from where the subscriber already stood.
+  if (delivery.kind === 'issue' && delivery.sub.program === 'weekly') {
+    const progressAfter = Math.max(
+      ...delivery.itemIds.map((id) => (sequencePosition.get(id) ?? -1) + 1)
+    );
+    if (progressAfter > delivery.sub.progress_index) {
+      await db.setProgress(delivery.sub.id, progressAfter);
+    }
   }
   return 'sent';
 }
@@ -183,7 +204,7 @@ async function sendPrepared(
         failed++;
         console.error('deliver outcome persistence failed', {
           subscriberId: chunk[index].sub.id,
-          papers: chunk[index].paperNumbers,
+          items: chunk[index].itemIds,
           error: String(error)
         });
       }
@@ -196,24 +217,25 @@ async function prepareClaimedDelivery(
   env: Env,
   db: Db,
   sub: Subscriber,
-  paperNumbers: number[],
-  scheduledFor: string
+  itemIds: number[],
+  scheduledFor: string,
+  kind: DeliveryKind = 'issue'
 ): Promise<PreparedDelivery | null> {
-  const claimedNumbers: number[] = [];
-  for (const paperNumber of paperNumbers) {
-    if (await db.claimDelivery(sub.id, paperNumber, scheduledFor)) {
-      claimedNumbers.push(paperNumber);
+  const claimedIds: number[] = [];
+  for (const itemId of itemIds) {
+    if (await db.claimDelivery(sub.id, itemId, scheduledFor)) {
+      claimedIds.push(itemId);
     }
   }
-  if (claimedNumbers.length === 0) return null;
+  if (claimedIds.length === 0) return null;
 
   try {
-    return await renderDelivery(env, sub, claimedNumbers, scheduledFor);
+    return await renderDelivery(env, sub, claimedIds, scheduledFor, kind);
   } catch (error) {
-    await markFailed(db, sub, claimedNumbers, scheduledFor);
+    await markFailed(db, sub, claimedIds, scheduledFor);
     console.error('deliver preparation failed', {
       subscriberId: sub.id,
-      papers: claimedNumbers,
+      items: claimedIds,
       error: String(error)
     });
     return null;
@@ -230,7 +252,7 @@ export async function runDaily(
   await db.purgeUnsubscribed(30);
   await db.purgeStalePending(7);
   await db.purgeEmailSends(45);
-  const dueCalendarPapers = papersDueOnDate(papers, todayIso);
+  const dueCalendarItems = itemsDueOnDate(items, todayIso);
   let sent = 0;
   let failed = 0;
   let retried = 0;
@@ -238,21 +260,33 @@ export async function runDaily(
   let due: PreparedDelivery[] = [];
   for (const sub of await db.listDeliverable()) {
     try {
-      let paperNumbers: number[] = [];
+      let itemIds: number[] = [];
+      let kind: DeliveryKind = 'issue';
       if (sub.program === 'weekly') {
-        const next = weeklyPaperDue(sub, todayIso);
-        if (next !== null) paperNumbers = [next];
-      } else if (dueCalendarPapers.length > 0) {
-        paperNumbers = dueCalendarPapers;
+        const next = weeklyItemDue(sub, todayIso, sequence);
+        if (next?.kind === 'item') itemIds = [next.id];
+        else if (next?.kind === 'makeup') {
+          itemIds = next.essayIds;
+          kind = 'makeup';
+        }
+      } else if (dueCalendarItems.length > 0) {
+        itemIds = dueCalendarItems;
       }
-      if (paperNumbers.length === 0) continue;
+      if (itemIds.length === 0) continue;
       const delivery = await prepareClaimedDelivery(
         env,
         db,
         sub,
-        paperNumbers,
-        todayIso
+        itemIds,
+        todayIso,
+        kind
       );
+      if (kind === 'makeup') {
+        // The flag is consumed the moment the make-up is claimed: a failed
+        // send rides the ordinary retry machinery (individual essay issues)
+        // instead of doubling as a second make-up next week.
+        await db.clearMakeupPending(sub.id);
+      }
       if (delivery) {
         due.push(delivery);
         if (due.length === BATCH_SIZE) {
@@ -297,7 +331,7 @@ export async function runDaily(
       failed++;
       console.error('deliver retry preparation failed', {
         subscriberId: retry.subscriber_id,
-        paper: retry.paper_number,
+        item: retry.paper_number,
         error: String(error)
       });
     }
