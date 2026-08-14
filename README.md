@@ -13,8 +13,9 @@ notes, and reading progress that lives in the browser. No accounts, no
 tracking beyond Cloudflare's cookieless analytics.
 
 **Subscribe by post:** [federalistreader.org/subscribe](https://federalistreader.org/subscribe/)
-delivers the papers by email — one each Saturday in order, or each on the
-anniversary of its original 1787–88 publication date.
+delivers the whole debate by email — the eighty-five papers and the eight
+essays that answered them, one a week in the order they reached readers, or
+each on the anniversary of its original 1787–88 publication date.
 
 **The other side:** [federalistreader.org/antifederalist](https://federalistreader.org/antifederalist/)
 shelves eight essays from Thomas Greenleaf's *New-York Journal* — Brutus and

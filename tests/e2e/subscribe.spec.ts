@@ -14,7 +14,7 @@ test.describe('subscribe surfaces', () => {
     await page.goto('/subscribe/');
     await expect(page.getByRole('heading', { name: 'The Weekly Course' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'As It Happened' })).toBeVisible();
-    await expect(page.getByText(/October 27/)).toBeVisible();
+    await expect(page.getByText(/October 18 with Brutus No/)).toBeVisible();
 
     const coupon = page.getByRole('complementary', { name: 'By Subscription' });
     await expect(coupon).toBeVisible();
