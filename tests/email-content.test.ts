@@ -1,6 +1,11 @@
 // tests/email-content.test.ts
 import { describe, expect, it } from 'vitest';
-import { parsePaperFile, parseEssayFile, buildExport } from '../scripts/generate-email-content.mjs';
+import {
+  parsePaperFile,
+  parseEssayFile,
+  buildExport,
+  buildDebateSequence
+} from '../scripts/generate-email-content.mjs';
 
 const PAPER_SAMPLE = `---
 number: 1
@@ -94,5 +99,35 @@ describe('buildExport', () => {
     const secondPaper = { ...paper, id: 2, number: 2 };
     const { sequence } = buildExport([secondPaper, paper], [sameDayEssay]);
     expect(sequence).toEqual([1, 2, 101]);
+  });
+});
+
+describe('buildDebateSequence', () => {
+  const paper = parsePaperFile(PAPER_SAMPLE);
+  const essay = parseEssayFile(ESSAY_SAMPLE);
+
+  it('shapes the merged order as site links for the client nav', () => {
+    const { items } = buildExport([paper], [essay]);
+    expect(buildDebateSequence(items)).toEqual([
+      {
+        href: '/antifederalist/brutus-1/',
+        label: 'Brutus No. I',
+        title: 'Against the Consolidated Republic'
+      },
+      {
+        href: '/papers/1/',
+        label: 'Federalist No. 1',
+        title: 'General Introduction'
+      }
+    ]);
+  });
+
+  it('renders Cato with its roman numeral display name', () => {
+    const cato = parseEssayFile(
+      ESSAY_SAMPLE.replace('"Brutus"', '"Cato"').replace('seriesNumber: 1', 'seriesNumber: 4')
+    );
+    const [entry] = buildDebateSequence([cato]);
+    expect(entry.href).toBe('/antifederalist/cato-4/');
+    expect(entry.label).toBe('Cato No. IV');
   });
 });

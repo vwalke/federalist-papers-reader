@@ -72,6 +72,29 @@ describe('paper pages', () => {
     expect(html).toContain('Return to the index');
   });
 
+  it('holds an empty, hidden nav context line for the reading-context script', async () => {
+    const html = await readFile(new URL('../dist/papers/1/index.html', import.meta.url), 'utf8');
+
+    expect(html).toMatch(/class="essay-navigation__context" data-nav-context hidden[^>]*>\s*<\/p>/);
+  });
+
+  it('bundles the debate sequence and the nav rewrite', async () => {
+    const { readdir } = await import('node:fs/promises');
+    const dir = new URL('../dist/_astro/', import.meta.url);
+    const chunks = await Promise.all(
+      (await readdir(dir))
+        .filter((file) => file.endsWith('.js'))
+        .map((file) => readFile(new URL(file, dir), 'utf8'))
+    );
+
+    // The generated sequence data reached the client bundle…
+    expect(chunks.some((chunk) => chunk.includes('/antifederalist/brutus-1/'))).toBe(true);
+    // …alongside the module that applies it to the nav.
+    expect(
+      chunks.some((chunk) => chunk.includes('The whole debate · in publication order'))
+    ).toBe(true);
+  });
+
   it('ships a committed social card for every paper plus a shared default', async () => {
     const { readdir } = await import('node:fs/promises');
     const cards = new Set(await readdir(new URL('../public/social-cards/', import.meta.url)));

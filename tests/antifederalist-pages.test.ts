@@ -135,6 +135,11 @@ describe('antifederalist built pages', () => {
     await assertCardExists('/social-cards/antifederalist-default.jpg');
   });
 
+  it('holds an empty, hidden nav context line for the reading-context script', async () => {
+    const page = await readPage('antifederalist/brutus-1');
+    expect(page).toMatch(/class="essay-navigation__context" data-nav-context hidden[^>]*>\s*<\/p>/);
+  });
+
   it('links every essay to its Publius answers', async () => {
     const page = await readPage('antifederalist/brutus-12');
     expect(page).toContain('href="/papers/78/"');
