@@ -187,6 +187,7 @@ const readLabel = next ? 'Next →' : 'The opposition shelf →';
     )}
 
     <nav class="essay-navigation" aria-label="Anti-Federalist essay navigation">
+      <p class="essay-navigation__context" data-nav-context hidden></p>
       {previous ? (
         <a class="essay-navigation__previous" href={`/antifederalist/${essaySlug(previous.data)}/`}>
           <span class="essay-navigation__label">← Previous</span>
@@ -225,8 +226,13 @@ const readLabel = next ? 'Next →' : 'The opposition shelf →';
 <script>
   import { initEssayJustify } from '../lib/essay-justify';
   import { createPreferences } from '../lib/preferences';
+  import { applyReadingContext } from '../lib/reading-context';
 
   initEssayJustify();
+
+  /* A guide journey or the debate view may replace the shelf order; the
+     rewrite mutates the anchors, so the wiring below survives it. */
+  applyReadingContext();
 
   /* Mark-read parity with EssayNavigation: the Next control marks the essay
      read on navigate, keyed by the shared progress id. */

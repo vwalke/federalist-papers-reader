@@ -17,6 +17,7 @@ const readLabel = next ? 'Next →' : 'The full collection →';
 ---
 
 <nav class="essay-navigation" aria-label="Federalist Paper navigation">
+  <p class="essay-navigation__context" data-nav-context hidden></p>
   {previous ? (
     <a class="essay-navigation__previous" href={`/papers/${previous.number}/`}>
       <span class="essay-navigation__label">← Previous</span>
@@ -42,6 +43,11 @@ const readLabel = next ? 'Next →' : 'The full collection →';
 
 <script>
   import { createPreferences } from '../lib/preferences';
+  import { applyReadingContext } from '../lib/reading-context';
+
+  /* A guide journey or the debate view may replace the numeric order; the
+     rewrite mutates the anchors, so the wiring below survives it. */
+  applyReadingContext();
 
   let storage: Storage | null = null;
   try {

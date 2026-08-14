@@ -210,6 +210,25 @@ const jsonLd = {
   </article>
 </BaseLayout>
 
+<script>
+  import { bindGuideJourney } from '../lib/reading-context';
+
+  /* The required-documents ledger is a course: clicking into any of its
+     five works records the list as the reader's journey, so prev/next
+     walks 10 → 51 → 70 → 78 → Brutus I. The feature notes below it are
+     not entries and stay out of the journey. */
+  const clean = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
+
+  bindGuideJourney(
+    [...document.querySelectorAll<HTMLAnchorElement>('ol.teachers-required .curated-entry__link a')].map(
+      (anchor) => ({
+        anchor,
+        label: clean(anchor.closest('.curated-entry')?.querySelector('.curated-entry__topic')?.textContent)
+      })
+    )
+  );
+</script>
+
 <style>
   /* The required-documents ledger keeps its numeral column even inside a
      guide group, which otherwise flattens entries to a single column. */

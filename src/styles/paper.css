@@ -683,6 +683,21 @@
   background: var(--color-paper);
 }
 
+/* The reader's frame — a guide journey or the whole-debate order — named
+   above the prev/next cells. Server-rendered empty and hidden; the page
+   script fills it only when a context is live. */
+.essay-navigation__context {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-newsprint);
+  color: var(--color-muted-ink);
+  font: 700 0.62rem/1.4 var(--font-utility);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
 .essay-navigation__next {
   text-align: end;
 }

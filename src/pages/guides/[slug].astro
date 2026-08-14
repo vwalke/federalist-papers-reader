@@ -141,3 +141,32 @@ const itemList = {
     )}
   </article>
 </BaseLayout>
+
+<script>
+  import { bindGuideJourney } from '../../lib/reading-context';
+
+  /* Clicking any entry link records this guide's list as the reader's
+     journey, so prev/next on the papers walks the list, not the numbers.
+     Curated entries are labeled by their accessible heading; a debate
+     exchange covers several works, so those take each link's own text.
+     The "further companions" lists link guides, not entries, and use a
+     different link idiom — they stay out of the journey. */
+  const clean = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
+
+  const anchors = document.querySelectorAll<HTMLAnchorElement>(
+    [
+      '.curated-list:not(.debate-list) .curated-entry__link a',
+      '.debate-list .debate-side__work a',
+      '.debate-list .debate-answers a'
+    ].join(', ')
+  );
+
+  bindGuideJourney(
+    [...anchors].map((anchor) => ({
+      anchor,
+      label: anchor.closest('.debate-exchange')
+        ? clean(anchor.textContent)
+        : clean(anchor.closest('.curated-entry')?.querySelector('.curated-entry__topic')?.textContent)
+    }))
+  );
+</script>

@@ -8,6 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const papersDir = join(root, 'src/content/papers');
 const essaysDir = join(root, 'src/content/antifederalist');
 const outFile = join(root, 'workers/post/content/debate.json');
+const sequenceOutFile = join(root, 'src/data/debate-sequence.json');
 
 /** Shared id space: 1–85 Publius, 100+n Brutus, 150+n Cato (src/lib/antifederalist.ts). */
 const SERIES_BASE = { Brutus: 100, Cato: 150 };
@@ -87,6 +88,27 @@ export function buildExport(papers, essays) {
   return { items, sequence: items.map((item) => item.id) };
 }
 
+/**
+ * The same merged order, shaped for the site's client-side prev/next
+ * rewriting (src/lib/reading-context.ts): one {href, label, title} per
+ * item, in publication order.
+ */
+export function buildDebateSequence(items) {
+  return items.map((item) =>
+    item.kind === 'paper'
+      ? {
+          href: `/papers/${item.number}/`,
+          label: `Federalist No. ${item.number}`,
+          title: item.title
+        }
+      : {
+          href: `/antifederalist/${item.slug}/`,
+          label: item.displayName,
+          title: item.title
+        }
+  );
+}
+
 function readContentDir(dir, parse) {
   return readdirSync(dir)
     .filter((f) => f.endsWith('.md'))
@@ -111,6 +133,17 @@ function main() {
   mkdirSync(dirname(outFile), { recursive: true });
   writeFileSync(outFile, JSON.stringify(exported, null, 2) + '\n');
   console.log(`Wrote ${papers.length} papers and ${essays.length} essays to ${outFile}`);
+
+  const sequence = buildDebateSequence(exported.items);
+  if (sequence.length !== 93) {
+    throw new Error(`expected a 93-item debate sequence, found ${sequence.length}`);
+  }
+  if (sequence[0].href !== '/antifederalist/brutus-1/') {
+    throw new Error('the debate sequence must open with Brutus No. I');
+  }
+  mkdirSync(dirname(sequenceOutFile), { recursive: true });
+  writeFileSync(sequenceOutFile, JSON.stringify(sequence, null, 2) + '\n');
+  console.log(`Wrote the ${sequence.length}-item reading sequence to ${sequenceOutFile}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();
