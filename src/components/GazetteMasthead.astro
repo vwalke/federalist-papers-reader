@@ -10,7 +10,7 @@ interface Props {
 
 const VARIANT_DEFAULTS = {
   'independent-journal': 'New-York · The essays of Publius · 1787–1788',
-  'new-york-journal': 'New-York · Printed by Thomas Greenleaf · 1787–1788'
+  'new-york-journal': '1787–1788'
 } as const;
 
 /* Greenleaf's sheet carries its motto under the nameplate, the emphasized
@@ -37,15 +37,43 @@ const mottoSource = Astro.props.mottoSource ?? (Astro.props.motto ? undefined : 
     width="1200"
     height="145"
   />
-  {motto && (
-    <p class="gazette-masthead__motto">
-      {motto}
-      {mottoSource && <cite class="gazette-masthead__motto-source">{mottoSource}</cite>}
-    </p>
+  {variant === 'new-york-journal' ? (
+    <>
+      {/* The Greenleaf stack, after the surviving sheets: thin rules between
+          every row — nameplate, motto, date, imprint — closing on the double
+          rule the columns hang from. The proper-noun runs of the imprint are
+          set in the Fell small-caps cut, as the compositor's case had it. */}
+      <span class="gazette-masthead__rule" aria-hidden="true"></span>
+      {motto && (
+        <p class="gazette-masthead__motto">
+          {motto}
+          {mottoSource && <cite class="gazette-masthead__motto-source">{mottoSource}</cite>}
+        </p>
+      )}
+      <span class="gazette-masthead__rule" aria-hidden="true"></span>
+      <p class="gazette-masthead__dateline">{dateLine}</p>
+      <span class="gazette-masthead__rule" aria-hidden="true"></span>
+      <p class="gazette-masthead__imprint">
+        <span class="gazette-masthead__sc">New-York</span> : Printed and Published by{' '}
+        <span class="gazette-masthead__sc">Thomas Greenleaf</span>, at the{' '}
+        <span class="gazette-masthead__sc">Printing-Office</span>, No. 25,{' '}
+        <span class="gazette-masthead__sc">Water-Street</span>.
+      </p>
+      <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
+    </>
+  ) : (
+    <>
+      {motto && (
+        <p class="gazette-masthead__motto">
+          {motto}
+          {mottoSource && <cite class="gazette-masthead__motto-source">{mottoSource}</cite>}
+        </p>
+      )}
+      <div class="gazette-masthead__issue">
+        <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
+        <p class="gazette-masthead__dateline">{dateLine}</p>
+        <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
+      </div>
+    </>
   )}
-  <div class="gazette-masthead__issue">
-    <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
-    <p class="gazette-masthead__dateline">{dateLine}</p>
-    <span class="gazette-masthead__issue-rule" aria-hidden="true"></span>
-  </div>
 </header>

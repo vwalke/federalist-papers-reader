@@ -207,6 +207,30 @@ a:hover {
   border-block: 1px solid var(--color-rule);
 }
 
+/* The Journal's masthead stack rules every row apart, as the surviving
+   Greenleaf sheets do — thin singles between rows, the double rule last. */
+.gazette-masthead__rule {
+  display: block;
+  border-block-start: 1px solid var(--color-rule);
+  margin-block: 0.35rem;
+}
+
+.gazette-masthead__imprint {
+  margin-block: 0.3rem 0.35rem;
+  font-family: 'IM Fell English', var(--font-reading);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  word-spacing: 0.06em;
+  text-align: center;
+  color: var(--color-ink);
+}
+
+/* The Fell small-caps cut: cap initials over true small caps, the way the
+   compositor set the proper-noun runs of the imprint. */
+.gazette-masthead__sc {
+  font-family: 'IM Fell English SC', 'IM Fell English', var(--font-reading);
+}
+
 /* Set as Greenleaf printed it: Fell type in ink, mixed case with the
    emphasized words carrying full caps from the text itself, the poem credit
    italic. No small-caps flattening — the caps ARE the emphasis. */

@@ -36,6 +36,16 @@ export function formatLongDate(publicationDate: string) {
   }).format(new Date(`${publicationDate}T12:00:00Z`));
 }
 
+/** The Journal's date row carries no city — the imprint line below names it. */
+export function formatJournalDateline(publicationDate: string) {
+  const date = new Date(`${publicationDate}T12:00:00Z`);
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    timeZone: 'UTC'
+  }).format(date);
+  return `${weekday}, ${formatLongDate(publicationDate)}`;
+}
+
 export function formatIssueDateline(
   publicationDate: string,
   publicationKind: 'newspaper' | 'book'

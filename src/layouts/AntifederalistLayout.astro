@@ -5,6 +5,8 @@ import type { CollectionEntry } from 'astro:content';
    DW Pica — same foundry, different face, loaded only on these pages. */
 import '@fontsource/im-fell-great-primer/latin-400.css';
 import '@fontsource/im-fell-great-primer/latin-400-italic.css';
+/* True Fell small caps for the masthead imprint's proper-noun runs. */
+import '@fontsource/im-fell-english-sc/latin-400.css';
 
 import Commentary from '../components/Commentary.astro';
 import GazetteMasthead from '../components/GazetteMasthead.astro';
@@ -15,7 +17,7 @@ import {
   essaySlug,
   progressId
 } from '../lib/antifederalist';
-import { formatIssueDateline, formatLongDate, toRomanNumeral } from '../lib/paper-display';
+import { formatJournalDateline, formatLongDate, toRomanNumeral } from '../lib/paper-display';
 import BaseLayout from './BaseLayout.astro';
 import imagesManifest from '../data/antifederalist-images.json';
 
@@ -105,7 +107,7 @@ const readLabel = next ? 'Next →' : 'The opposition shelf →';
     <GazetteMasthead
       compact
       variant="new-york-journal"
-      dateLine={formatIssueDateline(data.publicationDate, 'newspaper')}
+      dateLine={formatJournalDateline(data.publicationDate)}
     />
     <ReadingToolbar
       number={wearId}

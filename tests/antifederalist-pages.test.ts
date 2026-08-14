@@ -79,6 +79,19 @@ describe('antifederalist built pages', () => {
     expect(page).toMatch(/class="essay-signature"[^>]*>BRUTUS</);
   });
 
+  it('carries Greenleaf’s imprint line under a ruled masthead stack', async () => {
+    for (const path of ['antifederalist/brutus-1', 'antifederalist']) {
+      const page = await readPage(path);
+      expect(page).toContain('Printed and Published by');
+      expect(page).toContain('Thomas Greenleaf</span>');
+      expect(page).toContain('Water-Street</span>');
+      expect(page).toContain('gazette-masthead__rule');
+    }
+    // The date row carries no city — the imprint names it.
+    const essay = await readPage('antifederalist/brutus-1');
+    expect(essay).toMatch(/gazette-masthead__dateline">Thursday, October 18, 1787</);
+  });
+
   it('prints the Journal on its own lighter sheet stock', async () => {
     await expect(readPage('antifederalist/brutus-1')).resolves.toContain('paper-sheet--journal');
     await expect(readPage('antifederalist')).resolves.toContain('paper-sheet--journal');
