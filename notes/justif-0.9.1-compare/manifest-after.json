@@ -1,0 +1,1531 @@
+{
+  "label": "after",
+  "capturedAt": "2026-09-03T21:42:49.459Z",
+  "justifVersion": "after",
+  "pages": {
+    "federalist-10:phone": {
+      "title": "Federalist 10",
+      "path": "/papers/10/",
+      "viewport": "phone",
+      "paragraphCount": 23,
+      "enhancedCount": 23,
+      "targets": {
+        "dropcap": 0,
+        "column-break": 5,
+        "hanging": 2,
+        "editorial": 6,
+        "mid": 4
+      },
+      "info": [
+        {
+          "index": 0,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "AMONG the numerous advantages promised by a well constructed Union, none deserve",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 8
+        },
+        {
+          "index": 1,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "By a faction, I understand a number of citizens, whether amounting to a majority",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 2,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "There are two methods of curing the mischiefs of faction: the one, by removing i",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 3,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "There are again two methods of removing the causes of faction: the one, by destr",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 4,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It could never be more truly said than of the first remedy, that it was worse th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 5,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The second expedient is as impracticable as the first would be unwise. As long a",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 6,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The latent causes of faction are thus sown in the nature of man; and we see them",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 12
+        },
+        {
+          "index": 7,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "No man is allowed to be a judge in his own cause, because his interest would cer",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 8,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It is in vain to say that enlightened statesmen will be able to adjust these cla",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 9,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The inference to which we are brought is, that the CAUSES of faction cannot be r",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 10,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "If a faction consists of less than a majority, relief is supplied by the republi",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 11,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "By what means is this object attainable? Evidently by one of two only. Either th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 12,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "From this view of the subject it may be concluded that a pure democracy, by whic",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 5
+        },
+        {
+          "index": 13,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "A republic, by which I mean a government in which the scheme of representation t",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 14,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The two great points of difference between a democracy and a republic are: first",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 15,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The effect of the first difference is, on the one hand, to refine and enlarge th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 16,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In the first place, it is to be remarked that, however small the republic may be",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 17,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In the next place, as each representative will be chosen by a greater number of ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 18,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It must be confessed that in this, as in most other cases, there is a mean, on b",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 19,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The other point of difference is, the greater number of citizens and extent of t",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 5
+        },
+        {
+          "index": 20,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Hence, it clearly appears, that the same advantage which a republic has over a d",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 6
+        },
+        {
+          "index": 21,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The influence of factious leaders may kindle a flame within their particular Sta",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 22,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In the extent and proper structure of the Union, therefore, we behold a republic",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        }
+      ],
+      "shots": {
+        "viewport-open": {
+          "file": "federalist-10--phone--viewport-open.png",
+          "scrollY": 163,
+          "scrollX": 0,
+          "kind": "viewport"
+        },
+        "dropcap": {
+          "file": "federalist-10--phone--dropcap.png",
+          "kind": "element",
+          "paragraph": 0,
+          "x": 0,
+          "y": 56,
+          "width": 390,
+          "height": 788,
+          "scrollY": 315,
+          "scrollX": 0
+        },
+        "column-break": {
+          "file": "federalist-10--phone--column-break.png",
+          "kind": "element",
+          "paragraph": 5,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 360,
+          "scrollX": 0
+        },
+        "hanging": {
+          "file": "federalist-10--phone--hanging.png",
+          "kind": "element",
+          "paragraph": 2,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 485,
+          "scrollX": 0
+        },
+        "editorial": {
+          "file": "federalist-10--phone--editorial.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 623,
+          "scrollX": 0
+        }
+      }
+    },
+    "federalist-51:phone": {
+      "title": "Federalist 51",
+      "path": "/papers/51/",
+      "viewport": "phone",
+      "paragraphCount": 10,
+      "enhancedCount": 10,
+      "targets": {
+        "dropcap": 0,
+        "column-break": 5,
+        "hanging": 2,
+        "editorial": 6,
+        "mid": 4
+      },
+      "info": [
+        {
+          "index": 0,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "TO WHAT expedient, then, shall we finally resort, for maintaining in practice th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 1,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In order to lay a due foundation for that separate and distinct exercise of the ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 8
+        },
+        {
+          "index": 2,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It is equally evident, that the members of each department should be as little d",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 3,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "But the great security against a gradual concentration of the several powers in ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 7
+        },
+        {
+          "index": 4,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This policy of supplying, by opposite and rival interests, the defect of better ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 5,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "But it is not possible to give to each department an equal power of self-defense",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 7
+        },
+        {
+          "index": 6,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "If the principles on which these observations are founded be just, as I persuade",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 7,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "There are, moreover, two considerations particularly applicable to the fœderal s",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 8,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "First. In a single republic, all the power surrendered by the people is submitte",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 9,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Second. It is of great importance in a republic not only to guard the society ag",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 12
+        }
+      ],
+      "shots": {
+        "viewport-open": {
+          "file": "federalist-51--phone--viewport-open.png",
+          "scrollY": 163,
+          "scrollX": 0,
+          "kind": "viewport"
+        },
+        "dropcap": {
+          "file": "federalist-51--phone--dropcap.png",
+          "kind": "element",
+          "paragraph": 0,
+          "x": 0,
+          "y": 56,
+          "width": 390,
+          "height": 488,
+          "scrollY": 315,
+          "scrollX": 0
+        },
+        "column-break": {
+          "file": "federalist-51--phone--column-break.png",
+          "kind": "element",
+          "paragraph": 5,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 358,
+          "scrollX": 0
+        },
+        "hanging": {
+          "file": "federalist-51--phone--hanging.png",
+          "kind": "element",
+          "paragraph": 2,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 478,
+          "scrollX": 0
+        },
+        "editorial": {
+          "file": "federalist-51--phone--editorial.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 622,
+          "scrollX": 0
+        }
+      }
+    },
+    "brutus-1:phone": {
+      "title": "Brutus No. 1",
+      "path": "/antifederalist/brutus-1/",
+      "viewport": "phone",
+      "paragraphCount": 29,
+      "enhancedCount": 28,
+      "targets": {
+        "dropcap": 0,
+        "column-break": 5,
+        "hanging": 6,
+        "editorial": 2,
+        "mid": 4
+      },
+      "info": [
+        {
+          "index": 0,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "When the public is called to investigate and decide upon a question in which not",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 1,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In this situation, I trust the feeble efforts of an individual, to lead the mind",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 2,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Perhaps this country never saw so critical a period in their political concerns.",
+          "hasQuote": false,
+          "hasBracket": true,
+          "hyphenCount": 14
+        },
+        {
+          "index": 3,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "With these few introductory remarks I shall proceed to a consideration of this c",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 4,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The first question that presents itself on the subject is, whether a confederate",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 5,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This inquiry is important, because, although the government reported by the conv",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 6,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This government is to possess absolute and uncontrollable power, legislative, ex",
+          "hasQuote": true,
+          "hasBracket": true,
+          "hyphenCount": 16
+        },
+        {
+          "index": 7,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It might be here shown, that the power in the fœderal legislative, to raise and ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 8,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The judicial power of the United States is to be vested in a supreme court, and ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 9,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "How far the clause in the 8th section of the 1st article may operate to do away ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 10,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It is not meant, by stating this case, to insinuate that the constitution would ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 11
+        },
+        {
+          "index": 11,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Let us now proceed to inquire, as I at first proposed, whether it be best the th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 12,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "If respect is to be paid to the opinion of the greatest and wisest men who have ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 13,
+          "enhanced": false,
+          "rectCount": 1,
+          "textStart": "The one is the Baron de Montesquieu, Spirit of the Laws, Chap. xvi. Vol. I [Book",
+          "hasQuote": true,
+          "hasBracket": true,
+          "hyphenCount": 0
+        },
+        {
+          "index": 14,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "History furnishes no example of a free republic, anything like the extent of the",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 15,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Not only the opinion of the greatest men, and the experience of mankind, are aga",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 16,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This kind of government cannot be exercised, therefore, over a country of any co",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 17,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In a free republic, although all laws are derived from the consent of the people",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 18,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In every free government, the people must give their assent to the laws by which",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 19,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The territory of the United States is of vast extent; it now contains near three",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 20,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In a republic, the manners, sentiments, and interests of the people should be si",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 6
+        },
+        {
+          "index": 21,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The laws cannot be executed in a republic, of an extent equal to that of the Uni",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 22,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The magistrates in every government must be supported in the execution of the la",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 23,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In despotic governments, as well as in all the monarchies of Europe, standing ar",
+          "hasQuote": false,
+          "hasBracket": true,
+          "hyphenCount": 3
+        },
+        {
+          "index": 24,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "A free republic will never keep a standing army to execute its laws. It must dep",
+          "hasQuote": true,
+          "hasBracket": false,
+          "hyphenCount": 9
+        },
+        {
+          "index": 25,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In a republic of such vast extent as the United-States, the legislature cannot a",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 26,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In so extensive a republic, the great officers of government would soon become a",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 27,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "These are some of the reasons by which it appears, that a free republic cannot l",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 28,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Though I am of opinion, that it is a sufficient objection to this government, to",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        }
+      ],
+      "shots": {
+        "viewport-open": {
+          "file": "brutus-1--phone--viewport-open.png",
+          "scrollY": 156,
+          "scrollX": 0,
+          "kind": "viewport"
+        },
+        "dropcap": {
+          "file": "brutus-1--phone--dropcap.png",
+          "kind": "element",
+          "paragraph": 0,
+          "x": 0,
+          "y": 56,
+          "width": 390,
+          "height": 256,
+          "scrollY": 460,
+          "scrollX": 0
+        },
+        "column-break": {
+          "file": "brutus-1--phone--column-break.png",
+          "kind": "element",
+          "paragraph": 5,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 503,
+          "scrollX": 0
+        },
+        "hanging": {
+          "file": "brutus-1--phone--hanging.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 0,
+          "y": 843,
+          "width": 390,
+          "height": 1,
+          "scrollY": 619,
+          "scrollX": 0
+        },
+        "editorial": {
+          "file": "brutus-1--phone--editorial.png",
+          "kind": "element",
+          "paragraph": 2,
+          "x": 0,
+          "y": 193,
+          "width": 390,
+          "height": 651,
+          "scrollY": 797,
+          "scrollX": 0
+        }
+      }
+    },
+    "federalist-10:desktop": {
+      "title": "Federalist 10",
+      "path": "/papers/10/",
+      "viewport": "desktop",
+      "paragraphCount": 23,
+      "enhancedCount": 23,
+      "targets": {
+        "dropcap": 0,
+        "column-break": 6,
+        "hanging": 2,
+        "editorial": 6,
+        "mid": 4
+      },
+      "info": [
+        {
+          "index": 0,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "AMONG the numerous advantages promised by a well constructed Union, none deserve",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 10
+        },
+        {
+          "index": 1,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "By a faction, I understand a number of citizens, whether amounting to a majority",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 2,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "There are two methods of curing the mischiefs of faction: the one, by removing i",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 3,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "There are again two methods of removing the causes of faction: the one, by destr",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 4,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It could never be more truly said than of the first remedy, that it was worse th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 5,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The second expedient is as impracticable as the first would be unwise. As long a",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 7
+        },
+        {
+          "index": 6,
+          "enhanced": true,
+          "rectCount": 2,
+          "textStart": "The latent causes of faction are thus sown in the nature of man; and we see them",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 10
+        },
+        {
+          "index": 7,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "No man is allowed to be a judge in his own cause, because his interest would cer",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 8,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It is in vain to say that enlightened statesmen will be able to adjust these cla",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 9,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The inference to which we are brought is, that the CAUSES of faction cannot be r",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 10,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "If a faction consists of less than a majority, relief is supplied by the republi",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 11,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "By what means is this object attainable? Evidently by one of two only. Either th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 12,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "From this view of the subject it may be concluded that a pure democracy, by whic",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 5
+        },
+        {
+          "index": 13,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "A republic, by which I mean a government in which the scheme of representation t",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 14,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The two great points of difference between a democracy and a republic are: first",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 15,
+          "enhanced": true,
+          "rectCount": 2,
+          "textStart": "The effect of the first difference is, on the one hand, to refine and enlarge th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 16,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In the first place, it is to be remarked that, however small the republic may be",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 17,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In the next place, as each representative will be chosen by a greater number of ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 18,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It must be confessed that in this, as in most other cases, there is a mean, on b",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 19,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The other point of difference is, the greater number of citizens and extent of t",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 20,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Hence, it clearly appears, that the same advantage which a republic has over a d",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 5
+        },
+        {
+          "index": 21,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The influence of factious leaders may kindle a flame within their particular Sta",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 22,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In the extent and proper structure of the Union, therefore, we behold a republic",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        }
+      ],
+      "shots": {
+        "viewport-open": {
+          "file": "federalist-10--desktop--viewport-open.png",
+          "scrollY": 165,
+          "scrollX": 0,
+          "kind": "viewport"
+        },
+        "dropcap": {
+          "file": "federalist-10--desktop--dropcap.png",
+          "kind": "element",
+          "paragraph": 0,
+          "x": 35,
+          "y": 56,
+          "width": 400,
+          "height": 744,
+          "scrollY": 327,
+          "scrollX": 0
+        },
+        "column-break": {
+          "file": "federalist-10--desktop--column-break.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 440,
+          "y": 47,
+          "width": 400,
+          "height": 162,
+          "scrollY": 273,
+          "scrollX": 0
+        },
+        "hanging": {
+          "file": "federalist-10--desktop--hanging.png",
+          "kind": "element",
+          "paragraph": 2,
+          "x": 35,
+          "y": 799,
+          "width": 400,
+          "height": 1,
+          "scrollY": 312,
+          "scrollX": 0
+        },
+        "editorial": {
+          "file": "federalist-10--desktop--editorial.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 35,
+          "y": 0,
+          "width": 1210,
+          "height": 800,
+          "scrollY": 532,
+          "scrollX": 0
+        }
+      }
+    },
+    "federalist-51:desktop": {
+      "title": "Federalist 51",
+      "path": "/papers/51/",
+      "viewport": "desktop",
+      "paragraphCount": 10,
+      "enhancedCount": 10,
+      "targets": {
+        "dropcap": 0,
+        "column-break": 3,
+        "hanging": 2,
+        "editorial": 6,
+        "mid": 4
+      },
+      "info": [
+        {
+          "index": 0,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "TO WHAT expedient, then, shall we finally resort, for maintaining in practice th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 1,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In order to lay a due foundation for that separate and distinct exercise of the ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 2,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It is equally evident, that the members of each department should be as little d",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 3,
+          "enhanced": true,
+          "rectCount": 2,
+          "textStart": "But the great security against a gradual concentration of the several powers in ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 7
+        },
+        {
+          "index": 4,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This policy of supplying, by opposite and rival interests, the defect of better ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 5,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "But it is not possible to give to each department an equal power of self-defense",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 5
+        },
+        {
+          "index": 6,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "If the principles on which these observations are founded be just, as I persuade",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 7,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "There are, moreover, two considerations particularly applicable to the fœderal s",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 8,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "First. In a single republic, all the power surrendered by the people is submitte",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 9,
+          "enhanced": true,
+          "rectCount": 2,
+          "textStart": "Second. It is of great importance in a republic not only to guard the society ag",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 17
+        }
+      ],
+      "shots": {
+        "viewport-open": {
+          "file": "federalist-51--desktop--viewport-open.png",
+          "scrollY": 165,
+          "scrollX": 0,
+          "kind": "viewport"
+        },
+        "dropcap": {
+          "file": "federalist-51--desktop--dropcap.png",
+          "kind": "element",
+          "paragraph": 0,
+          "x": 35,
+          "y": 56,
+          "width": 400,
+          "height": 444,
+          "scrollY": 327,
+          "scrollX": 0
+        },
+        "column-break": {
+          "file": "federalist-51--desktop--column-break.png",
+          "kind": "element",
+          "paragraph": 3,
+          "x": 440,
+          "y": 47,
+          "width": 400,
+          "height": 110,
+          "scrollY": 273,
+          "scrollX": 0
+        },
+        "hanging": {
+          "file": "federalist-51--desktop--hanging.png",
+          "kind": "element",
+          "paragraph": 2,
+          "x": 35,
+          "y": 799,
+          "width": 400,
+          "height": 1,
+          "scrollY": 314,
+          "scrollX": 0
+        },
+        "editorial": {
+          "file": "federalist-51--desktop--editorial.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 440,
+          "y": 799,
+          "width": 400,
+          "height": 1,
+          "scrollY": 468,
+          "scrollX": 0
+        }
+      }
+    },
+    "brutus-1:desktop": {
+      "title": "Brutus No. 1",
+      "path": "/antifederalist/brutus-1/",
+      "viewport": "desktop",
+      "paragraphCount": 29,
+      "enhancedCount": 29,
+      "targets": {
+        "dropcap": 0,
+        "column-break": 6,
+        "hanging": 6,
+        "editorial": 2,
+        "mid": 4
+      },
+      "info": [
+        {
+          "index": 0,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "When the public is called to investigate and decide upon a question in which not",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 1,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In this situation, I trust the feeble efforts of an individual, to lead the mind",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 2,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Perhaps this country never saw so critical a period in their political concerns.",
+          "hasQuote": false,
+          "hasBracket": true,
+          "hyphenCount": 12
+        },
+        {
+          "index": 3,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "With these few introductory remarks I shall proceed to a consideration of this c",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 4,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The first question that presents itself on the subject is, whether a confederate",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 5,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This inquiry is important, because, although the government reported by the conv",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 6,
+          "enhanced": true,
+          "rectCount": 2,
+          "textStart": "This government is to possess absolute and uncontrollable power, legislative, ex",
+          "hasQuote": true,
+          "hasBracket": true,
+          "hyphenCount": 14
+        },
+        {
+          "index": 7,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It might be here shown, that the power in the fœderal legislative, to raise and ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 8,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The judicial power of the United States is to be vested in a supreme court, and ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 9,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "How far the clause in the 8th section of the 1st article may operate to do away ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 5
+        },
+        {
+          "index": 10,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "It is not meant, by stating this case, to insinuate that the constitution would ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 10
+        },
+        {
+          "index": 11,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Let us now proceed to inquire, as I at first proposed, whether it be best the th",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 12,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "If respect is to be paid to the opinion of the greatest and wisest men who have ",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 13,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The one is the Baron de Montesquieu, Spirit of the Laws, Chap. xvi. Vol. I [Book",
+          "hasQuote": true,
+          "hasBracket": true,
+          "hyphenCount": 0
+        },
+        {
+          "index": 14,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "History furnishes no example of a free republic, anything like the extent of the",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 15,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Not only the opinion of the greatest men, and the experience of mankind, are aga",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 16,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "This kind of government cannot be exercised, therefore, over a country of any co",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 17,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In a free republic, although all laws are derived from the consent of the people",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 18,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In every free government, the people must give their assent to the laws by which",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        },
+        {
+          "index": 19,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The territory of the United States is of vast extent; it now contains near three",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 20,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In a republic, the manners, sentiments, and interests of the people should be si",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 4
+        },
+        {
+          "index": 21,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The laws cannot be executed in a republic, of an extent equal to that of the Uni",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 22,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "The magistrates in every government must be supported in the execution of the la",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 23,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In despotic governments, as well as in all the monarchies of Europe, standing ar",
+          "hasQuote": false,
+          "hasBracket": true,
+          "hyphenCount": 3
+        },
+        {
+          "index": 24,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "A free republic will never keep a standing army to execute its laws. It must dep",
+          "hasQuote": true,
+          "hasBracket": false,
+          "hyphenCount": 6
+        },
+        {
+          "index": 25,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In a republic of such vast extent as the United-States, the legislature cannot a",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 1
+        },
+        {
+          "index": 26,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "In so extensive a republic, the great officers of government would soon become a",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 3
+        },
+        {
+          "index": 27,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "These are some of the reasons by which it appears, that a free republic cannot l",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 0
+        },
+        {
+          "index": 28,
+          "enhanced": true,
+          "rectCount": 1,
+          "textStart": "Though I am of opinion, that it is a sufficient objection to this government, to",
+          "hasQuote": false,
+          "hasBracket": false,
+          "hyphenCount": 2
+        }
+      ],
+      "shots": {
+        "viewport-open": {
+          "file": "brutus-1--desktop--viewport-open.png",
+          "scrollY": 165,
+          "scrollX": 0,
+          "kind": "viewport"
+        },
+        "dropcap": {
+          "file": "brutus-1--desktop--dropcap.png",
+          "kind": "element",
+          "paragraph": 0,
+          "x": 35,
+          "y": 55,
+          "width": 400,
+          "height": 235,
+          "scrollY": 378,
+          "scrollX": 0
+        },
+        "column-break": {
+          "file": "brutus-1--desktop--column-break.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 440,
+          "y": 46,
+          "width": 400,
+          "height": 261,
+          "scrollY": 324,
+          "scrollX": 0
+        },
+        "hanging": {
+          "file": "brutus-1--desktop--hanging.png",
+          "kind": "element",
+          "paragraph": 6,
+          "x": 440,
+          "y": 55,
+          "width": 400,
+          "height": 261,
+          "scrollY": 315,
+          "scrollX": 0
+        },
+        "editorial": {
+          "file": "brutus-1--desktop--editorial.png",
+          "kind": "element",
+          "paragraph": 2,
+          "x": 35,
+          "y": 452,
+          "width": 400,
+          "height": 348,
+          "scrollY": 389,
+          "scrollX": 0
+        }
+      }
+    }
+  }
+}

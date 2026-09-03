@@ -1,0 +1,194 @@
+[
+  {
+    "file": "brutus-1--desktop--column-break.png",
+    "width": 800,
+    "height": 522,
+    "identical": false,
+    "meanChannelDelta": 43.358072318007665,
+    "changedPixelRatio": 0.3436374521072797
+  },
+  {
+    "file": "brutus-1--desktop--dropcap.png",
+    "width": 800,
+    "height": 470,
+    "identical": false,
+    "meanChannelDelta": 3.7127293882978725,
+    "changedPixelRatio": 0.04877659574468085
+  },
+  {
+    "file": "brutus-1--desktop--editorial.png",
+    "width": 800,
+    "height": 696,
+    "identical": false,
+    "meanChannelDelta": 4.920960398706897,
+    "changedPixelRatio": 0.06625718390804598
+  },
+  {
+    "file": "brutus-1--desktop--hanging-edge.png",
+    "width": 280,
+    "height": 520,
+    "identical": false,
+    "meanChannelDelta": 14.115321085164835,
+    "changedPixelRatio": 0.134375
+  },
+  {
+    "file": "brutus-1--desktop--hanging.png",
+    "width": 800,
+    "height": 522,
+    "identical": false,
+    "meanChannelDelta": 43.358072318007665,
+    "changedPixelRatio": 0.3436374521072797
+  },
+  {
+    "file": "brutus-1--desktop--viewport-open.png",
+    "width": 2560,
+    "height": 1600,
+    "identical": false,
+    "meanChannelDelta": 12.246922119140624,
+    "changedPixelRatio": 0.11703955078125
+  },
+  {
+    "file": "brutus-1--phone--dropcap.png",
+    "width": 780,
+    "height": 512,
+    "identical": false,
+    "meanChannelDelta": 3.3374805939503207,
+    "changedPixelRatio": 0.044521233974358976
+  },
+  {
+    "file": "brutus-1--phone--editorial.png",
+    "width": 780,
+    "height": 1302,
+    "identical": false,
+    "meanChannelDelta": 4.823761520737327,
+    "changedPixelRatio": 0.06463921383276222
+  },
+  {
+    "file": "brutus-1--phone--hanging-edge.png",
+    "width": 260,
+    "height": 420,
+    "identical": false,
+    "meanChannelDelta": 6.0441163003663005,
+    "changedPixelRatio": 0.07543040293040293
+  },
+  {
+    "file": "brutus-1--phone--viewport-open.png",
+    "width": 780,
+    "height": 1688,
+    "identical": false,
+    "meanChannelDelta": 2.3390847156398102,
+    "changedPixelRatio": 0.031149744804958076
+  },
+  {
+    "file": "federalist-10--desktop--column-break.png",
+    "width": 800,
+    "height": 324,
+    "identical": false,
+    "meanChannelDelta": 3.300932677469136,
+    "changedPixelRatio": 0.04936342592592593
+  },
+  {
+    "file": "federalist-10--desktop--dropcap.png",
+    "width": 800,
+    "height": 1488,
+    "identical": false,
+    "meanChannelDelta": 4.410113617271505,
+    "changedPixelRatio": 0.06344002016129033
+  },
+  {
+    "file": "federalist-10--desktop--hanging-edge.png",
+    "width": 280,
+    "height": 520,
+    "identical": false,
+    "meanChannelDelta": 4.301696428571429,
+    "changedPixelRatio": 0.061833791208791206
+  },
+  {
+    "file": "federalist-10--desktop--viewport-open.png",
+    "width": 2560,
+    "height": 1600,
+    "identical": false,
+    "meanChannelDelta": 3.442338806152344,
+    "changedPixelRatio": 0.049845947265625
+  },
+  {
+    "file": "federalist-10--phone--dropcap.png",
+    "width": 780,
+    "height": 1576,
+    "identical": false,
+    "meanChannelDelta": 15.651767904789796,
+    "changedPixelRatio": 0.15307578419888065
+  },
+  {
+    "file": "federalist-10--phone--hanging-edge.png",
+    "width": 260,
+    "height": 480,
+    "identical": false,
+    "meanChannelDelta": 21.8456891025641,
+    "changedPixelRatio": 0.20603365384615385
+  },
+  {
+    "file": "federalist-10--phone--viewport-open.png",
+    "width": 780,
+    "height": 1688,
+    "identical": false,
+    "meanChannelDelta": 14.076797947806538,
+    "changedPixelRatio": 0.13498222748815167
+  },
+  {
+    "file": "federalist-51--desktop--column-break.png",
+    "width": 800,
+    "height": 220,
+    "identical": false,
+    "meanChannelDelta": 18.779661931818183,
+    "changedPixelRatio": 0.16668181818181818
+  },
+  {
+    "file": "federalist-51--desktop--dropcap.png",
+    "width": 800,
+    "height": 888,
+    "identical": false,
+    "meanChannelDelta": 4.405786880630631,
+    "changedPixelRatio": 0.06367820945945946
+  },
+  {
+    "file": "federalist-51--desktop--hanging-edge.png",
+    "width": 280,
+    "height": 520,
+    "identical": false,
+    "meanChannelDelta": 3.1100652472527472,
+    "changedPixelRatio": 0.04462225274725275
+  },
+  {
+    "file": "federalist-51--desktop--viewport-open.png",
+    "width": 2560,
+    "height": 1600,
+    "identical": false,
+    "meanChannelDelta": 5.275106323242188,
+    "changedPixelRatio": 0.06332958984375
+  },
+  {
+    "file": "federalist-51--phone--dropcap.png",
+    "width": 780,
+    "height": 976,
+    "identical": false,
+    "meanChannelDelta": 3.675787489491383,
+    "changedPixelRatio": 0.05303304960067255
+  },
+  {
+    "file": "federalist-51--phone--hanging-edge.png",
+    "width": 260,
+    "height": 480,
+    "identical": false,
+    "meanChannelDelta": 2.935116185897436,
+    "changedPixelRatio": 0.04280448717948718
+  },
+  {
+    "file": "federalist-51--phone--viewport-open.png",
+    "width": 780,
+    "height": 1688,
+    "identical": false,
+    "meanChannelDelta": 3.754731361647831,
+    "changedPixelRatio": 0.04740475756471017
+  }
+]
