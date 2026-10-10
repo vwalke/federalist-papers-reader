@@ -30,7 +30,7 @@ const JOURNAL_MASTHEAD: Masthead = {
   subline: 'Brutus &amp; Cato &middot; By Post from Federalist Reader'
 };
 
-function shell(bodyHtml: string, ctx: EmailContext, masthead: Masthead = GAZETTE_MASTHEAD): string {
+export function shell(bodyHtml: string, ctx: EmailContext, masthead: Masthead = GAZETTE_MASTHEAD): string {
   return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:24px 12px;background:#E7DFCE;">
 <div style="max-width:560px;margin:0 auto;background:${PAPER};color:${INK};font-family:${SERIF};padding:32px 28px;border:1px solid rgba(42,33,24,0.28);">
 <div style="text-align:center;">
