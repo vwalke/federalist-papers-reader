@@ -69,6 +69,10 @@ export interface Db {
   markDelivery(subscriberId: number, paperNumber: number, scheduledFor: string,
     status: 'sent' | 'failed', providerMessageId?: string): Promise<void>;
   listRetryable(): Promise<Array<{ subscriber_id: number; paper_number: number; scheduled_for: string }>>;
+  claimAnnouncement(subscriberId: number, announcementId: string): Promise<boolean>;
+  markAnnouncement(subscriberId: number, announcementId: string,
+    status: 'sent' | 'failed', providerMessageId?: string): Promise<void>;
+  listRetryableAnnouncement(announcementId: string): Promise<Subscriber[]>;
   purgeUnsubscribed(olderThanDays: number): Promise<void>;
   purgeStalePending(olderThanDays: number): Promise<void>;
   recordDailyRun(todayIso: string): Promise<void>;
@@ -225,6 +229,28 @@ export function makeDb(d1: D1Database): Db {
          WHERE (d.status = 'failed' OR (d.status = 'queued' AND d.created_at < datetime('now','-1 hour')))
            AND d.created_at >= datetime('now','-2 days')`).all();
       return results as unknown as Array<{ subscriber_id: number; paper_number: number; scheduled_for: string }>;
+    },
+    async claimAnnouncement(subscriberId, announcementId) {
+      const result = await d1.prepare(
+        `INSERT OR IGNORE INTO announcement_deliveries (subscriber_id, announcement_id) VALUES (?, ?)`
+      ).bind(subscriberId, announcementId).run();
+      return (result.meta.changes ?? 0) > 0;
+    },
+    async markAnnouncement(subscriberId, announcementId, status, providerMessageId) {
+      await d1.prepare(
+        `UPDATE announcement_deliveries SET status = ?, provider_message_id = ?
+         WHERE subscriber_id = ? AND announcement_id = ?`
+      ).bind(status, providerMessageId ?? null, subscriberId, announcementId).run();
+    },
+    async listRetryableAnnouncement(announcementId) {
+      // Same retry window and at-least-once stance as listRetryable.
+      const { results } = await d1.prepare(
+        `SELECT s.* FROM announcement_deliveries a
+         JOIN subscribers s ON s.id = a.subscriber_id AND s.status = 'active'
+         WHERE a.announcement_id = ?
+           AND (a.status = 'failed' OR (a.status = 'queued' AND a.created_at < datetime('now','-1 hour')))
+           AND a.created_at >= datetime('now','-2 days')`).bind(announcementId).all();
+      return results as unknown as Subscriber[];
     },
     async purgeUnsubscribed(olderThanDays) {
       await d1.prepare(
