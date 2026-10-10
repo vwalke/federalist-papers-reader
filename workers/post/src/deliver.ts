@@ -5,6 +5,7 @@ import type { DebateItem, EssayContent, Env, Subscriber } from './types';
 import { itemsDueOnDate, weeklyItemDue } from './schedule';
 import { renderIssue, renderMakeupIssue, type EmailContext, type RenderedEmail } from './email';
 import { signToken } from './tokens';
+import { AIH_SEASON_ANNOUNCEMENT, type Announcement } from './announcement';
 import type {
   BatchEmailOutcome,
   BatchSender,
@@ -242,6 +243,126 @@ async function prepareClaimedDelivery(
   }
 }
 
+async function sendAnnouncementBatches(
+  env: Env,
+  db: Db,
+  sendBatch: BatchSender,
+  announcement: Announcement,
+  subs: Subscriber[]
+): Promise<{ sent: number; failed: number }> {
+  let sent = 0;
+  let failed = 0;
+  for (const chunk of chunks(subs, BATCH_SIZE)) {
+    const ready: Array<{ sub: Subscriber; mail: OutboundEmail }> = [];
+    for (const sub of chunk) {
+      try {
+        const ctx = await contextFor(env, sub);
+        const mail = announcement.render(sub.program, ctx);
+        ready.push({
+          sub,
+          mail: {
+            from: env.FROM_ADDRESS, to: sub.email, subject: mail.subject,
+            html: mail.html, text: mail.text, unsubscribeUrl: ctx.unsubscribeUrl
+          }
+        });
+      } catch (error) {
+        failed++;
+        await db.markAnnouncement(sub.id, announcement.id, 'failed');
+        console.error('announcement preparation failed', {
+          subscriberId: sub.id, announcement: announcement.id, error: String(error)
+        });
+      }
+    }
+    if (ready.length === 0) continue;
+
+    let outcomes: BatchEmailOutcome[];
+    try {
+      // Same recipients, same key: a same-day retry of an ambiguous failure is
+      // deduplicated by Resend rather than mailed twice.
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(
+        ready.map(({ sub }) => sub.id).join(',')
+      ));
+      const hex = Array.from(new Uint8Array(digest), (byte) =>
+        byte.toString(16).padStart(2, '0')
+      ).join('');
+      outcomes = await sendBatch(
+        env.RESEND_API_KEY,
+        ready.map(({ mail }) => mail),
+        `announcement/v1/${announcement.id}/${hex}`
+      );
+      if (outcomes.length !== ready.length) {
+        throw new Error('batch sender returned the wrong outcome count');
+      }
+    } catch (error) {
+      console.error('announcement batch failed', { size: ready.length, error: String(error) });
+      outcomes = ready.map(() => ({ status: 'failed', error: String(error) }));
+    }
+
+    for (let index = 0; index < ready.length; index++) {
+      const { sub } = ready[index];
+      const outcome = outcomes[index];
+      try {
+        if (outcome.status === 'failed') {
+          failed++;
+          await db.markAnnouncement(sub.id, announcement.id, 'failed');
+          console.error('announcement batch item failed', {
+            subscriberId: sub.id, announcement: announcement.id, error: outcome.error
+          });
+          continue;
+        }
+        try {
+          await db.recordEmailSend(outcome.id, new Date().toISOString(), 1);
+        } catch {
+          console.error('accepted email activity could not be recorded');
+        }
+        await db.markAnnouncement(sub.id, announcement.id, 'sent', outcome.id);
+        sent++;
+      } catch (error) {
+        console.error('announcement outcome persistence failed', {
+          subscriberId: sub.id, announcement: announcement.id, error: String(error)
+        });
+      }
+    }
+  }
+  return { sent, failed };
+}
+
+/**
+ * Sweeps every active subscriber on `announcement.sendOn` (and on no other
+ * day), claiming one row per subscriber so reruns never mail anyone twice,
+ * then retries failed or stranded claims the way paper deliveries are retried.
+ */
+export async function runAnnouncement(
+  env: Env,
+  db: Db,
+  sendBatch: BatchSender,
+  todayIso: string,
+  announcement: Announcement
+): Promise<{ sent: number; failed: number }> {
+  let sent = 0;
+  let failed = 0;
+  if (todayIso === announcement.sendOn) {
+    const claimed: Subscriber[] = [];
+    for (const sub of await db.listDeliverable()) {
+      if (await db.claimAnnouncement(sub.id, announcement.id)) claimed.push(sub);
+    }
+    const result = await sendAnnouncementBatches(env, db, sendBatch, announcement, claimed);
+    sent += result.sent;
+    failed += result.failed;
+  }
+  // Retries are never found before sendOn: no claim exists until then.
+  const retries = await db.listRetryableAnnouncement(announcement.id);
+  if (retries.length > 0) {
+    const result = await sendAnnouncementBatches(env, db, sendBatch, announcement, retries);
+    sent += result.sent;
+    failed += result.failed;
+  }
+  if (sent + failed > 0) {
+    console.log('announcement done', { announcement: announcement.id, sent, failed });
+  }
+  return { sent, failed };
+}
+
 export async function runDaily(
   env: Env,
   db: Db,
@@ -340,6 +461,16 @@ export async function runDaily(
   const remainingRetryResult = await sendPrepared(env, db, sendBatch, retries);
   sent += remainingRetryResult.sent;
   failed += remainingRetryResult.failed;
+
+  // After the day's papers, and fenced off so it can never cost the run its
+  // heartbeat.
+  try {
+    const result = await runAnnouncement(env, db, sendBatch, todayIso, AIH_SEASON_ANNOUNCEMENT);
+    sent += result.sent;
+    failed += result.failed;
+  } catch (error) {
+    console.error('announcement run failed', { error: String(error) });
+  }
 
   // The dead-man's switch: written only when the run reaches the end, so the
   // nightly backup workflow can tell a completed run from a silent death.
