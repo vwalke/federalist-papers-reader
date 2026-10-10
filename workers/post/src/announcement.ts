@@ -27,19 +27,17 @@ const AIH_OUTRO_HTML = `
 ${P}In the spirit of 1787, when these essays passed from hand to hand and paper to paper, pass this one along. If you know someone who&rsquo;d enjoy reading the debate as it unfolded, forward this note or send them to <a href="https://federalistreader.org/subscribe/" style="color:#1F6B66;">federalistreader.org/subscribe</a>. It&rsquo;s free, and both sides arrive on their original dates.</p><p style="text-align:center;font-family:Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6E6353;margin:18px 0;">Share: <a href="mailto:?subject=The%20ratification%20debate%2C%20as%20it%20happened&body=I%20thought%20you%27d%20enjoy%20this.%20Federalist%20Reader%20is%20emailing%20both%20sides%20of%20the%201787%20ratification%20debate%20on%20their%20original%20dates%2C%20starting%20October%2018%20with%20Brutus%20No.%20I.%20It%27s%20free%3A%20https%3A//federalistreader.org/subscribe/" style="color:#1F6B66;text-decoration:none;">Email a friend</a> &middot; <a href="https://twitter.com/intent/tweet?text=Reading%20the%201787%20ratification%20debate%20as%20it%20happened%2C%20both%20sides%20on%20their%20original%20dates%2C%20starting%20Oct%2018%20with%20Brutus%20No.%20I.&url=https%3A//federalistreader.org/subscribe/" style="color:#1F6B66;text-decoration:none;">X</a> &middot; <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A//federalistreader.org/subscribe/" style="color:#1F6B66;text-decoration:none;">Facebook</a></p>${P}Thanks for reading along. It’s a pleasure to have you here.</p>
 <p style="font-size:15px;line-height:1.6;margin-bottom:0;">Publius</p>`;
 
-/** Calendar readers already get the season; they see this line instead of the switch. */
-const AIH_ALREADY_SET = 'You’re already on As It Happened, so you’re all set for the season.';
-
+/** Calendar readers already get the season, so they get no switch section. */
 function aihSwitchHtml(program: Program, ctx: EmailContext): string {
-  if (program === 'calendar') return `${P}${AIH_ALREADY_SET}</p>`;
+  if (program === 'calendar') return '';
   return `${P}If you’re on the Weekly Course, nothing changes for you. You’ll keep getting one paper a week. If you’d like to follow the debate as it unfolded instead, you can switch here:</p>
 <p style="text-align:center;margin:22px 0;"><a href="${escapeHtml(ctx.manageUrl)}" style="background:#1F6B66;color:#F4EFE2;font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 22px;display:inline-block;">Switch to As It Happened</a></p>`;
 }
 
 function aihText(program: Program, ctx: EmailContext): string {
   const switchText = program === 'calendar'
-    ? AIH_ALREADY_SET
-    : `If you’re on the Weekly Course, nothing changes for you. You’ll keep getting one paper a week. If you’d like to follow the debate as it unfolded instead, you can switch here: ${ctx.manageUrl}`;
+    ? ''
+    : `If you’re on the Weekly Course, nothing changes for you. You’ll keep getting one paper a week. If you’d like to follow the debate as it unfolded instead, you can switch here: ${ctx.manageUrl}\n\n`;
   return `A Note from the Editor. Sunday, October 11, 2026.
 
 The Debate Begins Again on October 18
@@ -53,9 +51,7 @@ On October 18, 1787, a New York newspaper printed an essay signed “Brutus.” 
 
 Starting October 18, Federalist Reader’s “As It Happened” season puts that argument back in your inbox on its original calendar. Each essay arrives on the anniversary of its first publication, from both sides of the debate. Brutus No. I comes first, and Federalist No. 1 follows on October 27. The season runs through April 26.
 
-${switchText}
-
-In the spirit of 1787, when these essays passed from hand to hand and paper to paper, pass this one along. If you know someone who'd enjoy reading the debate as it unfolded, forward this note or send them to https://federalistreader.org/subscribe/. It's free, and both sides arrive on their original dates.
+${switchText}In the spirit of 1787, when these essays passed from hand to hand and paper to paper, pass this one along. If you know someone who'd enjoy reading the debate as it unfolded, forward this note or send them to https://federalistreader.org/subscribe/. It's free, and both sides arrive on their original dates.
 
 Share by email: mailto:?subject=The%20ratification%20debate%2C%20as%20it%20happened&body=I%20thought%20you%27d%20enjoy%20this.%20Federalist%20Reader%20is%20emailing%20both%20sides%20of%20the%201787%20ratification%20debate%20on%20their%20original%20dates%2C%20starting%20October%2018%20with%20Brutus%20No.%20I.%20It%27s%20free%3A%20https%3A//federalistreader.org/subscribe/
 Share on X: https://twitter.com/intent/tweet?text=Reading%20the%201787%20ratification%20debate%20as%20it%20happened%2C%20both%20sides%20on%20their%20original%20dates%2C%20starting%20Oct%2018%20with%20Brutus%20No.%20I.&url=https%3A//federalistreader.org/subscribe/

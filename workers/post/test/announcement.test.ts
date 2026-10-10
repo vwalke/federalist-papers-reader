@@ -21,7 +21,6 @@ const CTX: EmailContext = {
 };
 
 const SWITCH_LINE = 'If you’re on the Weekly Course, nothing changes for you.';
-const ALREADY_SET = 'You’re already on As It Happened, so you’re all set for the season.';
 
 function sub(overrides: Partial<Subscriber>): Subscriber {
   return {
@@ -106,19 +105,19 @@ describe('AIH season announcement copy', () => {
     const { html, text } = AIH_SEASON_ANNOUNCEMENT.render('weekly', CTX);
     expect(html).toContain(SWITCH_LINE);
     expect(html).toMatch(/<a href="https:\/\/federalistreader\.org\/manage\?token=MANAGE_TOK"[^>]*>Switch to As It Happened<\/a>/);
-    expect(html).not.toContain(ALREADY_SET);
-    expect(text).toContain(`you can switch here: ${CTX.manageUrl}`);
+    expect(text).toContain(`you can switch here: ${CTX.manageUrl}\n\nIn the spirit of 1787`);
   });
 
-  it('tells calendar readers they are set, without the switch paragraph or button', () => {
+  it('gives calendar readers no switch section at all', () => {
     const { html, text } = AIH_SEASON_ANNOUNCEMENT.render('calendar', CTX);
-    expect(html).toContain(ALREADY_SET);
-    expect(text).toContain(ALREADY_SET);
     for (const body of [html, text]) {
       expect(body).not.toContain(SWITCH_LINE);
       expect(body).not.toContain('Switch to As It Happened');
       expect(body).not.toContain('switch here');
+      expect(body).not.toContain('already on As It Happened');
     }
+    expect(text).not.toContain('\n\n\n');
+    expect(text).toContain('The season runs through April 26.\n\nIn the spirit of 1787');
   });
 
   it('escapes the manage link in the button href', () => {
@@ -183,7 +182,7 @@ describe('runAnnouncement', () => {
     expect(sent.map((m) => m.to)).toEqual(['weekly@example.com', 'season@example.com']);
     expect(sent[0].html).toContain('Switch to As It Happened');
     expect(sent[1].html).not.toContain('Switch to As It Happened');
-    expect(sent[1].html).toContain(ALREADY_SET);
+    expect(sent[1].html).not.toContain(SWITCH_LINE);
     for (const mail of sent) {
       expect(mail.subject).toBe('The Debate Begins Again on October 18');
       expect(mail.from).toBe(ENV.FROM_ADDRESS);
