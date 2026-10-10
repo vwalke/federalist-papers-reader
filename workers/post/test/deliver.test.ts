@@ -46,6 +46,9 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     }),
     markDelivery: vi.fn(async () => {}),
     listRetryable: vi.fn(async () => []),
+    claimAnnouncement: vi.fn(async () => true),
+    markAnnouncement: vi.fn(async () => {}),
+    listRetryableAnnouncement: vi.fn(async () => []),
     recordDailyRun: vi.fn(async () => {})
   } as unknown as Db & { claimed: string[] };
 }
