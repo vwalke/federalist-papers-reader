@@ -172,11 +172,34 @@ async function requireSubscriber(
   return id === null ? null : db.getSubscriberById(id);
 }
 
-async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): Promise<Response> {
+const INVALID_CONFIRM =
+  '<h1>That link is not valid.</h1><p>It may have expired — subscribe again from the site.</p>';
+
+// GET must not mutate: mail scanners prefetch links and would confirm addresses
+// nobody asked to subscribe. GET renders a single-button POST form; POST
+// confirms. Links in already-sent emails point at this GET URL.
+async function handleConfirmGet(request: Request, env: Env, db: Db): Promise<Response> {
   const token = new URL(request.url).searchParams.get('token');
   const sub = await requireSubscriber(token, 'confirm', env, db);
-  if (!sub) return page('<h1>That link is not valid.</h1><p>It may have expired — subscribe again from the site.</p>', 400);
-  await db.activate(sub.id, request.headers.get('CF-Connecting-IP'));
+  if (!sub || sub.status === 'unsubscribed') return page(INVALID_CONFIRM, 400, true);
+  if (sub.status !== 'pending') {
+    return page(plainPage('Already confirmed', `<h1>Already confirmed</h1>
+<p>This address is already subscribed. <a href="/subscribe/confirmed/">What happens next</a></p>`), 200, true);
+  }
+  return page(plainPage('Confirm your subscription', `<h1>Confirm your subscription</h1>
+<p>One click and the papers begin arriving by post.</p>
+<form method="post" action="/api/confirm?token=${escapeHtml(token!)}"><button>Confirm subscription</button></form>`), 200, true);
+}
+
+async function handleConfirmPost(request: Request, env: Env, db: Db, send: Sender): Promise<Response> {
+  const token = new URL(request.url).searchParams.get('token');
+  const sub = await requireSubscriber(token, 'confirm', env, db);
+  if (!sub || sub.status === 'unsubscribed') return page(INVALID_CONFIRM, 400, true);
+  // Only the request that actually moves the row out of 'pending' sends the
+  // welcome; a double-click or replay just lands on the confirmed page.
+  if (!(await db.activate(sub.id, request.headers.get('CF-Connecting-IP')))) {
+    return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
+  }
   const ctx = await emailContext(env, sub);
   const today = new Date().toISOString().slice(0, 10);
   const firstDelivery = sub.program === 'weekly'
@@ -184,6 +207,20 @@ async function handleConfirm(request: Request, env: Env, db: Db, send: Sender): 
   await deliver(env, db, send, sub,
     renderWelcome(sub.program, firstDelivery, DOW_NAMES[sub.send_dow], ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
+}
+
+const PAGE_STYLE = `<style>body{font-family:Georgia,serif;background:#E7DFCE;color:#2A2118;max-width:34rem;margin:2rem auto;padding:0 1rem;}
+form{display:inline}button{font-family:Arial,sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;
+background:#F4EFE2;border:1px solid #2A2118;padding:0.6rem 1rem;margin:0.25rem 0.25rem 0.25rem 0;cursor:pointer}
+button.quit{color:#7B2519}
+select{font-family:Arial,sans-serif;font-size:0.8rem;padding:0.5rem;background:#F4EFE2;border:1px solid #2A2118}</style>`;
+
+function plainPage(title: string, body: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} — The Federalist</title>
+${PAGE_STYLE}</head><body>
+${body}
+</body></html>`;
 }
 
 function managePage(sub: Subscriber, token: string): string {
@@ -201,11 +238,7 @@ function managePage(sub: Subscriber, token: string): string {
     : '';
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manage subscription — The Federalist</title>
-<style>body{font-family:Georgia,serif;background:#E7DFCE;color:#2A2118;max-width:34rem;margin:2rem auto;padding:0 1rem;}
-form{display:inline}button{font-family:Arial,sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;
-background:#F4EFE2;border:1px solid #2A2118;padding:0.6rem 1rem;margin:0.25rem 0.25rem 0.25rem 0;cursor:pointer}
-button.quit{color:#7B2519}
-select{font-family:Arial,sans-serif;font-size:0.8rem;padding:0.5rem;background:#F4EFE2;border:1px solid #2A2118}</style></head><body>
+${PAGE_STYLE}</head><body>
 <h1>Your subscription</h1><p>${progress}</p>${status}
 ${dayForm}
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="pause"><button>Pause</button></form>
@@ -336,6 +369,23 @@ async function handleWebhook(request: Request, env: Env, db: Db): Promise<Respon
       console.error('email.sent webhook persistence failed');
       return new Response('webhook persistence failed', { status: 500 });
     }
+  } else if (event.type === 'email.delivered' || event.type === 'email.delivery_delayed') {
+    if (typeof fields.email_id !== 'string' || fields.email_id.length === 0) {
+      return new Response('bad payload', { status: 400 });
+    }
+    const occurredAt = typeof event.created_at === 'string' && Number.isFinite(Date.parse(event.created_at))
+      ? new Date(event.created_at).toISOString()
+      : new Date().toISOString();
+    try {
+      await db.recordEmailDelivery(
+        fields.email_id,
+        event.type === 'email.delivered' ? 'delivered' : 'delivery_delayed',
+        occurredAt
+      );
+    } catch {
+      console.error(`${event.type} webhook persistence failed`);
+      return new Response('webhook persistence failed', { status: 500 });
+    }
   } else if (event.type === 'email.bounced' || event.type === 'email.complained') {
     const recipients = Array.isArray(fields.to) ? fields.to : [];
     for (const to of recipients) {
@@ -361,7 +411,8 @@ export async function handleRequest(
   const method = request.method;
   if (pathname === '/post-office') return handleDashboard(request, env, db, fetchImpl);
   if (method === 'POST' && pathname === '/api/subscribe') return handleSubscribe(request, env, db, send);
-  if (method === 'GET' && pathname === '/api/confirm') return handleConfirm(request, env, db, send);
+  if (method === 'GET' && pathname === '/api/confirm') return handleConfirmGet(request, env, db);
+  if (method === 'POST' && pathname === '/api/confirm') return handleConfirmPost(request, env, db, send);
   if (method === 'GET' && pathname === '/manage') return handleManageGet(request, env, db);
   if (method === 'POST' && pathname === '/api/manage') return handleManagePost(request, env, db);
   if (method === 'GET' && pathname === '/api/unsubscribe') return handleUnsubscribeGet(request, env, db);

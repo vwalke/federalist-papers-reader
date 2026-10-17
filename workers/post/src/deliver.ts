@@ -3,16 +3,30 @@ import { byId, items, sequence, sequencePosition } from './content';
 import type { Db } from './db';
 import type { DebateItem, EssayContent, Env, Subscriber } from './types';
 import { itemsDueOnDate, weeklyItemDue } from './schedule';
-import { renderIssue, renderMakeupIssue, type EmailContext, type RenderedEmail } from './email';
+import {
+  renderConfirmReminder,
+  renderIssue,
+  renderMakeupIssue,
+  type EmailContext,
+  type RenderedEmail
+} from './email';
 import { signToken } from './tokens';
 import { AIH_SEASON_ANNOUNCEMENT, type Announcement } from './announcement';
-import type {
-  BatchEmailOutcome,
-  BatchSender,
-  OutboundEmail
+import {
+  sendEmail,
+  type BatchEmailOutcome,
+  type BatchSender,
+  type OutboundEmail,
+  type Sender
 } from './resend';
+import { sendAndRecord } from './send-tracking';
 
 const BATCH_SIZE = 100;
+
+/** Days after signup before the one confirmation reminder goes out. */
+export const CONFIRM_REMINDER_AFTER_DAYS = 3;
+/** Days after signup when an unconfirmed address is purged. */
+export const STALE_PENDING_DAYS = 7;
 
 type DeliveryKind = 'issue' | 'makeup';
 
@@ -363,15 +377,58 @@ export async function runAnnouncement(
   return { sent, failed };
 }
 
+/**
+ * Sends one reminder to each pending signup between CONFIRM_REMINDER_AFTER_DAYS
+ * and the stale-pending purge. Each reminder is claimed before it is sent: a
+ * rerun never mails it twice, and a failed send is not retried. The first
+ * failure stops the sweep so a provider outage or rate limit leaves the rest
+ * unclaimed for tomorrow's run.
+ */
+export async function runConfirmReminders(
+  env: Env,
+  db: Db,
+  send: Sender
+): Promise<{ sent: number; failed: number }> {
+  let sent = 0;
+  let failed = 0;
+  for (const sub of await db.listConfirmReminderDue(CONFIRM_REMINDER_AFTER_DAYS, STALE_PENDING_DAYS)) {
+    if (!(await db.claimConfirmReminder(sub.id))) continue;
+    try {
+      const ctx = await contextFor(env, sub);
+      const confirm = await signToken(sub.id, 'confirm', env.TOKEN_SECRET, sub.token_secret);
+      const mail = renderConfirmReminder(`${env.SITE_URL}/api/confirm?token=${confirm}`, ctx);
+      await sendAndRecord(env, db, send, {
+        from: env.FROM_ADDRESS, to: sub.email, subject: mail.subject,
+        html: mail.html, text: mail.text, unsubscribeUrl: ctx.unsubscribeUrl
+      });
+      sent++;
+    } catch (error) {
+      failed++;
+      console.error('confirm reminder failed', { subscriberId: sub.id, error: String(error) });
+      break;
+    }
+  }
+  if (sent + failed > 0) console.log('confirm reminders done', { sent, failed });
+  return { sent, failed };
+}
+
 export async function runDaily(
   env: Env,
   db: Db,
   sendBatch: BatchSender,
-  todayIso: string
+  todayIso: string,
+  send: Sender = sendEmail
 ): Promise<void> {
   await db.autoResume(todayIso);
   await db.purgeUnsubscribed(30);
-  await db.purgeStalePending(7);
+  // Before the purge, and fenced off so a reminder problem never costs the
+  // day's papers or the heartbeat.
+  try {
+    await runConfirmReminders(env, db, send);
+  } catch (error) {
+    console.error('confirm reminder run failed', { error: String(error) });
+  }
+  await db.purgeStalePending(STALE_PENDING_DAYS);
   await db.purgeEmailSends(45);
   const dueCalendarItems = itemsDueOnDate(items, todayIso);
   let sent = 0;

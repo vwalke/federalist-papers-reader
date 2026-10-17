@@ -152,6 +152,27 @@ export function renderConfirmation(confirmUrl: string, ctx: EmailContext): Rende
   };
 }
 
+const REMINDER_BODY =
+  'A few days ago you asked to receive the great debate by post, but the subscription ' +
+  'was never confirmed. One click confirms it.';
+const REMINDER_IGNORE =
+  "If you didn't sign up, simply ignore this letter. The address will be removed " +
+  'within a few days and nothing more will arrive.';
+
+/** The one reminder sent ~3 days after an unconfirmed signup. */
+export function renderConfirmReminder(confirmUrl: string, ctx: EmailContext): RenderedEmail {
+  const html = shell(`
+<p style="font-size:15px;line-height:1.6;">${escapeHtml(REMINDER_BODY)}</p>
+<p style="text-align:center;margin:22px 0;"><a href="${escapeHtml(confirmUrl)}" style="background:${VERDIGRIS};color:${PAPER};font-family:Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:12px 22px;display:inline-block;">Confirm Subscription</a></p>
+<p style="font-size:14px;color:${MUTED};">${escapeHtml(REMINDER_IGNORE)}</p>
+<p style="text-align:right;font-size:14px;letter-spacing:2px;margin:18px 0 6px;">PUBLIUS.</p>`, ctx);
+  return {
+    subject: 'Reminder: confirm your subscription — The Federalist by Post',
+    html,
+    text: `${REMINDER_BODY}\n\nConfirm your subscription: ${confirmUrl}\n\n${REMINDER_IGNORE}\n\nPublius`
+  };
+}
+
 /**
  * @param firstDelivery Human-formatted date for the reader (e.g. "July 25, 2026"),
  *   not an ISO string — it is interpolated verbatim into the email copy.
