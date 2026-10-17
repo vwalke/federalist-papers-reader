@@ -1,6 +1,6 @@
 // workers/post/test/email.test.ts
 import { describe, expect, it } from 'vitest';
-import { renderConfirmation, renderIssue, renderMakeupIssue, renderWelcome } from '../src/email';
+import { renderConfirmReminder, renderConfirmation, renderIssue, renderMakeupIssue, renderWelcome } from '../src/email';
 import debate from '../content/debate.json';
 import type { DebateItem, EssayContent, PaperContent } from '../src/types';
 
@@ -121,6 +121,27 @@ describe('confirmation and welcome', () => {
     expect(mail.html).toContain('the eighty-five Federalist papers and the eight essays that answered them');
     expect(mail.html).not.toMatch(/https:\/\/(?:x\.com|twitter\.com)\//);
     expect(mail.html).not.toContain('@ReadPublius');
+  });
+  it('confirm reminder uses the plain Fœderalist shell, the confirm link, and a Publius signature', () => {
+    const url = 'https://federalistreader.org/api/confirm?token=7.confirm.SIG';
+    const mail = renderConfirmReminder(url, CTX);
+    const confirmation = renderConfirmation(url, CTX);
+    expect(mail.subject).toBe('Reminder: confirm your subscription — The Federalist by Post');
+    expect(mail.html).toContain(`href="${url}"`);
+    expect(mail.text).toContain(url);
+    expect(mail.html).toContain('The F&oelig;deralist');
+    expect(mail.html).toContain('PUBLIUS.');
+    expect(mail.text).toMatch(/Publius$/);
+    expect(mail.html).toContain('One click confirms it.');
+    expect(mail.html).toContain('ignore this letter');
+    expect(mail.html).toContain('removed');
+    expect(mail.html).not.toMatch(/spam|promotions|junk/i);
+    // Same shell as the confirmation: identical head and footer around the body.
+    const head = (html: string) => html.slice(0, html.indexOf('<hr'));
+    const foot = (html: string) => html.slice(html.lastIndexOf('<hr'));
+    expect(head(mail.html)).toBe(head(confirmation.html));
+    expect(foot(mail.html)).toBe(foot(confirmation.html));
+    expect(mail.html).not.toMatch(/<img|<table/);
   });
   it('welcome states the first delivery expectation per program', () => {
     const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);

@@ -36,9 +36,12 @@ function makeStubDb(subscribers: Subscriber[]) {
   const db = {
     claims,
     recordEmailSend: vi.fn(async () => {}),
+    recordEmailDelivery: vi.fn(async () => {}),
     purgeEmailSends: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id: number) => subscribers.find((s) => s.id === id) ?? null),
     purgeUnsubscribed: vi.fn(async () => {}),
+    listConfirmReminderDue: vi.fn(async () => []),
+    claimConfirmReminder: vi.fn(async () => true),
     purgeStalePending: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
     clearMakeupPending: vi.fn(async () => {}),
