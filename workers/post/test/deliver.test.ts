@@ -1,9 +1,10 @@
 // workers/post/test/deliver.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { runDaily } from '../src/deliver';
+import { runConfirmReminders, runDaily } from '../src/deliver';
+import { verifyToken } from '../src/tokens';
 import type { Db } from '../src/db';
 import type { Env, Subscriber } from '../src/types';
-import type { BatchEmailOutcome } from '../src/resend';
+import type { BatchEmailOutcome, OutboundEmail } from '../src/resend';
 
 const ENV = {
   SITE_URL: 'https://federalistreader.org', FROM_ADDRESS: 'Publius <p@f.org>',
@@ -26,12 +27,15 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     getWeeklyDayStats: vi.fn(),
     getSubscriptionActivity: vi.fn(async () => ({ days: [] })),
     recordEmailSend: vi.fn(async () => {}),
+    recordEmailDelivery: vi.fn(async () => {}),
     getEmailActivity: vi.fn(),
     purgeEmailSends: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id) => subscribers.find((s) => s.id === id) ?? null),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(), activate: vi.fn(), setStatus: vi.fn(), setProgram: vi.fn(),
     unsubscribe: vi.fn(), unsubscribeByEmail: vi.fn(), purgeUnsubscribed: vi.fn(async () => {}),
+    listConfirmReminderDue: vi.fn(async () => []),
+    claimConfirmReminder: vi.fn(async () => true),
     purgeStalePending: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
     clearMakeupPending: vi.fn(async () => {}),
@@ -343,5 +347,98 @@ describe('runDaily', () => {
       2, 3, '2026-07-18', 'failed', undefined
     );
     expect(db.setProgress).not.toHaveBeenCalled();
+  });
+});
+
+describe('confirmation reminders', () => {
+  const pending = (overrides: Partial<Subscriber> = {}) =>
+    sub({ id: 9, email: 'p@example.com', status: 'pending', confirmed_at: null, token_secret: 'salt9', ...overrides });
+
+  /** A stub whose reminder claim behaves like the D1 UPDATE ... WHERE confirm_reminded_at IS NULL. */
+  function reminderDb(due: Subscriber[], log: string[] = []) {
+    const db = makeStubDb([]);
+    const reminded = new Set<number>();
+    vi.mocked(db.listConfirmReminderDue).mockImplementation(async () => {
+      log.push('listConfirmReminderDue');
+      return due.filter((s) => !reminded.has(s.id));
+    });
+    vi.mocked(db.claimConfirmReminder).mockImplementation(async (id) => {
+      if (reminded.has(id)) return false;
+      reminded.add(id);
+      return true;
+    });
+    vi.mocked(db.purgeStalePending).mockImplementation(async () => { log.push('purgeStalePending'); });
+    return { db, reminded };
+  }
+
+  let mails: OutboundEmail[];
+  const send = vi.fn(async (_key: string, mail: OutboundEmail) => {
+    mails.push(mail);
+    return `msg_r${mails.length}`;
+  });
+  const noBatch = async (): Promise<BatchEmailOutcome[]> => { throw new Error('no batch expected'); };
+  beforeEach(() => {
+    mails = [];
+    send.mockClear();
+  });
+
+  it('asks for signups older than 3 days and inside the 7-day purge, before the purge runs', async () => {
+    const log: string[] = [];
+    const { db } = reminderDb([pending()], log);
+    await runDaily(ENV, db, noBatch, '2026-07-20', send);
+    expect(db.listConfirmReminderDue).toHaveBeenCalledWith(3, 7);
+    expect(db.purgeStalePending).toHaveBeenCalledWith(7);
+    expect(log).toEqual(['listConfirmReminderDue', 'purgeStalePending']);
+    expect(mails).toHaveLength(1);
+  });
+
+  it('sends one reminder with a valid confirm link through sendAndRecord', async () => {
+    const { db } = reminderDb([pending()]);
+    await runConfirmReminders(ENV, db, send);
+    expect(mails).toHaveLength(1);
+    expect(mails[0].to).toBe('p@example.com');
+    expect(mails[0].from).toBe(ENV.FROM_ADDRESS);
+    expect(mails[0].subject).toBe('Reminder: confirm your subscription — The Federalist by Post');
+    const token = mails[0].html.match(/\/api\/confirm\?token=([^"&]+)/)![1];
+    expect(mails[0].html).toContain(`${ENV.SITE_URL}/api/confirm?token=${token}`);
+    expect(await verifyToken(token, 'confirm', ENV.TOKEN_SECRET, async () => 'salt9')).toBe(9);
+    expect(db.claimConfirmReminder).toHaveBeenCalledWith(9);
+    expect(db.recordEmailSend).toHaveBeenCalledWith('msg_r1', expect.any(String), 1);
+  });
+
+  it('reminds each signup at most once across reruns', async () => {
+    const { db } = reminderDb([pending(), pending({ id: 10, email: 'q@example.com' })]);
+    await runDaily(ENV, db, noBatch, '2026-07-20', send);
+    await runDaily(ENV, db, noBatch, '2026-07-20', send);
+    await runDaily(ENV, db, noBatch, '2026-07-21', send);
+    expect(mails.map((m) => m.to)).toEqual(['p@example.com', 'q@example.com']);
+  });
+
+  it('skips a row another run already claimed', async () => {
+    const { db } = reminderDb([pending()]);
+    vi.mocked(db.claimConfirmReminder).mockResolvedValue(false);
+    await runConfirmReminders(ENV, db, send);
+    expect(mails).toHaveLength(0);
+  });
+
+  it('keeps a failed reminder claimed (no retry loop), stops the sweep, and still delivers the day', async () => {
+    const { db, reminded } = reminderDb([pending(), pending({ id: 10, email: 'q@example.com' })]);
+    const failing = vi.fn(async () => { throw new Error('Resend 429'); });
+    await runDaily(ENV, db, noBatch, '2026-07-20', failing);
+    expect(failing).toHaveBeenCalledTimes(1);
+    expect([...reminded]).toEqual([9]); // q@ stays unclaimed for tomorrow
+    expect(db.purgeStalePending).toHaveBeenCalledWith(7);
+    expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-20');
+
+    await runDaily(ENV, db, noBatch, '2026-07-21', send);
+    expect(mails.map((m) => m.to)).toEqual(['q@example.com']);
+  });
+
+  it('survives a reminder query failure without costing the run', async () => {
+    const db = makeStubDb([]);
+    vi.mocked(db.listConfirmReminderDue).mockRejectedValue(new Error('D1 down'));
+    await runDaily(ENV, db, noBatch, '2026-07-20', send);
+    expect(db.purgeStalePending).toHaveBeenCalledWith(7);
+    expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-20');
   });
 });

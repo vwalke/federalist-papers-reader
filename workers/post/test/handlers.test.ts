@@ -18,12 +18,13 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     getWeeklyDayStats: vi.fn(async () => []),
     getSubscriptionActivity: vi.fn(async () => ({ days: [] })),
     recordEmailSend: vi.fn(async () => {}),
+    recordEmailDelivery: vi.fn(async () => {}),
     getEmailActivity: vi.fn(async () => ({ last24Hours: 0, days: [] })),
     purgeEmailSends: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async () => SUB),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(async () => SUB),
-    activate: vi.fn(async (_id: number, _confirmIp: string | null) => {}),
+    activate: vi.fn(async (_id: number, _confirmIp: string | null) => true),
     setStatus: vi.fn(async () => {}),
     setProgram: vi.fn(async () => {}),
     setProgress: vi.fn(async () => {}),
@@ -40,6 +41,8 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     markAnnouncement: vi.fn(async () => {}),
     listRetryableAnnouncement: vi.fn(async () => []),
     purgeUnsubscribed: vi.fn(async () => {}),
+    listConfirmReminderDue: vi.fn(async () => []),
+    claimConfirmReminder: vi.fn(async () => true),
     purgeStalePending: vi.fn(async () => {}),
     recordDailyRun: vi.fn(async () => {}),
     ...overrides
@@ -441,18 +444,81 @@ describe('POST /api/subscribe', () => {
   });
 });
 
-describe('GET /api/confirm', () => {
-  it('activates on a valid token and sends the welcome email', async () => {
+describe('/api/confirm', () => {
+  async function confirmToken() {
     const { signToken } = await import('../src/tokens');
-    const token = await signToken(7, 'confirm', ENV.TOKEN_SECRET, SUB.token_secret);
+    return signToken(7, 'confirm', ENV.TOKEN_SECRET, SUB.token_secret);
+  }
+  const confirmUrl = async () => `https://federalistreader.org/api/confirm?token=${await confirmToken()}`;
+
+  /** A stub whose activate behaves like D1: only a pending row transitions. */
+  function statefulDb() {
+    let status: Subscriber['status'] = 'pending';
+    return makeStubDb({
+      getSubscriberById: vi.fn(async () => ({ ...SUB, status })),
+      activate: vi.fn(async () => {
+        if (status !== 'pending') return false;
+        status = 'active';
+        return true;
+      })
+    });
+  }
+
+  it('GET renders a single POST form and does not activate (scanner-safe)', async () => {
+    const db = makeStubDb();
+    const res = await handleRequest(new Request(await confirmUrl()), ENV, db, sender);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    const html = await res.text();
+    expect(html).toContain(`<form method="post" action="/api/confirm?token=${await confirmToken()}">`);
+    expect(html.match(/<button/g)).toHaveLength(1);
+    expect(html).toContain('font-family:Georgia');
+    expect(db.activate).not.toHaveBeenCalled();
+    expect(sent).toHaveLength(0);
+  });
+
+  it('GET tells an already-confirmed subscriber so, without a form', async () => {
+    const db = makeStubDb({ getSubscriberById: vi.fn(async () => ({ ...SUB, status: 'active' as const })) });
+    const res = await handleRequest(new Request(await confirmUrl()), ENV, db, sender);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('Already confirmed');
+    expect(html).toContain('href="/subscribe/confirmed/"');
+    expect(html).not.toContain('<form');
+    expect(db.activate).not.toHaveBeenCalled();
+  });
+
+  it('POST activates on a valid token, sends the welcome email, and redirects', async () => {
     const db = makeStubDb();
     const res = await handleRequest(
-      new Request(`https://federalistreader.org/api/confirm?token=${token}`), ENV, db, sender);
+      new Request(await confirmUrl(), { method: 'POST', headers: { 'CF-Connecting-IP': '203.0.113.9' } }),
+      ENV, db, sender);
     expect(res.status).toBe(303);
     expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/confirmed/');
-    expect(db.activate).toHaveBeenCalledWith(7, null);
+    expect(db.activate).toHaveBeenCalledWith(7, '203.0.113.9');
+    expect(sent).toHaveLength(1);
     expect(sent[0].subject).toContain('Welcome');
     expect(db.recordEmailSend).toHaveBeenCalledWith('msg_test', expect.any(String), 1);
+  });
+
+  it('POST twice sends the welcome only once', async () => {
+    const db = statefulDb();
+    const first = await handleRequest(new Request(await confirmUrl(), { method: 'POST' }), ENV, db, sender);
+    const second = await handleRequest(new Request(await confirmUrl(), { method: 'POST' }), ENV, db, sender);
+    expect(first.status).toBe(303);
+    expect(second.status).toBe(303);
+    expect(second.headers.get('Location')).toBe('https://federalistreader.org/subscribe/confirmed/');
+    expect(sent.filter((m) => m.subject.includes('Welcome'))).toHaveLength(1);
+  });
+
+  it('POST for an already-active subscriber sends no welcome', async () => {
+    const db = makeStubDb({
+      getSubscriberById: vi.fn(async () => ({ ...SUB, status: 'active' as const })),
+      activate: vi.fn(async () => false)
+    });
+    const res = await handleRequest(new Request(await confirmUrl(), { method: 'POST' }), ENV, db, sender);
+    expect(res.status).toBe(303);
+    expect(sent).toHaveLength(0);
   });
 
   it('keeps confirmation successful when activity recording fails', async () => {
@@ -461,21 +527,27 @@ describe('GET /api/confirm', () => {
         throw new Error('D1 unavailable');
       })
     });
-    const res = await handleRequest(
-      post('/api/subscribe', { email: 'reader@example.com', program: 'weekly' }),
-      ENV,
-      db,
-      sender
-    );
+    const res = await handleRequest(new Request(await confirmUrl(), { method: 'POST' }), ENV, db, sender);
 
     expect(res.status).toBe(303);
     expect(sent).toHaveLength(1);
   });
 
-  it('rejects a bad token with 400', async () => {
+  it.each(['GET', 'POST'])('%s rejects a bad token with the same 400 message', async (method) => {
+    const db = makeStubDb();
     const res = await handleRequest(
-      new Request('https://federalistreader.org/api/confirm?token=junk'), ENV, makeStubDb(), sender);
+      new Request('https://federalistreader.org/api/confirm?token=junk', { method }), ENV, db, sender);
     expect(res.status).toBe(400);
+    expect(await res.text()).toContain('That link is not valid.');
+    expect(db.activate).not.toHaveBeenCalled();
+    expect(sent).toHaveLength(0);
+  });
+
+  it('POST rejects a token for an unsubscribed address', async () => {
+    const db = makeStubDb({ getSubscriberById: vi.fn(async () => ({ ...SUB, status: 'unsubscribed' as const })) });
+    const res = await handleRequest(new Request(await confirmUrl(), { method: 'POST' }), ENV, db, sender);
+    expect(res.status).toBe(400);
+    expect(db.activate).not.toHaveBeenCalled();
   });
 });
 
@@ -713,5 +785,51 @@ describe('resend webhook', () => {
     expect(res.status).toBe(500);
     expect(body).toBe('webhook persistence failed');
     expect(body).not.toMatch(/private|provider|subject|SQL|example\.com/i);
+  });
+
+  it.each([
+    ['email.delivered', 'delivered'],
+    ['email.delivery_delayed', 'delivery_delayed']
+  ] as const)('records %s against the tracked email', async (type, status) => {
+    const payload = JSON.stringify({
+      type,
+      created_at: '2026-07-25T12:35:10.000Z',
+      data: { email_id: 'em_1', created_at: '2026-07-25T12:34:56Z', to: ['reader@example.com'] }
+    });
+    const db = makeStubDb();
+    const res = await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+    expect(res.status).toBe(200);
+    expect(db.recordEmailDelivery).toHaveBeenCalledWith('em_1', status, '2026-07-25T12:35:10.000Z');
+    expect(db.recordEmailSend).not.toHaveBeenCalled();
+    expect(db.unsubscribeByEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects a delivered event without an email id', async () => {
+    const payload = JSON.stringify({ type: 'email.delivered', data: { email_id: '' } });
+    const db = makeStubDb();
+    const res = await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+    expect(res.status).toBe(400);
+    expect(db.recordEmailDelivery).not.toHaveBeenCalled();
+  });
+
+  it('returns 500 when delivery persistence fails so Resend retries', async () => {
+    const payload = JSON.stringify({ type: 'email.delivered', data: { email_id: 'em_1' } });
+    const db = makeStubDb({ recordEmailDelivery: vi.fn(async () => { throw new Error('SQL detail'); }) });
+    const res = await handleRequest(
+      webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, db, sender);
+    expect(res.status).toBe(500);
+    expect(await res.text()).toBe('webhook persistence failed');
+  });
+
+  it('rejects a forged delivered event', async () => {
+    const payload = JSON.stringify({ type: 'email.delivered', data: { email_id: 'em_1' } });
+    const db = makeStubDb();
+    const headers = await svixHeaders(payload);
+    headers['svix-signature'] = `v1,${btoa('forged-signature-bytes-here-1234')}`;
+    const res = await handleRequest(webhookRequest(payload, headers), WEBHOOK_ENV, db, sender);
+    expect(res.status).toBe(401);
+    expect(db.recordEmailDelivery).not.toHaveBeenCalled();
   });
 });
