@@ -50,12 +50,16 @@ export interface Db {
   getWeeklyDayStats(): Promise<WeeklyDayStats[]>;
   getSubscriptionActivity(now: Date): Promise<DailyActivity>;
   recordEmailSend(providerMessageId: string, sentAt: string, recipientCount: number): Promise<void>;
+  /** Records a Resend delivery event against an email we already track; a no-op for unknown ids. */
+  recordEmailDelivery(providerMessageId: string, status: 'delivered' | 'delivery_delayed',
+    occurredAt: string): Promise<void>;
   getEmailActivity(now: Date): Promise<EmailActivity>;
   purgeEmailSends(olderThanDays: number): Promise<void>;
   getSubscriberById(id: number): Promise<Subscriber | null>;
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
   upsertPending(email: string, program: Program, tokenSecret: string, sendDow: number): Promise<Subscriber>;
-  activate(id: number, confirmIp: string | null): Promise<void>;
+  /** True only when this call moved the subscriber out of 'pending'. */
+  activate(id: number, confirmIp: string | null): Promise<boolean>;
   setStatus(id: number, status: 'active' | 'paused', pausedUntil?: string | null): Promise<void>;
   setProgram(id: number, program: Program, progressIndex: number): Promise<void>;
   setProgress(id: number, progressIndex: number): Promise<void>;
@@ -74,6 +78,10 @@ export interface Db {
     status: 'sent' | 'failed', providerMessageId?: string): Promise<void>;
   listRetryableAnnouncement(announcementId: string): Promise<Subscriber[]>;
   purgeUnsubscribed(olderThanDays: number): Promise<void>;
+  /** Pending signups older than `afterDays`, not yet reminded, and not old enough for purgeStalePending(`purgeDays`). */
+  listConfirmReminderDue(afterDays: number, purgeDays: number): Promise<Subscriber[]>;
+  /** Marks the reminder sent before sending; false if it was already claimed or the signup is no longer pending. */
+  claimConfirmReminder(id: number): Promise<boolean>;
   purgeStalePending(olderThanDays: number): Promise<void>;
   recordDailyRun(todayIso: string): Promise<void>;
 }
@@ -134,6 +142,15 @@ export function makeDb(d1: D1Database): Db {
            recipient_count = excluded.recipient_count`
       ).bind(providerMessageId, sentAt, recipientCount).run();
     },
+    async recordEmailDelivery(providerMessageId, status, occurredAt) {
+      // Delivered is final: a late-arriving delay event never downgrades it.
+      await d1.prepare(
+        `UPDATE email_sends SET
+           delivery_status = CASE WHEN delivery_status = 'delivered' THEN 'delivered' ELSE ? END,
+           delivery_status_at = CASE WHEN delivery_status = 'delivered' THEN delivery_status_at ELSE ? END
+         WHERE provider_message_id = ?`
+      ).bind(status, occurredAt, providerMessageId).run();
+    },
     async getEmailActivity(now) {
       const cutoff = new Date(now.getTime() - 31 * 86_400_000).toISOString();
       const { results } = await d1.prepare(
@@ -159,16 +176,18 @@ export function makeDb(d1: D1Database): Db {
            send_dow = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.send_dow ELSE subscribers.send_dow END,
            status = CASE WHEN subscribers.status = 'unsubscribed' THEN 'pending' ELSE subscribers.status END,
            token_secret = CASE WHEN subscribers.status = 'unsubscribed' THEN excluded.token_secret ELSE subscribers.token_secret END,
-           unsubscribed_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.unsubscribed_at END
+           unsubscribed_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.unsubscribed_at END,
+           confirm_reminded_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.confirm_reminded_at END
          RETURNING *`
       ).bind(email.toLowerCase(), program, tokenSecret, sendDow).first();
       if (!row) throw new Error('upsertPending returned no row');
       return row as unknown as Subscriber;
     },
     async activate(id, confirmIp) {
-      await d1.prepare(
+      const result = await d1.prepare(
         `UPDATE subscribers SET status = 'active', confirmed_at = datetime('now'), confirm_ip = ?
          WHERE id = ? AND status = 'pending'`).bind(confirmIp, id).run();
+      return (result.meta.changes ?? 0) > 0;
     },
     async setStatus(id, status, pausedUntil = null) {
       await d1.prepare('UPDATE subscribers SET status = ?, paused_until = ? WHERE id = ?')
@@ -257,6 +276,25 @@ export function makeDb(d1: D1Database): Db {
         `DELETE FROM subscribers WHERE status = 'unsubscribed'
          AND unsubscribed_at < datetime('now', ?)`
       ).bind(`-${olderThanDays} days`).run();
+    },
+    async listConfirmReminderDue(afterDays, purgeDays) {
+      // The lower bound is exactly purgeStalePending's complement, so a row
+      // purged in the same run is never reminded first.
+      const { results } = await d1.prepare(
+        `SELECT * FROM subscribers WHERE status = 'pending'
+         AND confirm_reminded_at IS NULL
+         AND created_at < datetime('now', ?)
+         AND created_at >= datetime('now', ?)
+         ORDER BY created_at`
+      ).bind(`-${afterDays} days`, `-${purgeDays} days`).all();
+      return results as unknown as Subscriber[];
+    },
+    async claimConfirmReminder(id) {
+      const result = await d1.prepare(
+        `UPDATE subscribers SET confirm_reminded_at = datetime('now')
+         WHERE id = ? AND status = 'pending' AND confirm_reminded_at IS NULL`
+      ).bind(id).run();
+      return (result.meta.changes ?? 0) > 0;
     },
     async purgeStalePending(olderThanDays) {
       await d1.prepare(
