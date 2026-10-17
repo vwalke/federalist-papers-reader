@@ -13,6 +13,6 @@ export default {
     // Use the cron's scheduled time, not invocation time, so a delayed start
     // still delivers the intended day's papers.
     await runDaily(env, makeDb(env.DB), sendBatchEmails,
-      new Date(event.scheduledTime).toISOString().slice(0, 10));
+      new Date(event.scheduledTime).toISOString().slice(0, 10), sendEmail);
   }
 };
