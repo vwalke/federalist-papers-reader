@@ -7,6 +7,7 @@ import {
   addDays,
   catchUpItemDue,
   catchUpPosition,
+  catchUpStateFor,
   nextOnDate,
   seasonOpens,
   weekdayDateLabel
@@ -101,7 +102,7 @@ async function renderDelivery(
       throw new Error('make-up issues carry only essays');
     }
     mail = renderMakeupIssue(essays, ctx);
-  } else if (sub.program === 'calendar' && sub.catchup_items) {
+  } else if (sub.program === 'calendar' && catchUpStateFor(sub, scheduledFor).catchup_items) {
     mail = renderCalendarMorning(sub, issue, scheduledFor, ctx);
   } else {
     if (sub.program === 'weekly') {
@@ -141,7 +142,7 @@ function renderCalendarMorning(
   ctx: EmailContext
 ): RenderedEmail {
   for (const item of issue) {
-    const place = catchUpPosition(sub, items, item.id, scheduledFor);
+    const place = catchUpPosition(catchUpStateFor(sub, scheduledFor), items, item.id, scheduledFor);
     if (!place) continue;
     const last = place.position === place.total;
     const next = last ? nextOnDate(items, addDays(scheduledFor, 1)) : null;
@@ -500,9 +501,11 @@ export async function runDaily(
         // One catch-up paper a morning, in the same letter as any on-date
         // paper. The backlog's progress lives in deliveries, so the claim
         // below is what advances it, exactly once however often the day runs.
-        if (sub.catchup_items && !sub.caught_up_on) {
+        // A backlog from an earlier season reads as none.
+        const state = catchUpStateFor(sub, todayIso);
+        if (state.catchup_items && !state.caught_up_on) {
           const delivered = await db.listDeliveredItems(sub.id, seasonOpens(todayIso));
-          const catchUp = catchUpItemDue(sub, todayIso, delivered);
+          const catchUp = catchUpItemDue(state, todayIso, delivered);
           if (catchUp) {
             itemIds.push(catchUp.id);
             caughtUp = catchUp.position === catchUp.total;

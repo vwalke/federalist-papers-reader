@@ -3,6 +3,7 @@
 // The catch-up pacing rule against the real season schedule: every possible
 // late joiner converges, on the date promised, with at most two papers a
 // morning, and never receives a paper twice or misses one.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import debate from '../content/debate.json';
 import { itemsDueOnDate } from '../src/schedule';
@@ -16,11 +17,18 @@ import {
   catchUpOpen,
   catchUpPosition,
   catchUpStartsOn,
+  catchUpStateFor,
+  CATCH_UP_LAST_DAY,
+  dailyRunHasGoneOut,
+  easternToday,
+  effectiveMonthDay,
   firstLiveDay,
   nextOnDate,
   numberWord,
   seasonCalendar,
+  SEASON_OPENS,
   seasonOpens,
+  signupCatchUpBehind,
   weekdayDateLabel,
   type CatchUpState,
   type DeliveredItem
@@ -232,5 +240,107 @@ describe('labels', () => {
     expect(numberWord(23)).toBe('23');
     expect(nextOnDate(items, '2026-11-11')).toEqual({ id: 6, date: '2026-11-14' });
     expect(nextOnDate(items, '2027-04-27')).toBeNull();
+  });
+});
+
+describe('Eastern dates', () => {
+  const today = (iso: string) => easternToday(new Date(iso));
+  const ranAt = (iso: string) => dailyRunHasGoneOut(new Date(iso));
+
+  it('keeps November 21 until midnight in New York', () => {
+    expect(today('2026-11-22T00:30:00Z')).toBe('2026-11-21');
+    expect(today('2026-11-22T04:59:59Z')).toBe('2026-11-21');
+    expect(today('2026-11-22T05:00:00Z')).toBe('2026-11-22');
+    expect(catchUpOpen(today('2026-11-22T00:30:00Z'))).toBe(true);
+    expect(catchUpOpen(today('2026-11-22T05:30:00Z'))).toBe(false);
+  });
+
+  it('turns the day at 04:00 UTC under daylight time and 05:00 UTC under standard time', () => {
+    expect(today('2026-07-01T03:59:00Z')).toBe('2026-06-30');
+    expect(today('2026-07-01T04:00:00Z')).toBe('2026-07-01');
+    // Clocks spring forward on March 14, 2027: that midnight is still EST.
+    expect(today('2027-03-14T04:59:00Z')).toBe('2027-03-13');
+    expect(today('2027-03-14T05:00:00Z')).toBe('2027-03-14');
+    expect(today('2027-03-15T03:59:00Z')).toBe('2027-03-14');
+    expect(today('2027-03-15T04:00:00Z')).toBe('2027-03-15');
+    // Clocks fall back on November 1, 2026: that midnight is still EDT.
+    expect(today('2026-11-01T03:59:00Z')).toBe('2026-10-31');
+    expect(today('2026-11-01T04:00:00Z')).toBe('2026-11-01');
+    expect(today('2026-11-02T04:30:00Z')).toBe('2026-11-01');
+    expect(today('2026-11-02T05:00:00Z')).toBe('2026-11-02');
+  });
+
+  it('defaults to the present', () => {
+    expect(easternToday()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('counts the run as out from the 11:00 UTC cron: 7am EDT, 6am EST', () => {
+    // Daylight time.
+    expect(ranAt('2026-07-01T10:59:00Z')).toBe(false);
+    expect(ranAt('2026-07-01T11:00:00Z')).toBe(true);
+    expect(ranAt('2026-07-02T03:30:00Z')).toBe(true); // 11:30pm EDT, July 1
+    expect(ranAt('2026-07-02T04:00:00Z')).toBe(false); // midnight EDT, July 2
+    // Standard time, the day after clocks fall back.
+    expect(ranAt('2026-11-02T10:59:00Z')).toBe(false);
+    expect(ranAt('2026-11-02T11:00:00Z')).toBe(true);
+    expect(ranAt('2026-11-02T04:30:00Z')).toBe(true); // 11:30pm EST, November 1
+    expect(ranAt('2026-11-02T05:00:00Z')).toBe(false); // midnight EST, November 2
+    // The fall-back and spring-forward mornings themselves.
+    expect(ranAt('2026-11-01T10:59:00Z')).toBe(false);
+    expect(ranAt('2026-11-01T11:00:00Z')).toBe(true);
+    expect(ranAt('2027-03-14T06:30:00Z')).toBe(false); // 1:30am EST, before the jump
+    expect(ranAt('2027-03-14T11:00:00Z')).toBe(true);
+    expect(ranAt('2027-03-14T04:30:00Z')).toBe(true); // 11:30pm EST, March 13
+  });
+});
+
+describe('the signup form’s count', () => {
+  const days = items.map(effectiveMonthDay)
+    .filter((day) => day >= SEASON_OPENS && day <= CATCH_UP_LAST_DAY).sort();
+  const behind = (iso: string) => signupCatchUpBehind(days, new Date(iso));
+
+  it('agrees with the Worker’s backlog, before and after the morning run', () => {
+    expect(behind('2026-11-10T09:00:00Z')).toBe(catchUpBacklog(items, firstLiveDay('2026-11-10', false)).length);
+    expect(behind('2026-11-10T16:00:00Z')).toBe(catchUpBacklog(items, firstLiveDay('2026-11-10', true)).length);
+    expect(behind('2026-11-10T09:00:00Z')).toBe(7);
+    expect(behind('2026-11-10T16:00:00Z')).toBe(8);
+  });
+
+  it('keeps the offer through the evening of November 21 in New York and drops it at midnight', () => {
+    expect(behind('2026-11-22T00:30:00Z')).toBe(12);
+    expect(behind('2026-11-22T05:30:00Z')).toBe(0);
+    expect(behind('2026-10-17T16:00:00Z')).toBe(0);
+  });
+
+  it('is what the site’s signup component runs, with no UTC date of its own', () => {
+    const source = readFileSync(new URL('../../../src/components/SubscribeCoupon.astro', import.meta.url), 'utf8');
+    const script = source.slice(source.indexOf('<script>'));
+    expect(script).toContain('signupCatchUpBehind(');
+    expect(script).not.toMatch(/toISOString|getUTCHours/);
+  });
+});
+
+describe('catchUpStateFor', () => {
+  const state = (overrides: Partial<CatchUpState> = {}): CatchUpState => ({
+    catchup_items: '101,1,2', catchup_starts_on: '2026-11-11', caught_up_on: null, ...overrides
+  });
+  const none = { catchup_items: null, catchup_starts_on: null, caught_up_on: null };
+
+  it('keeps this season’s state, through the season’s close in April', () => {
+    expect(catchUpStateFor(state(), '2026-11-20')).toEqual(state());
+    expect(catchUpStateFor(state({ caught_up_on: '2026-11-13' }), '2027-04-26'))
+      .toEqual(state({ caught_up_on: '2026-11-13' }));
+  });
+
+  it('reads an earlier season’s backlog, finished or not, as none', () => {
+    expect(catchUpStateFor(state(), '2027-11-10')).toEqual(none);
+    expect(catchUpStateFor(state({ caught_up_on: '2026-11-13' }), '2027-10-18')).toEqual(none);
+    // From May the calendar looks ahead to the next season.
+    expect(catchUpStateFor(state(), '2027-05-01')).toEqual(none);
+  });
+
+  it('falls back to the caught-up date when there is no start date, and passes no state through', () => {
+    expect(catchUpStateFor(state({ catchup_starts_on: null, caught_up_on: '2026-11-13' }), '2027-11-10')).toEqual(none);
+    expect(catchUpStateFor(none, '2027-11-10')).toEqual(none);
   });
 });

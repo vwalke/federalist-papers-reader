@@ -74,6 +74,33 @@ export function catchUpLastDay(iso: string): string {
   return `${seasonStartYear(iso)}-${CATCH_UP_LAST_DAY}`;
 }
 
+/**
+ * The daily run's cron (wrangler.toml, "0 11 * * *") fires at 11:00 UTC every
+ * day: 7am ET under daylight time, 6am ET under standard time. Either way it
+ * falls on the same Eastern calendar date as the UTC one.
+ */
+export const DAILY_RUN_UTC_HOUR = 11;
+
+const EASTERN_DATE_PARTS = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+});
+
+/**
+ * Today's date on the Eastern calendar, the one the season and its cut-off
+ * keep: Nov 21 lasts until midnight in New York, not 7pm EST.
+ */
+export function easternToday(now: Date = new Date()): string {
+  const parts = new Map(EASTERN_DATE_PARTS.formatToParts(now).map((part) => [part.type, part.value]));
+  return `${parts.get('year')}-${parts.get('month')}-${parts.get('day')}`;
+}
+
+/** True once the cron's run for today's Eastern date has fired (whatever the clocks say). */
+export function dailyRunHasGoneOut(now: Date = new Date()): boolean {
+  const today = easternToday(now);
+  const hour = String(DAILY_RUN_UTC_HOUR).padStart(2, '0');
+  return now.getTime() >= Date.parse(`${today}T${hour}:00:00Z`);
+}
+
 /** True on the days a reader may ask for catch-up: from opening day through the cut-off. */
 export function catchUpOpen(iso: string): boolean {
   return seasonOpens(iso) <= iso && iso <= catchUpLastDay(iso);
@@ -125,6 +152,20 @@ export function catchUpBacklog(
     .map((entry) => entry.id);
 }
 
+/**
+ * How many papers the signup form offers to catch up on at `now`: the
+ * cut-off-window anniversaries in `monthDays` that fall before the reader's
+ * first live morning, or 0 when the window is shut. The same Eastern date and
+ * run check the Worker applies at confirmation.
+ */
+export function signupCatchUpBehind(monthDays: ReadonlyArray<string>, now: Date = new Date()): number {
+  const today = easternToday(now);
+  if (!catchUpOpen(today)) return 0;
+  const firstLive = firstLiveDay(today, dailyRunHasGoneOut(now));
+  const startYear = seasonStartYear(firstLive);
+  return monthDays.filter((day) => seasonDateFor(day, startYear) < firstLive).length;
+}
+
 /** The first item of the season due on or after `fromIso`, or null once the season has run out. */
 export function nextOnDate(items: ReadonlyArray<DatedItem>, fromIso: string): SeasonEntry | null {
   return seasonCalendar(items, fromIso).find((entry) => entry.date >= fromIso) ?? null;
@@ -145,6 +186,27 @@ export interface CatchUpState {
   catchup_items: string | null;
   catchup_starts_on: string | null;
   caught_up_on: string | null;
+}
+
+const NO_CATCH_UP: CatchUpState = { catchup_items: null, catchup_starts_on: null, caught_up_on: null };
+
+/**
+ * The reader's catch-up state for the season containing `todayIso`. The
+ * columns outlive the season they were set in, so a backlog begun (or
+ * finished) in an earlier season reads as no catch-up at all: next season the
+ * reader is offered catch-up afresh and the daily run sends none of last
+ * year's backlog. Every reader of the catch-up columns goes through this.
+ */
+export function catchUpStateFor(state: CatchUpState, todayIso: string): CatchUpState {
+  const anchor = state.catchup_starts_on ?? state.caught_up_on;
+  if (anchor === null || seasonStartYear(anchor) === seasonStartYear(todayIso)) {
+    return {
+      catchup_items: state.catchup_items,
+      catchup_starts_on: state.catchup_starts_on,
+      caught_up_on: state.caught_up_on
+    };
+  }
+  return NO_CATCH_UP;
 }
 
 export function parseCatchUpItems(value: string | null): number[] {

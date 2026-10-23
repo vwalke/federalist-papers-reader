@@ -258,3 +258,100 @@ describe('manage page', () => {
     expect(already.startCatchUp).not.toHaveBeenCalled();
   });
 });
+
+describe('catch-up belongs to its season', () => {
+  const EIGHT = [101, 1, 2, 102, 3, 4, 154, 5];
+  const lastSeason = { catchup_items: EIGHT.join(','), catchup_starts_on: '2026-11-11' };
+  const view = async (db: Db) => {
+    const res = await handleRequest(
+      new Request(`https://federalistreader.org/manage?token=${await manageToken()}`), ENV, db, sender);
+    return res.text();
+  };
+  const optIn = async (db: Db) =>
+    handleRequest(post('/api/manage', { token: await manageToken(), action: 'catchup' }), ENV, db, sender);
+
+  it('offers catch-up afresh next season to a reader who caught up last season', async () => {
+    at('2027-11-10T16:00:00Z');
+    const sub = reader({ status: 'active', ...lastSeason, caught_up_on: '2026-11-18' });
+    const html = await view(stubDb(sub, { lastRun: '2027-11-10' }));
+    expect(html).toContain('<h2>Catch up</h2>');
+    expect(html).toContain('Eight papers were printed before you joined.');
+    expect(html).not.toContain('Caught up on');
+  });
+
+  it('does not show last season’s unfinished backlog as in progress', async () => {
+    at('2027-11-10T16:00:00Z');
+    const sub = reader({ status: 'active', ...lastSeason, caught_up_on: null });
+    const html = await view(stubDb(sub, { lastRun: '2027-11-10' }));
+    expect(html).toContain('<h2>Catch up</h2>');
+    expect(html).not.toContain('Catching up');
+  });
+
+  it('lets the reader opt in again, replacing last season’s backlog with this one’s', async () => {
+    at('2027-11-10T16:00:00Z');
+    const db = stubDb(reader({ status: 'active', ...lastSeason, caught_up_on: '2026-11-18' }), { lastRun: '2027-11-10' });
+    await optIn(db);
+    expect(db.startCatchUp).toHaveBeenCalledWith(7, EIGHT, '2027-11-11');
+    expect(db.listDeliveredItems).toHaveBeenCalledWith(7, '2027-10-18');
+  });
+
+  it('points a signup from a reader with last season’s backlog to the manage page', async () => {
+    at('2027-11-10T16:00:00Z');
+    const db = stubDb(reader());
+    db.getSubscriberByEmail.mockResolvedValue(reader({ status: 'active', ...lastSeason, caught_up_on: '2026-11-18' }));
+    await handleRequest(post('/api/subscribe', { email: 'reader@example.com', program: 'calendar', catchup: '1' }),
+      ENV, db, sender);
+    expect(sent[0].text).toContain('To catch up on the papers already printed, open the manage page.');
+  });
+
+  it('keeps this season’s state as before: caught up, no offer, no second opt-in', async () => {
+    at('2026-11-20T16:00:00Z');
+    const sub = reader({ status: 'active', ...lastSeason, caught_up_on: '2026-11-18' });
+    const html = await view(stubDb(sub, { lastRun: '2026-11-20' }));
+    expect(html).toContain('Caught up on Wednesday, November 18.');
+    expect(html).not.toContain('<h2>Catch up</h2>');
+    const db = stubDb(sub, { lastRun: '2026-11-20' });
+    await optIn(db);
+    expect(db.startCatchUp).not.toHaveBeenCalled();
+    const hinted = stubDb(reader());
+    hinted.getSubscriberByEmail.mockResolvedValue(sub);
+    await handleRequest(post('/api/subscribe', { email: 'reader@example.com', program: 'calendar', catchup: '1' }),
+      ENV, hinted, sender);
+    expect(sent.at(-1)!.text).not.toContain('To catch up');
+  });
+});
+
+describe('the cut-off keeps Eastern time', () => {
+  const subscribe = (db: Db) => handleRequest(
+    post('/api/subscribe', { email: 'reader@example.com', program: 'calendar', catchup: '1' }), ENV, db, sender);
+
+  it('is still open at 7:30pm EST on November 21 (00:30 UTC on the 22nd)', async () => {
+    at('2026-11-22T00:30:00Z');
+    const signup = stubDb(reader());
+    await subscribe(signup);
+    expect(signup.upsertPending.mock.calls[0][4]).toBe(true);
+    const manage = stubDb(reader({ status: 'active' }), { lastRun: '2026-11-21' });
+    await handleRequest(post('/api/manage', { token: await manageToken(), action: 'catchup' }), ENV, manage, sender);
+    expect(manage.startCatchUp).toHaveBeenCalledWith(7, [101, 1, 2, 102, 3, 4, 154, 5, 6, 7, 8, 9], '2026-11-22');
+  });
+
+  it('is closed at 12:30am EST on November 22 (05:30 UTC)', async () => {
+    at('2026-11-22T05:30:00Z');
+    const signup = stubDb(reader());
+    await subscribe(signup);
+    expect(signup.upsertPending.mock.calls[0][4]).toBe(false);
+    const manage = stubDb(reader({ status: 'active' }), { lastRun: '2026-11-21' });
+    await handleRequest(post('/api/manage', { token: await manageToken(), action: 'catchup' }), ENV, manage, sender);
+    expect(manage.startCatchUp).not.toHaveBeenCalled();
+    expect(await (await handleRequest(
+      new Request(`https://federalistreader.org/manage?token=${await manageToken()}`), ENV, manage, sender)).text())
+      .not.toContain('<h2>Catch up</h2>');
+  });
+
+  it('dates a confirmation by the Eastern calendar: catch-up from the next Eastern morning', async () => {
+    at('2026-11-11T02:00:00Z'); // 9pm EST on November 10
+    const db = stubDb(reader({ catchup_requested: 1 }), { lastRun: '2026-11-10' });
+    await confirm(db);
+    expect(db.startCatchUp).toHaveBeenCalledWith(7, [101, 1, 2, 102, 3, 4, 154, 5], '2026-11-11');
+  });
+});

@@ -89,28 +89,17 @@ const catchUpDays = (debate.items as DatedItem[])
 </aside>
 
 <script>
-  import {
-    catchUpOpen,
-    firstLiveDay,
-    numberWord,
-    seasonDateFor,
-    seasonStartYear
-  } from '../../workers/post/src/season';
+  import { numberWord, signupCatchUpBehind } from '../../workers/post/src/season';
 
-  // The same rule the Worker applies at confirmation: papers dated before the
-  // reader's first live morning, which is tomorrow once the 11:00 UTC run is out.
-  const now = new Date();
-  const today = now.toISOString().slice(0, 10);
-  const firstLive = firstLiveDay(today, now.getUTCHours() >= 11);
-
+  // The same rule the Worker applies at confirmation, on the Eastern calendar:
+  // papers dated before the reader's first live morning, which is tomorrow
+  // once the daily run is out.
   for (const option of document.querySelectorAll<HTMLElement>('[data-catchup]')) {
     const form = option.closest('form');
     const box = option.querySelector<HTMLInputElement>('input[name="catchup"]');
     const count = option.querySelector('[data-catchup-count]');
-    if (!form || !box || !count || !catchUpOpen(today)) continue;
-    const days: string[] = JSON.parse(option.dataset.days ?? '[]');
-    const startYear = seasonStartYear(firstLive);
-    const behind = days.filter((day) => seasonDateFor(day, startYear) < firstLive).length;
+    if (!form || !box || !count) continue;
+    const behind = signupCatchUpBehind(JSON.parse(option.dataset.days ?? '[]'));
     if (behind === 0) continue;
     count.textContent = numberWord(behind);
 
