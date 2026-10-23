@@ -1,11 +1,8 @@
 ---
 import debate from '../../workers/post/content/debate.json';
-import {
-  CATCH_UP_LAST_DAY,
-  SEASON_OPENS,
-  effectiveMonthDay,
-  type DatedItem
-} from '../../workers/post/src/season';
+import { catchUpMonthDays } from '../lib/catch-up-window';
+import type { DatedItem } from '../../workers/post/src/season';
+import NotTooLate from './NotTooLate.astro';
 
 interface Props {
   /** The fine print links to /subscribe/; pass false there so it doesn't link to itself. */
@@ -17,10 +14,7 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 // Anniversaries a late joiner could still catch up on: opening day through the
 // cut-off. The script below counts those already printed and shows the offer
 // only while the window is open, so the static page never goes stale.
-const catchUpDays = (debate.items as DatedItem[])
-  .map(effectiveMonthDay)
-  .filter((day) => day >= SEASON_OPENS && day <= CATCH_UP_LAST_DAY)
-  .sort();
+const catchUpDays = catchUpMonthDays(debate.items as DatedItem[]);
 ---
 
 <aside class="subscribe-coupon" aria-labelledby="subscribe-coupon-title">
@@ -28,6 +22,7 @@ const catchUpDays = (debate.items as DatedItem[])
   <p class="subscribe-coupon__pitch">
     Have Publius call at your address&mdash;the next paper, and every one after it.
   </p>
+  <NotTooLate class="subscribe-coupon__pitch" />
   <form class="subscribe-coupon__form" method="post" action="/api/subscribe">
     <fieldset class="subscribe-coupon__programs">
       <legend class="visually-hidden">Delivery program</legend>

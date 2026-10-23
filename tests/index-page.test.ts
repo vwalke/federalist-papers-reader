@@ -65,13 +65,18 @@ describe('complete paper index', () => {
     expect(html).not.toContain('index-opposition-note');
   });
 
-  it('announces the opposition in a dismissible printer’s notice', async () => {
+  it('announces As It Happened in a dismissible printer’s notice', async () => {
     const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+    const notice = html.slice(html.indexOf('<aside class="site-notice"'), html.indexOf('</aside>', html.indexOf('<aside class="site-notice"')));
 
     expect(html).toContain('data-site-notice');
-    expect(html).toContain('New to this edition');
-    expect(html).toMatch(/site-notice__link[^>]*href="\/antifederalist\/"/);
-    // The dismissal is keyed per news item, so a future notice reappears.
-    expect(html).toContain('publius:notice-dismissed:antifederalist-2026');
+    expect(notice).toContain('As It Happened is underway');
+    expect(notice).toContain('Brutus No.&nbsp;I');
+    expect(notice).toMatch(/site-notice__link[^>]*href="\/subscribe\/"/);
+    // The opposition announcement is gone from the notice.
+    expect(notice).not.toContain('/antifederalist/');
+    expect(notice).not.toContain('Read the opposition');
+    // The dismissal is keyed per news item, so a reader who dismissed the old one sees this.
+    expect(html).toContain('publius:notice-dismissed:aih-underway-2026');
   });
 });
