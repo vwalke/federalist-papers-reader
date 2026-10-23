@@ -75,14 +75,19 @@ export function catchUpLastDay(iso: string): string {
 }
 
 /**
- * The daily run's cron (wrangler.toml, "0 11 * * *") fires at 11:00 UTC every
- * day: 7am ET under daylight time, 6am ET under standard time. Either way it
- * falls on the same Eastern calendar date as the UTC one.
+ * The daily run goes out at 7am Eastern, summer and winter. Cron triggers are
+ * UTC only, so wrangler.toml fires at 11:00 UTC (7am EDT) and 12:00 UTC
+ * (7am EST), and the scheduled handler runs only the one that lands on this
+ * hour in New York.
  */
-export const DAILY_RUN_UTC_HOUR = 11;
+export const DAILY_RUN_EASTERN_HOUR = 7;
 
 const EASTERN_DATE_PARTS = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+});
+
+const EASTERN_HOUR = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York', hour: '2-digit', hourCycle: 'h23'
 });
 
 /**
@@ -94,11 +99,23 @@ export function easternToday(now: Date = new Date()): string {
   return `${parts.get('year')}-${parts.get('month')}-${parts.get('day')}`;
 }
 
-/** True once the cron's run for today's Eastern date has fired (whatever the clocks say). */
+/** The hour on the clock in New York, 0-23. */
+export function easternHour(now: Date = new Date()): number {
+  return Number(EASTERN_HOUR.formatToParts(now).find((part) => part.type === 'hour')?.value);
+}
+
+/**
+ * True when a cron fire at `scheduledTime` is the daily run's: the 7am hour
+ * in New York. Exactly one of the two UTC triggers matches on any Eastern
+ * day, since the clocks change at 2am, well before seven.
+ */
+export function isDailyRunHour(scheduledTime: Date): boolean {
+  return easternHour(scheduledTime) === DAILY_RUN_EASTERN_HOUR;
+}
+
+/** True from 7:00am Eastern on today's Eastern date until midnight. */
 export function dailyRunHasGoneOut(now: Date = new Date()): boolean {
-  const today = easternToday(now);
-  const hour = String(DAILY_RUN_UTC_HOUR).padStart(2, '0');
-  return now.getTime() >= Date.parse(`${today}T${hour}:00:00Z`);
+  return easternHour(now) >= DAILY_RUN_EASTERN_HOUR;
 }
 
 /** True on the days a reader may ask for catch-up: from opening day through the cut-off. */

@@ -45,13 +45,15 @@ taken from the backlog in season order.
 - **Backlog**: every item of the season dated before the reader's first live
   morning, less anything they already hold this season. A returning or
   switching reader is never sent a paper twice. The first live morning is today
-  if the 11:00 UTC run (7am EDT, 6am EST) has not gone out yet (read from
+  if the 7am Eastern run has not gone out yet (read from
   `ops_meta.last_daily_run`), otherwise tomorrow.
 - **Eastern dates**: "today" is always the America/New_York calendar date
   (`easternToday` in `season.ts`), on the Worker and in the signup form alike,
   so Nov 21 lasts until midnight in New York. The form, which cannot read
-  `last_daily_run`, uses `dailyRunHasGoneOut`: on or after 11:00 UTC on the
-  Eastern date, matching the cron.
+  `last_daily_run`, uses `dailyRunHasGoneOut`: on or after 7:00am Eastern on the
+  Eastern date, matching the run. The Worker has two cron triggers, 11:00 and
+  12:00 UTC, and runs only the one that is 7am in New York, so the run keeps
+  to 7am Eastern in summer and winter alike.
 - **Start**: the morning after confirming (or opting in). The welcome letter and
   the first paper never land on the same morning, matching the Weekly Course.
 - **Convergence**: a backlog of N takes exactly N mornings, however bunched the
