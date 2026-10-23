@@ -4,6 +4,16 @@ import type { Db } from './db';
 import type { DebateItem, EssayContent, Env, Subscriber } from './types';
 import { itemsDueOnDate, weeklyItemDue } from './schedule';
 import {
+  addDays,
+  catchUpItemDue,
+  catchUpPosition,
+  nextOnDate,
+  seasonOpens,
+  weekdayDateLabel
+} from './season';
+import {
+  itemDisplayName,
+  renderCalendarIssue,
   renderConfirmReminder,
   renderIssue,
   renderMakeupIssue,
@@ -91,6 +101,8 @@ async function renderDelivery(
       throw new Error('make-up issues carry only essays');
     }
     mail = renderMakeupIssue(essays, ctx);
+  } else if (sub.program === 'calendar' && sub.catchup_items) {
+    mail = renderCalendarMorning(sub, issue, scheduledFor, ctx);
   } else {
     if (sub.program === 'weekly') {
       const position = sequencePosition.get(itemIds[0]);
@@ -114,6 +126,39 @@ async function renderDelivery(
       unsubscribeUrl: ctx.unsubscribeUrl
     }
   };
+}
+
+/**
+ * A calendar morning for a reader with a catch-up backlog. Whichever claimed
+ * item is a catch-up paper (it is going out after its anniversary) rides below
+ * the day's on-date paper in one letter; a morning with no catch-up item, such
+ * as a retried on-date paper, is an ordinary issue.
+ */
+function renderCalendarMorning(
+  sub: Subscriber,
+  issue: DebateItem[],
+  scheduledFor: string,
+  ctx: EmailContext
+): RenderedEmail {
+  for (const item of issue) {
+    const place = catchUpPosition(sub, items, item.id, scheduledFor);
+    if (!place) continue;
+    const last = place.position === place.total;
+    const next = last ? nextOnDate(items, addDays(scheduledFor, 1)) : null;
+    const nextItem = next ? byId.get(next.id) : undefined;
+    return renderCalendarIssue(
+      issue.filter((other) => other !== item),
+      {
+        item,
+        ...place,
+        next: nextItem && next
+          ? { name: itemDisplayName(nextItem), dateLabel: weekdayDateLabel(next.date) }
+          : null
+      },
+      ctx
+    );
+  }
+  return renderIssue(issue, ctx);
 }
 
 async function markFailed(
@@ -396,7 +441,9 @@ export async function runConfirmReminders(
     try {
       const ctx = await contextFor(env, sub);
       const confirm = await signToken(sub.id, 'confirm', env.TOKEN_SECRET, sub.token_secret);
-      const mail = renderConfirmReminder(`${env.SITE_URL}/api/confirm?token=${confirm}`, ctx);
+      const mail = renderConfirmReminder(
+        `${env.SITE_URL}/api/confirm?token=${confirm}`, ctx, sub.catchup_requested === 1
+      );
       await sendAndRecord(env, db, send, {
         from: env.FROM_ADDRESS, to: sub.email, subject: mail.subject,
         html: mail.html, text: mail.text, unsubscribeUrl: ctx.unsubscribeUrl
@@ -440,6 +487,7 @@ export async function runDaily(
     try {
       let itemIds: number[] = [];
       let kind: DeliveryKind = 'issue';
+      let caughtUp = false;
       if (sub.program === 'weekly') {
         const next = weeklyItemDue(sub, todayIso, sequence);
         if (next?.kind === 'item') itemIds = [next.id];
@@ -447,8 +495,19 @@ export async function runDaily(
           itemIds = next.essayIds;
           kind = 'makeup';
         }
-      } else if (dueCalendarItems.length > 0) {
-        itemIds = dueCalendarItems;
+      } else {
+        itemIds = [...dueCalendarItems];
+        // One catch-up paper a morning, in the same letter as any on-date
+        // paper. The backlog's progress lives in deliveries, so the claim
+        // below is what advances it, exactly once however often the day runs.
+        if (sub.catchup_items && !sub.caught_up_on) {
+          const delivered = await db.listDeliveredItems(sub.id, seasonOpens(todayIso));
+          const catchUp = catchUpItemDue(sub, todayIso, delivered);
+          if (catchUp) {
+            itemIds.push(catchUp.id);
+            caughtUp = catchUp.position === catchUp.total;
+          }
+        }
       }
       if (itemIds.length === 0) continue;
       const delivery = await prepareClaimedDelivery(
@@ -464,6 +523,11 @@ export async function runDaily(
         // send rides the ordinary retry machinery (individual essay issues)
         // instead of doubling as a second make-up next week.
         await db.clearMakeupPending(sub.id);
+      }
+      if (caughtUp) {
+        // Like the make-up flag, consumed at claim: a failed last send is
+        // retried as a catch-up letter by the ordinary retry machinery.
+        await db.markCaughtUp(sub.id, todayIso);
       }
       if (delivery) {
         due.push(delivery);

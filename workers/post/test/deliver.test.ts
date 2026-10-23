@@ -15,6 +15,7 @@ function sub(overrides: Partial<Subscriber>): Subscriber {
   return {
     id: 1, email: 'a@example.com', program: 'weekly', status: 'active',
     progress_index: 0, send_dow: 6, paused_until: null, makeup_pending: 0,
+    catchup_requested: 0, catchup_items: null, catchup_starts_on: null, caught_up_on: null,
     token_secret: 'ts', confirmed_at: '2026-07-01T00:00:00Z', ...overrides
   };
 }
@@ -53,7 +54,12 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     claimAnnouncement: vi.fn(async () => true),
     markAnnouncement: vi.fn(async () => {}),
     listRetryableAnnouncement: vi.fn(async () => []),
-    recordDailyRun: vi.fn(async () => {})
+    recordDailyRun: vi.fn(async () => {}),
+    listDeliveredItems: vi.fn(async () => []),
+    startCatchUp: vi.fn(async () => {}),
+    stopCatchUp: vi.fn(async () => {}),
+    markCaughtUp: vi.fn(async () => {}),
+    getLastDailyRun: vi.fn(async () => null)
   } as unknown as Db & { claimed: string[] };
 }
 

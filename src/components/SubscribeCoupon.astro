@@ -1,4 +1,12 @@
 ---
+import debate from '../../workers/post/content/debate.json';
+import {
+  CATCH_UP_LAST_DAY,
+  SEASON_OPENS,
+  effectiveMonthDay,
+  type DatedItem
+} from '../../workers/post/src/season';
+
 interface Props {
   /** The fine print links to /subscribe/; pass false there so it doesn't link to itself. */
   showLearnMore?: boolean;
@@ -6,6 +14,13 @@ interface Props {
 
 const { showLearnMore = true } = Astro.props;
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+// Anniversaries a late joiner could still catch up on: opening day through the
+// cut-off. The script below counts those already printed and shows the offer
+// only while the window is open, so the static page never goes stale.
+const catchUpDays = (debate.items as DatedItem[])
+  .map(effectiveMonthDay)
+  .filter((day) => day >= SEASON_OPENS && day <= CATCH_UP_LAST_DAY)
+  .sort();
 ---
 
 <aside class="subscribe-coupon" aria-labelledby="subscribe-coupon-title">
@@ -23,6 +38,17 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
       <label class="subscribe-coupon__program">
         <input type="radio" name="program" value="calendar" />
         <span>As It Happened&mdash;on the original dates</span>
+      </label>
+      <label class="subscribe-coupon__catchup" data-catchup data-days={JSON.stringify(catchUpDays)} hidden>
+        <input type="checkbox" name="catchup" value="1" checked disabled />
+        <span>
+          <span class="subscribe-coupon__catchup-title">
+            Catch up on the <span data-catchup-count>papers</span> already printed
+          </span>
+          <span class="subscribe-coupon__catchup-note">
+            One extra each morning, earliest first, until you&rsquo;re level with the season.
+          </span>
+        </span>
       </label>
     </fieldset>
     <p class="subscribe-coupon__honeypot" aria-hidden="true">
@@ -61,3 +87,40 @@ const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
     </p>
   </form>
 </aside>
+
+<script>
+  import {
+    catchUpOpen,
+    firstLiveDay,
+    numberWord,
+    seasonDateFor,
+    seasonStartYear
+  } from '../../workers/post/src/season';
+
+  // The same rule the Worker applies at confirmation: papers dated before the
+  // reader's first live morning, which is tomorrow once the 11:00 UTC run is out.
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const firstLive = firstLiveDay(today, now.getUTCHours() >= 11);
+
+  for (const option of document.querySelectorAll<HTMLElement>('[data-catchup]')) {
+    const form = option.closest('form');
+    const box = option.querySelector<HTMLInputElement>('input[name="catchup"]');
+    const count = option.querySelector('[data-catchup-count]');
+    if (!form || !box || !count || !catchUpOpen(today)) continue;
+    const days: string[] = JSON.parse(option.dataset.days ?? '[]');
+    const startYear = seasonStartYear(firstLive);
+    const behind = days.filter((day) => seasonDateFor(day, startYear) < firstLive).length;
+    if (behind === 0) continue;
+    count.textContent = numberWord(behind);
+
+    // Offered beneath As It Happened only; disabled (so never submitted) otherwise.
+    const sync = () => {
+      const calendar = form.querySelector('input[name="program"][value="calendar"]:checked') !== null;
+      option.hidden = !calendar;
+      box.disabled = !calendar;
+    };
+    form.addEventListener('change', sync);
+    sync();
+  }
+</script>

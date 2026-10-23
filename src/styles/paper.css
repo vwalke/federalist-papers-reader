@@ -602,6 +602,43 @@
   accent-color: var(--color-oxblood);
 }
 
+/* As It Happened catch-up: a quiet sub-option hung beneath its program,
+   aligned with the program label's text rather than boxed like a choice. */
+.subscribe-coupon__catchup {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--space-xs);
+  padding-block: var(--space-2xs) var(--space-xs);
+  padding-inline: calc(var(--space-sm) + 1.15rem + var(--space-xs)) var(--space-sm);
+  cursor: pointer;
+}
+
+.subscribe-coupon__catchup[hidden] {
+  display: none;
+}
+
+.subscribe-coupon__catchup input {
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--color-oxblood);
+}
+
+.subscribe-coupon__catchup-title {
+  display: block;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.subscribe-coupon__catchup-note {
+  display: block;
+  margin-block-start: 0.15rem;
+  color: var(--color-muted-ink);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
 /* Off-screen, not display:none, so bots that skip hidden fields still fill it. */
 .subscribe-coupon__honeypot {
   position: absolute;

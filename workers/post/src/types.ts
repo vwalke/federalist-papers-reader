@@ -27,6 +27,14 @@ export interface Subscriber {
   confirmed_at: string | null;
   /** weekly: 1 when a make-up email for the Journal essays is still owed. */
   makeup_pending: number;
+  /** calendar: 1 when the signup asked to catch up; consumed at confirmation. */
+  catchup_requested: number;
+  /** calendar: the catch-up backlog as comma-separated item ids; null when not catching up. */
+  catchup_items: string | null;
+  /** calendar: ISO date of the first catch-up morning. */
+  catchup_starts_on: string | null;
+  /** calendar: ISO date the last catch-up paper was claimed. */
+  caught_up_on: string | null;
 }
 
 interface SharedContent {

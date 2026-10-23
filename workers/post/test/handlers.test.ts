@@ -7,7 +7,7 @@ import type { Env, Subscriber } from '../src/types';
 const SUB: Subscriber = {
   id: 7, email: 'reader@example.com', program: 'weekly', status: 'pending',
   progress_index: 0, send_dow: 6, paused_until: null, token_secret: 'subsecret', confirmed_at: null,
-  makeup_pending: 0
+  makeup_pending: 0, catchup_requested: 0, catchup_items: null, catchup_starts_on: null, caught_up_on: null
 };
 
 function makeStubDb(overrides: Partial<Db> = {}): Db {
@@ -45,6 +45,11 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     claimConfirmReminder: vi.fn(async () => true),
     purgeStalePending: vi.fn(async () => {}),
     recordDailyRun: vi.fn(async () => {}),
+    listDeliveredItems: vi.fn(async () => []),
+    startCatchUp: vi.fn(async () => {}),
+    stopCatchUp: vi.fn(async () => {}),
+    markCaughtUp: vi.fn(async () => {}),
+    getLastDailyRun: vi.fn(async () => null),
     ...overrides
   };
 }
@@ -403,7 +408,7 @@ describe('POST /api/subscribe', () => {
         post('/api/subscribe', { email: 'reader@example.com', program: 'weekly' }), ENV, db, sender);
       expect(res.status).toBe(303);
       expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/check-inbox/');
-      expect(db.upsertPending).toHaveBeenCalledWith('reader@example.com', 'weekly', expect.any(String), 2);
+      expect(db.upsertPending).toHaveBeenCalledWith('reader@example.com', 'weekly', expect.any(String), 2, false);
       expect(sent[0].subject).toContain('Confirm');
       expect(db.recordEmailSend).toHaveBeenCalledWith('msg_test', expect.any(String), 1);
     } finally {

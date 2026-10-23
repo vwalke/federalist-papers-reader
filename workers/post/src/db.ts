@@ -1,5 +1,6 @@
 // workers/post/src/db.ts
 import type { Program, Subscriber } from './types';
+import type { DeliveredItem } from './season';
 import {
   easternWindow,
   summarizeDailyActivity,
@@ -57,10 +58,18 @@ export interface Db {
   purgeEmailSends(olderThanDays: number): Promise<void>;
   getSubscriberById(id: number): Promise<Subscriber | null>;
   getSubscriberByEmail(email: string): Promise<Subscriber | null>;
-  upsertPending(email: string, program: Program, tokenSecret: string, sendDow: number): Promise<Subscriber>;
+  /**
+   * A pending or unsubscribed address is (re)set as a fresh signup: new program,
+   * day, and catch-up request, and a new signup date, so the reminder and purge
+   * clocks restart with the new confirmation letter. Active and paused rows are
+   * left alone.
+   */
+  upsertPending(email: string, program: Program, tokenSecret: string, sendDow: number,
+    catchupRequested?: boolean): Promise<Subscriber>;
   /** True only when this call moved the subscriber out of 'pending'. */
   activate(id: number, confirmIp: string | null): Promise<boolean>;
   setStatus(id: number, status: 'active' | 'paused', pausedUntil?: string | null): Promise<void>;
+  /** Also ends any catch-up: it belongs to the program being left. */
   setProgram(id: number, program: Program, progressIndex: number): Promise<void>;
   setProgress(id: number, progressIndex: number): Promise<void>;
   clearMakeupPending(id: number): Promise<void>;
@@ -72,6 +81,14 @@ export interface Db {
   claimDelivery(subscriberId: number, paperNumber: number, scheduledFor: string): Promise<boolean>;
   markDelivery(subscriberId: number, paperNumber: number, scheduledFor: string,
     status: 'sent' | 'failed', providerMessageId?: string): Promise<void>;
+  /** Every delivery row for the subscriber scheduled on or after `sinceIso`, any status. */
+  listDeliveredItems(subscriberId: number, sinceIso: string): Promise<DeliveredItem[]>;
+  /** Fixes the backlog and the first catch-up morning; clears the request flag. */
+  startCatchUp(id: number, itemIds: number[], startsOn: string): Promise<void>;
+  stopCatchUp(id: number): Promise<void>;
+  markCaughtUp(id: number, onIso: string): Promise<void>;
+  /** ISO date of the last daily run to complete, or null before the first. */
+  getLastDailyRun(): Promise<string | null>;
   listRetryable(): Promise<Array<{ subscriber_id: number; paper_number: number; scheduled_for: string }>>;
   claimAnnouncement(subscriberId: number, announcementId: string): Promise<boolean>;
   markAnnouncement(subscriberId: number, announcementId: string,
@@ -168,18 +185,25 @@ export function makeDb(d1: D1Database): Db {
     getSubscriberById: (id) => one(d1.prepare('SELECT * FROM subscribers WHERE id = ?').bind(id)),
     getSubscriberByEmail: (email) =>
       one(d1.prepare('SELECT * FROM subscribers WHERE email = ?').bind(email.toLowerCase())),
-    async upsertPending(email, program, tokenSecret, sendDow) {
+    async upsertPending(email, program, tokenSecret, sendDow, catchupRequested = false) {
+      // Every SET reads the row's pre-update status, so the CASEs agree.
       const row = await d1.prepare(
-        `INSERT INTO subscribers (email, program, token_secret, send_dow) VALUES (?, ?, ?, ?)
+        `INSERT INTO subscribers (email, program, token_secret, send_dow, catchup_requested) VALUES (?, ?, ?, ?, ?)
          ON CONFLICT(email) DO UPDATE SET
            program = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.program ELSE subscribers.program END,
            send_dow = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.send_dow ELSE subscribers.send_dow END,
+           catchup_requested = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN excluded.catchup_requested ELSE subscribers.catchup_requested END,
+           created_at = CASE WHEN subscribers.status IN ('pending','unsubscribed') THEN datetime('now') ELSE subscribers.created_at END,
            status = CASE WHEN subscribers.status = 'unsubscribed' THEN 'pending' ELSE subscribers.status END,
            token_secret = CASE WHEN subscribers.status = 'unsubscribed' THEN excluded.token_secret ELSE subscribers.token_secret END,
            unsubscribed_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.unsubscribed_at END,
-           confirm_reminded_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.confirm_reminded_at END
+           confirmed_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.confirmed_at END,
+           confirm_reminded_at = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.confirm_reminded_at END,
+           catchup_items = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.catchup_items END,
+           catchup_starts_on = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.catchup_starts_on END,
+           caught_up_on = CASE WHEN subscribers.status = 'unsubscribed' THEN NULL ELSE subscribers.caught_up_on END
          RETURNING *`
-      ).bind(email.toLowerCase(), program, tokenSecret, sendDow).first();
+      ).bind(email.toLowerCase(), program, tokenSecret, sendDow, catchupRequested ? 1 : 0).first();
       if (!row) throw new Error('upsertPending returned no row');
       return row as unknown as Subscriber;
     },
@@ -194,8 +218,11 @@ export function makeDb(d1: D1Database): Db {
         .bind(status, pausedUntil, id).run();
     },
     async setProgram(id, program, progressIndex) {
-      await d1.prepare('UPDATE subscribers SET program = ?, progress_index = ? WHERE id = ?')
-        .bind(program, progressIndex, id).run();
+      await d1.prepare(
+        `UPDATE subscribers SET program = ?, progress_index = ?,
+           catchup_requested = 0, catchup_items = NULL, catchup_starts_on = NULL, caught_up_on = NULL
+         WHERE id = ?`
+      ).bind(program, progressIndex, id).run();
     },
     async setProgress(id, progressIndex) {
       await d1.prepare('UPDATE subscribers SET progress_index = ? WHERE id = ?')
@@ -238,6 +265,42 @@ export function makeDb(d1: D1Database): Db {
         `UPDATE deliveries SET status = ?, provider_message_id = ?
          WHERE subscriber_id = ? AND paper_number = ? AND scheduled_for = ?`
       ).bind(status, providerMessageId ?? null, subscriberId, paperNumber, scheduledFor).run();
+    },
+    async listDeliveredItems(subscriberId, sinceIso) {
+      const { results } = await d1.prepare(
+        `SELECT paper_number, scheduled_for FROM deliveries
+         WHERE subscriber_id = ? AND scheduled_for >= ?
+         ORDER BY scheduled_for, paper_number`
+      ).bind(subscriberId, sinceIso).all<DeliveredItem>();
+      return results.map((row) => ({
+        paper_number: Number(row.paper_number),
+        scheduled_for: String(row.scheduled_for)
+      }));
+    },
+    async startCatchUp(id, itemIds, startsOn) {
+      await d1.prepare(
+        `UPDATE subscribers SET catchup_items = ?, catchup_starts_on = ?, caught_up_on = NULL,
+           catchup_requested = 0
+         WHERE id = ?`
+      ).bind(itemIds.join(','), startsOn, id).run();
+    },
+    async stopCatchUp(id) {
+      await d1.prepare(
+        `UPDATE subscribers SET catchup_items = NULL, catchup_starts_on = NULL, caught_up_on = NULL,
+           catchup_requested = 0
+         WHERE id = ?`
+      ).bind(id).run();
+    },
+    async markCaughtUp(id, onIso) {
+      await d1.prepare(
+        'UPDATE subscribers SET caught_up_on = ? WHERE id = ? AND caught_up_on IS NULL'
+      ).bind(onIso, id).run();
+    },
+    async getLastDailyRun() {
+      const row = await d1.prepare(
+        `SELECT value FROM ops_meta WHERE key = 'last_daily_run'`
+      ).first<{ value: string }>();
+      return row?.value ?? null;
     },
     async listRetryable() {
       // Stale queued rows are retried too (claimed, then the worker died mid-send):
