@@ -45,8 +45,13 @@ taken from the backlog in season order.
 - **Backlog**: every item of the season dated before the reader's first live
   morning, less anything they already hold this season. A returning or
   switching reader is never sent a paper twice. The first live morning is today
-  if the 7am ET (11:00 UTC) run has not gone out yet (read from
+  if the 11:00 UTC run (7am EDT, 6am EST) has not gone out yet (read from
   `ops_meta.last_daily_run`), otherwise tomorrow.
+- **Eastern dates**: "today" is always the America/New_York calendar date
+  (`easternToday` in `season.ts`), on the Worker and in the signup form alike,
+  so Nov 21 lasts until midnight in New York. The form, which cannot read
+  `last_daily_run`, uses `dailyRunHasGoneOut`: on or after 11:00 UTC on the
+  Eastern date, matching the cron.
 - **Start**: the morning after confirming (or opting in). The welcome letter and
   the first paper never land on the same morning, matching the Weekly Course.
 - **Convergence**: a backlog of N takes exactly N mornings, however bunched the
@@ -208,7 +213,12 @@ meta keeps the 560px sheet fluid on phones.
 - **Welcome "October 18" bug (fixed)**: see the welcome states above.
 - **Next season.** Backlogs and "already held" look only at deliveries since
   this season's opening, so a returning reader from last year is not mistaken
-  for one who already has this year's papers.
+  for one who already has this year's papers. The catch-up columns are scoped
+  the same way: every reader of them goes through `catchUpStateFor`, which
+  treats state whose `catchup_starts_on` (or `caught_up_on`) falls in an
+  earlier season as no catch-up. Last year's reader is offered catch-up again,
+  may opt in (`startCatchUp` overwrites the old columns), and the daily run
+  sends nothing from the old backlog. No migration is needed.
 
 ## Data
 

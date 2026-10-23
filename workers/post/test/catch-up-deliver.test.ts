@@ -219,3 +219,23 @@ describe('confirmation reminder', () => {
     expect(mails[1].text).not.toContain('catch-up');
   });
 });
+
+describe('catch-up from an earlier season', () => {
+  it('is ignored by the daily run: no old backlog paper, no caught-up mark', async () => {
+    const sub = reader({ catchup_starts_on: '2026-11-22', caught_up_on: null });
+    const db = makeDb([sub]);
+    await runDaily(ENV, db, batchSender, '2027-11-23');
+    expect(sent).toHaveLength(0);
+    await runDaily(ENV, db, batchSender, '2027-11-22');
+    expect(sent.map((m) => m.subject)).toEqual(['Federalist No. 10 — The Same Subject Continued (The Union as a Safeguard Against Domestic Faction and Insurrection)']);
+    expect(sent[0].html).not.toContain('Catch-up');
+    expect(db.listDeliveredItems).not.toHaveBeenCalled();
+    expect(db.markCaughtUp).not.toHaveBeenCalled();
+  });
+
+  it('still drives this season’s backlog', async () => {
+    const db = makeDb([reader({ catchup_starts_on: '2026-11-23' })]);
+    await runDaily(ENV, db, batchSender, '2026-11-23');
+    expect(sent.map((m) => m.subject)).toEqual(['Catch-up 1 of 12: Brutus No. I — Against the Consolidated Republic']);
+  });
+});

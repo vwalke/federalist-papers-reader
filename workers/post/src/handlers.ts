@@ -11,6 +11,8 @@ import {
   catchUpLastDay,
   catchUpOpen,
   catchUpStartsOn,
+  catchUpStateFor,
+  easternToday,
   firstLiveDay,
   monthDayLabel,
   nextOnDate,
@@ -158,13 +160,14 @@ async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender)
   }
 
   // Catch-up is As It Happened only, and only asked for through the cut-off.
-  const today = new Date().toISOString().slice(0, 10);
+  const today = easternToday();
   const catchupRequested = program === 'calendar' && form.get('catchup') === '1' && catchUpOpen(today);
 
   const existing = await db.getSubscriberByEmail(email);
   if (existing && (existing.status === 'active' || existing.status === 'paused')) {
     const ctx = await emailContext(env, existing);
-    const catchUpHint = catchupRequested && existing.program === 'calendar' && !existing.catchup_items
+    const catchUpHint = catchupRequested && existing.program === 'calendar'
+      && !catchUpStateFor(existing, today).catchup_items
       ? ' To catch up on the papers already printed, open the manage page.' : '';
     await deliver(env, db, send, existing, {
       subject: 'You are already subscribed — The Federalist by Post',
@@ -297,14 +300,15 @@ async function handleConfirmPost(request: Request, env: Env, db: Db, send: Sende
     return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
   }
   const ctx = await emailContext(env, sub);
-  const today = new Date().toISOString().slice(0, 10);
   const details: WelcomeDetails = sub.program === 'weekly'
     ? {
       program: 'weekly',
-      firstDelivery: humanDate(nextSendDate(today, sub.send_dow)),
+      // The UTC date, deliberately: weeklyItemDue counts from confirmed_at,
+      // which SQLite stamps in UTC.
+      firstDelivery: humanDate(nextSendDate(new Date().toISOString().slice(0, 10), sub.send_dow)),
       sendDayName: DOW_NAMES[sub.send_dow]
     }
-    : { program: 'calendar', season: await calendarWelcome(db, sub, today) };
+    : { program: 'calendar', season: await calendarWelcome(db, sub, easternToday()) };
   await deliver(env, db, send, sub, renderWelcome(details, ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
 }
@@ -331,18 +335,17 @@ type CatchUpView =
 
 async function catchUpView(db: Db, sub: Subscriber, todayIso: string): Promise<CatchUpView> {
   if (sub.program !== 'calendar') return { kind: 'none' };
-  const total = parseCatchUpItems(sub.catchup_items).length;
-  if (total > 0 && sub.caught_up_on) {
-    return sub.caught_up_on >= seasonOpens(todayIso) ? { kind: 'caught-up', on: sub.caught_up_on } : { kind: 'none' };
-  }
+  const state = catchUpStateFor(sub, todayIso);
+  const total = parseCatchUpItems(state.catchup_items).length;
+  if (total > 0 && state.caught_up_on) return { kind: 'caught-up', on: state.caught_up_on };
   if (total > 0) {
     const delivered = await db.listDeliveredItems(sub.id, seasonOpens(todayIso));
-    const sent = catchUpClaimed(sub, delivered);
+    const sent = catchUpClaimed(state, delivered);
     let finishesOn: string | null = null;
     if (sub.status === 'active') {
       const lastRun = await db.getLastDailyRun();
       const nextRun = firstLiveDay(todayIso, lastRun !== null && lastRun >= todayIso);
-      const from = sub.catchup_starts_on && sub.catchup_starts_on > nextRun ? sub.catchup_starts_on : nextRun;
+      const from = state.catchup_starts_on && state.catchup_starts_on > nextRun ? state.catchup_starts_on : nextRun;
       finishesOn = catchUpFinishesOn(from, total - sent);
     }
     return { kind: 'catching-up', sent, total, finishesOn };
@@ -403,8 +406,7 @@ async function handleManageGet(request: Request, env: Env, db: Db): Promise<Resp
   const token = new URL(request.url).searchParams.get('token');
   const sub = await requireSubscriber(token, 'manage', env, db);
   if (!sub || sub.status === 'unsubscribed') return page('<h1>That link is not valid.</h1>', 400, true);
-  const today = new Date().toISOString().slice(0, 10);
-  return page(managePage(sub, token!, await catchUpView(db, sub, today)), 200, true);
+  return page(managePage(sub, token!, await catchUpView(db, sub, easternToday())), 200, true);
 }
 
 async function handleManagePost(request: Request, env: Env, db: Db): Promise<Response> {
@@ -424,9 +426,11 @@ async function handleManagePost(request: Request, env: Env, db: Db): Promise<Res
       await db.setProgram(sub.id, sub.program === 'weekly' ? 'calendar' : 'weekly', 0); break;
     case 'restart': await db.setProgress(sub.id, 0); break;
     case 'catchup': {
-      // Opting in from the manage page follows the signup rule: through the cut-off only.
-      const today = new Date().toISOString().slice(0, 10);
-      if (sub.program !== 'calendar' || sub.catchup_items || !catchUpOpen(today)) break;
+      // Opting in from the manage page follows the signup rule: through the
+      // cut-off only. A backlog left from an earlier season does not count,
+      // and startCatchUp overwrites it.
+      const today = easternToday();
+      if (sub.program !== 'calendar' || catchUpStateFor(sub, today).catchup_items || !catchUpOpen(today)) break;
       const { backlog } = await catchUpBacklogFor(db, sub, today);
       if (backlog.length > 0) await db.startCatchUp(sub.id, backlog, catchUpStartsOn(today));
       break;
