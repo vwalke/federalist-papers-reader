@@ -15,7 +15,10 @@ routes = [
 ]
 
 [triggers]
-crons = ["0 11 * * *"]
+# The daily run goes out at 7am Eastern. Crons are UTC, so fire at 11:00 UTC
+# (7am EDT) and 12:00 UTC (7am EST); src/index.ts runs only the one that is
+# 7am in New York and the other returns without doing anything.
+crons = ["0 11 * * *", "0 12 * * *"]
 
 [[d1_databases]]
 binding = "DB"

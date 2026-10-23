@@ -19,10 +19,13 @@ import {
   catchUpStartsOn,
   catchUpStateFor,
   CATCH_UP_LAST_DAY,
+  DAILY_RUN_EASTERN_HOUR,
   dailyRunHasGoneOut,
+  easternHour,
   easternToday,
   effectiveMonthDay,
   firstLiveDay,
+  isDailyRunHour,
   nextOnDate,
   numberWord,
   seasonCalendar,
@@ -274,23 +277,79 @@ describe('Eastern dates', () => {
     expect(easternToday()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('counts the run as out from the 11:00 UTC cron: 7am EDT, 6am EST', () => {
-    // Daylight time.
+  it('counts the run as out from 7am Eastern, summer and winter', () => {
+    // Daylight time: 7am EDT is 11:00 UTC.
     expect(ranAt('2026-07-01T10:59:00Z')).toBe(false);
     expect(ranAt('2026-07-01T11:00:00Z')).toBe(true);
     expect(ranAt('2026-07-02T03:30:00Z')).toBe(true); // 11:30pm EDT, July 1
     expect(ranAt('2026-07-02T04:00:00Z')).toBe(false); // midnight EDT, July 2
-    // Standard time, the day after clocks fall back.
-    expect(ranAt('2026-11-02T10:59:00Z')).toBe(false);
-    expect(ranAt('2026-11-02T11:00:00Z')).toBe(true);
+    // Standard time: 7am EST is 12:00 UTC.
+    expect(ranAt('2026-12-15T11:00:00Z')).toBe(false); // 6am EST
+    expect(ranAt('2026-12-15T11:59:00Z')).toBe(false);
+    expect(ranAt('2026-12-15T12:00:00Z')).toBe(true);
+    expect(ranAt('2027-01-15T11:59:00Z')).toBe(false);
+    expect(ranAt('2027-01-15T12:00:00Z')).toBe(true);
+    expect(ranAt('2026-11-02T11:59:00Z')).toBe(false);
+    expect(ranAt('2026-11-02T12:00:00Z')).toBe(true);
     expect(ranAt('2026-11-02T04:30:00Z')).toBe(true); // 11:30pm EST, November 1
     expect(ranAt('2026-11-02T05:00:00Z')).toBe(false); // midnight EST, November 2
-    // The fall-back and spring-forward mornings themselves.
-    expect(ranAt('2026-11-01T10:59:00Z')).toBe(false);
-    expect(ranAt('2026-11-01T11:00:00Z')).toBe(true);
+    // Clocks fall back at 2am EDT on November 1, 2026, so 7am that day is EST.
+    expect(ranAt('2026-10-31T10:59:00Z')).toBe(false);
+    expect(ranAt('2026-10-31T11:00:00Z')).toBe(true);
+    expect(ranAt('2026-11-01T11:00:00Z')).toBe(false); // 6am EST
+    expect(ranAt('2026-11-01T11:59:00Z')).toBe(false);
+    expect(ranAt('2026-11-01T12:00:00Z')).toBe(true);
+    // Clocks spring forward at 2am EST on March 14, 2027, so 7am that day is EDT.
+    expect(ranAt('2027-03-13T11:59:00Z')).toBe(false);
+    expect(ranAt('2027-03-13T12:00:00Z')).toBe(true);
     expect(ranAt('2027-03-14T06:30:00Z')).toBe(false); // 1:30am EST, before the jump
+    expect(ranAt('2027-03-14T10:59:00Z')).toBe(false);
     expect(ranAt('2027-03-14T11:00:00Z')).toBe(true);
     expect(ranAt('2027-03-14T04:30:00Z')).toBe(true); // 11:30pm EST, March 13
+  });
+
+  it('reads the hour on the New York clock', () => {
+    expect(easternHour(new Date('2026-07-01T04:00:00Z'))).toBe(0);
+    expect(easternHour(new Date('2026-07-01T11:00:00Z'))).toBe(7);
+    expect(easternHour(new Date('2026-12-15T12:00:00Z'))).toBe(7);
+    expect(easternHour(new Date('2026-12-16T04:59:00Z'))).toBe(23);
+    expect(DAILY_RUN_EASTERN_HOUR).toBe(7);
+  });
+});
+
+describe('the two cron fires', () => {
+  const runs = (iso: string) => isDailyRunHour(new Date(iso));
+  const fires = (day: string) => [runs(`${day}T11:00:00Z`), runs(`${day}T12:00:00Z`)];
+
+  it('runs the 11:00 UTC fire under daylight time and skips 12:00', () => {
+    expect(fires('2026-07-01')).toEqual([true, false]);
+    expect(fires('2026-10-31')).toEqual([true, false]);
+  });
+
+  it('runs the 12:00 UTC fire under standard time and skips 11:00', () => {
+    expect(fires('2026-12-15')).toEqual([false, true]);
+    expect(fires('2027-01-15')).toEqual([false, true]);
+    expect(fires('2027-03-13')).toEqual([false, true]);
+  });
+
+  it('runs 7am EST on the morning clocks fall back (11:00 UTC is 6am)', () => {
+    expect(fires('2026-11-01')).toEqual([false, true]);
+  });
+
+  it('runs 7am EDT on the morning clocks spring forward (12:00 UTC is 8am)', () => {
+    expect(fires('2027-03-14')).toEqual([true, false]);
+  });
+
+  it('runs exactly once on every Eastern day of the year', () => {
+    for (let day = '2026-07-01'; day <= '2027-07-01'; day = addDays(day, 1)) {
+      expect(fires(day).filter(Boolean), day).toHaveLength(1);
+    }
+  });
+
+  it('matches the triggers in wrangler.toml', () => {
+    const toml = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
+    const line = toml.split('\n').find((l) => l.startsWith('crons = '));
+    expect(JSON.parse(line!.slice('crons = '.length))).toEqual(['0 11 * * *', '0 12 * * *']);
   });
 });
 

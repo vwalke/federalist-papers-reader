@@ -53,9 +53,16 @@ The Worker lives in `workers/post/`. It uses:
 
 - D1 for subscriber and delivery state;
 - Resend for transactional email;
-- a daily cron trigger for scheduled delivery;
+- a daily run at 7am Eastern for scheduled delivery (see below);
 - Turnstile as an optional subscription challenge; and
 - Cloudflare Access as the security boundary for `/post-office*`.
+
+The daily run goes out at 7am America/New_York all year. Cron triggers are
+UTC only, so `wrangler.toml` has two: `0 11 * * *` (7am EDT) and `0 12 * * *`
+(7am EST). Both fire every day; the scheduled handler checks the Eastern hour
+of the fire and runs only the one that is 7am, so each Eastern day gets one
+run. The other returns without touching D1. A change to the triggers takes
+effect only when the Worker is deployed (`pnpm run deploy` in `workers/post`).
 
 Its public routes are declared in `workers/post/wrangler.toml`. Secrets are
 configured with Wrangler and are never committed. The production secret names are:
@@ -113,7 +120,7 @@ with its old semantics.
 ### Semantic migrations (0004 and any like it)
 
 Migration `0004_debate.sql` remaps weekly `progress_index` from "last paper
-number sent" to "merged debate items consumed". If the daily cron (11:00 UTC)
+number sent" to "merged debate items consumed". If the daily run (7am Eastern)
 fires after the migration but before the new Worker deploys, the old Worker's
 `progress_index + 1` arithmetic sends the wrong paper and writes corrupted
 progress. Apply such migrations like this:
@@ -124,9 +131,10 @@ progress. Apply such migrations like this:
 2. Take a D1 backup/export first (the operational backup commands live outside
    this repository), so a botched window can be rolled back.
 3. Run `pnpm migrate:remote` and `pnpm run deploy` back-to-back, well clear of
-   the 11:00 UTC cron — anywhere in the 12:00–10:00 UTC window. If a wider
-   safety margin is wanted, first deploy a configuration with the cron trigger
-   removed, migrate, deploy the new Worker, then restore the trigger.
+   the daily run — anywhere in the 13:00–10:00 UTC window (both cron
+   triggers, 11:00 and 12:00 UTC, fall outside it). If a wider
+   safety margin is wanted, first deploy a configuration with the cron triggers
+   removed, migrate, deploy the new Worker, then restore the triggers.
 4. Verify after the next cron run: `deliveries` rows with `paper_number > 85`
    appear for the make-up sends, `last_daily_run` advances, and spot-check
    `SELECT progress_index, makeup_pending FROM subscribers WHERE program =

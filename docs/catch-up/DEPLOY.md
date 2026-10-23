@@ -9,7 +9,11 @@ Migration: **`0007_calendar_catch_up.sql`**. It is additive only (four new
 `subscribers` columns), so the ordinary order applies and the cron needs no
 pause (see `docs/deployment.md`).
 
-Avoid the minutes around the daily cron, 11:00 UTC (7am EDT / 6am EST).
+Avoid the minutes around the daily run, 7am Eastern. That is 11:00 UTC under
+daylight time and 12:00 UTC under standard time (from November 1, 2026). The
+Worker has a cron trigger at each and runs only the one that is 7am in New
+York; deploying the Worker (`pnpm run deploy` in `workers/post`) is what puts
+both triggers in place.
 
 1. **Verify locally**
    ```sh
@@ -47,7 +51,7 @@ Avoid the minutes around the daily cron, 11:00 UTC (7am EDT / 6am EST).
      names how many papers, the first catch-up morning, and the last.
    - Open that address's manage link. It shows *Catching up: 0 of N sent* and
      *End the catch-up*.
-   - The next morning, after 11:00 UTC, the test address receives
+   - The next morning, after 7am Eastern, the test address receives
      *Catch-up 1 of N* (combined with the day's paper if one ran), and
      `deliveries` has one row per item for that date.
    - Unsubscribe the test address.
