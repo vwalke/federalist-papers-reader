@@ -1,19 +1,11 @@
 // workers/post/src/schedule.ts
 import type { DebateItem } from './types';
+import { effectiveMonthDay } from './season';
 
-/** Operator amendment 2026-07-18: papers 78-85 keep the season's stride. */
-export const MCLEAN_OVERRIDES: Record<number, string> = {
-  78: '04-05', 79: '04-08', 80: '04-11', 81: '04-14',
-  82: '04-17', 83: '04-20', 84: '04-23', 85: '04-26'
-};
+// The McLean overrides live with the season calendar, which the site shares.
+export { MCLEAN_OVERRIDES, effectiveMonthDay } from './season';
 
 type DatedItem = Pick<DebateItem, 'kind' | 'id' | 'publicationDate'>;
-
-/** The McLean overrides apply to papers only; essays keep their real dates. */
-export function effectiveMonthDay(item: DatedItem): string {
-  const override = item.kind === 'paper' ? MCLEAN_OVERRIDES[item.id] : undefined;
-  return override ?? item.publicationDate.slice(5);
-}
 
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;

@@ -1,0 +1,11 @@
+Subject: Reminder: confirm your subscription — The Federalist by Post
+
+A few days ago you asked to receive the great debate by post, but the subscription was never confirmed. One click confirms it.
+
+The catch-up you asked for is kept for you: once you confirm, the papers already printed follow, one each morning, until you are current.
+
+Confirm your subscription: https://federalistreader.org/api/confirm?token=PREVIEW
+
+If you didn't sign up, simply ignore this letter. The address will be removed within a few days and nothing more will arrive.
+
+Publius

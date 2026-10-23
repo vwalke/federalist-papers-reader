@@ -26,6 +26,32 @@ test.describe('subscribe surfaces', () => {
     await expect(coupon.getByLabel('Email address')).toHaveAttribute('type', 'email');
   });
 
+  test('offers As It Happened catch-up only inside the window, beneath that program', async ({ page }) => {
+    // Tuesday November 10, 2026, after the morning run: eight already printed.
+    await page.clock.install({ time: new Date('2026-11-10T17:00:00Z') });
+    await page.goto('/subscribe/');
+    const coupon = page.getByRole('complementary', { name: 'By Subscription' });
+    const catchUp = coupon.getByRole('checkbox', { name: /Catch up on the eight already printed/ });
+    await expect(catchUp).toBeHidden();
+    await coupon.getByRole('radio', { name: /As It Happened/ }).check();
+    await expect(catchUp).toBeVisible();
+    await expect(catchUp).toBeChecked();
+    await expect(catchUp).toBeEnabled();
+    await coupon.getByRole('radio', { name: /Weekly Course/ }).check();
+    await expect(catchUp).toBeHidden();
+    // Disabled while hidden, so a Weekly signup never submits it.
+    await expect(coupon.locator('input[name="catchup"]')).toBeDisabled();
+  });
+
+  test('no catch-up offer after the cut-off', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-11-22T17:00:00Z') });
+    await page.goto('/subscribe/');
+    const coupon = page.getByRole('complementary', { name: 'By Subscription' });
+    await coupon.getByRole('radio', { name: /As It Happened/ }).check();
+    await expect(coupon.locator('input[name="catchup"]')).toBeHidden();
+    await expect(coupon.locator('input[name="catchup"]')).toBeDisabled();
+  });
+
   test('result pages render', async ({ page }) => {
     await page.goto('/subscribe/check-inbox/');
     await expect(page.getByRole('heading', { name: /confirmation/i })).toBeVisible();

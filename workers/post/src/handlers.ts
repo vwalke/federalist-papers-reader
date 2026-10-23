@@ -1,10 +1,39 @@
 // workers/post/src/handlers.ts
 import type { Db } from './db';
 import type { Env, Program, Subscriber } from './types';
-import { sequence } from './content';
+import { byId, items, sequence } from './content';
 import { DOW_NAMES, nextDayDowEastern } from './schedule';
+import {
+  addDays,
+  catchUpBacklog,
+  catchUpClaimed,
+  catchUpFinishesOn,
+  catchUpLastDay,
+  catchUpOpen,
+  catchUpStartsOn,
+  firstLiveDay,
+  monthDayLabel,
+  nextOnDate,
+  numberWord,
+  parseCatchUpItems,
+  SEASON_OPENS,
+  seasonCloses,
+  seasonOpens,
+  seasonStartYear,
+  weekdayDateLabel
+} from './season';
+import { STALE_PENDING_DAYS } from './deliver';
 import { signToken, verifyToken, type TokenPurpose } from './tokens';
-import { escapeHtml, renderConfirmation, renderWelcome, type EmailContext, type RenderedEmail } from './email';
+import {
+  escapeHtml,
+  itemDisplayName,
+  renderConfirmation,
+  renderWelcome,
+  type CalendarWelcome,
+  type EmailContext,
+  type RenderedEmail,
+  type WelcomeDetails
+} from './email';
 import type { Sender } from './resend';
 import { renderDashboard, renderDashboardError } from './dashboard';
 import { sendAndRecord } from './send-tracking';
@@ -128,19 +157,25 @@ async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender)
     return page('<h1>Verification failed.</h1><p>Please go back and try again.</p>', 400);
   }
 
+  // Catch-up is As It Happened only, and only asked for through the cut-off.
+  const today = new Date().toISOString().slice(0, 10);
+  const catchupRequested = program === 'calendar' && form.get('catchup') === '1' && catchUpOpen(today);
+
   const existing = await db.getSubscriberByEmail(email);
   if (existing && (existing.status === 'active' || existing.status === 'paused')) {
     const ctx = await emailContext(env, existing);
+    const catchUpHint = catchupRequested && existing.program === 'calendar' && !existing.catchup_items
+      ? ' To catch up on the papers already printed, open the manage page.' : '';
     await deliver(env, db, send, existing, {
       subject: 'You are already subscribed — The Federalist by Post',
-      html: `<p>This address already receives the papers. Manage your subscription here: <a href="${ctx.manageUrl}">${ctx.manageUrl}</a></p>`,
-      text: `Already subscribed. Manage: ${ctx.manageUrl}`
+      html: `<p>This address already receives the papers.${catchUpHint} Manage your subscription here: <a href="${ctx.manageUrl}">${ctx.manageUrl}</a></p>`,
+      text: `Already subscribed.${catchUpHint} Manage: ${ctx.manageUrl}`
     }, ctx);
     return redirect(`${env.SITE_URL}/subscribe/check-inbox/`);
   }
 
   const tokenSecret = crypto.randomUUID();
-  const sub = await db.upsertPending(email, program, tokenSecret, nextDayDowEastern(new Date()));
+  const sub = await db.upsertPending(email, program, tokenSecret, nextDayDowEastern(new Date()), catchupRequested);
   const ctx = await emailContext(env, sub);
   const confirm = await signToken(sub.id, 'confirm', env.TOKEN_SECRET, sub.token_secret);
   await deliver(env, db, send, sub, renderConfirmation(`${env.SITE_URL}/api/confirm?token=${confirm}`, ctx), ctx);
@@ -154,6 +189,67 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
 function humanDate(iso: string): string {
   const [year, month, day] = iso.split('-').map(Number);
   return `${MONTHS[month - 1]} ${day}, ${year}`;
+}
+
+/**
+ * The catch-up backlog `sub` would have if catch-up began today: every paper of
+ * the season dated before their first live morning, less what they already
+ * hold this season. The last daily run says whether today's paper has gone.
+ */
+async function catchUpBacklogFor(db: Db, sub: Subscriber, todayIso: string): Promise<{
+  backlog: number[]; firstLive: string; ranToday: boolean;
+}> {
+  const lastRun = await db.getLastDailyRun();
+  const ranToday = lastRun !== null && lastRun >= todayIso;
+  const firstLive = firstLiveDay(todayIso, ranToday);
+  const held = await db.listDeliveredItems(sub.id, seasonOpens(firstLive));
+  return {
+    backlog: catchUpBacklog(items, firstLive, new Set(held.map((row) => row.paper_number))),
+    firstLive,
+    ranToday
+  };
+}
+
+/**
+ * Where a newly confirmed As It Happened reader stands, starting their
+ * catch-up when they asked for it. A request made by the cut-off is honoured
+ * for the life of the signup (it is purged unconfirmed after STALE_PENDING_DAYS),
+ * so a slow inbox does not cost the reader their catch-up.
+ */
+async function calendarWelcome(db: Db, sub: Subscriber, todayIso: string): Promise<CalendarWelcome> {
+  const opens = seasonOpens(todayIso);
+  const closes = seasonCloses(todayIso);
+  const { backlog, firstLive } = await catchUpBacklogFor(db, sub, todayIso);
+  if (firstLive <= opens) {
+    return { state: 'before-season', opens: monthDayLabel(opens), closes: monthDayLabel(closes) };
+  }
+  const honoured = todayIso <= addDays(catchUpLastDay(todayIso), STALE_PENDING_DAYS);
+  if (sub.catchup_requested === 1 && honoured && backlog.length > 0) {
+    const startsOn = catchUpStartsOn(todayIso);
+    await db.startCatchUp(sub.id, backlog, startsOn);
+    return {
+      state: 'catch-up',
+      opened: monthDayLabel(opens),
+      behind: backlog.length,
+      startsOn: weekdayDateLabel(startsOn),
+      finishesOn: weekdayDateLabel(catchUpFinishesOn(startsOn, backlog.length))
+    };
+  }
+  const next = nextOnDate(items, firstLive);
+  const nextItem = next ? byId.get(next.id) : undefined;
+  if (!next || !nextItem) {
+    return {
+      state: 'between-seasons',
+      closed: monthDayLabel(closes),
+      opens: monthDayLabel(`${seasonStartYear(todayIso) + 1}-${SEASON_OPENS}`)
+    };
+  }
+  return {
+    state: 'live',
+    opened: monthDayLabel(opens),
+    closes: monthDayLabel(closes),
+    next: { name: itemDisplayName(nextItem), dateLabel: weekdayDateLabel(next.date) }
+  };
 }
 
 /** Next occurrence of sendDow strictly after fromIso — mirrors weeklyItemDue's 1-day guard. */
@@ -202,10 +298,14 @@ async function handleConfirmPost(request: Request, env: Env, db: Db, send: Sende
   }
   const ctx = await emailContext(env, sub);
   const today = new Date().toISOString().slice(0, 10);
-  const firstDelivery = sub.program === 'weekly'
-    ? humanDate(nextSendDate(today, sub.send_dow)) : 'October 18';
-  await deliver(env, db, send, sub,
-    renderWelcome(sub.program, firstDelivery, DOW_NAMES[sub.send_dow], ctx), ctx);
+  const details: WelcomeDetails = sub.program === 'weekly'
+    ? {
+      program: 'weekly',
+      firstDelivery: humanDate(nextSendDate(today, sub.send_dow)),
+      sendDayName: DOW_NAMES[sub.send_dow]
+    }
+    : { program: 'calendar', season: await calendarWelcome(db, sub, today) };
+  await deliver(env, db, send, sub, renderWelcome(details, ctx), ctx);
   return redirect(`${env.SITE_URL}/subscribe/confirmed/`);
 }
 
@@ -223,7 +323,56 @@ ${body}
 </body></html>`;
 }
 
-function managePage(sub: Subscriber, token: string): string {
+type CatchUpView =
+  | { kind: 'none' }
+  | { kind: 'offer'; behind: number }
+  | { kind: 'catching-up'; sent: number; total: number; finishesOn: string | null }
+  | { kind: 'caught-up'; on: string };
+
+async function catchUpView(db: Db, sub: Subscriber, todayIso: string): Promise<CatchUpView> {
+  if (sub.program !== 'calendar') return { kind: 'none' };
+  const total = parseCatchUpItems(sub.catchup_items).length;
+  if (total > 0 && sub.caught_up_on) {
+    return sub.caught_up_on >= seasonOpens(todayIso) ? { kind: 'caught-up', on: sub.caught_up_on } : { kind: 'none' };
+  }
+  if (total > 0) {
+    const delivered = await db.listDeliveredItems(sub.id, seasonOpens(todayIso));
+    const sent = catchUpClaimed(sub, delivered);
+    let finishesOn: string | null = null;
+    if (sub.status === 'active') {
+      const lastRun = await db.getLastDailyRun();
+      const nextRun = firstLiveDay(todayIso, lastRun !== null && lastRun >= todayIso);
+      const from = sub.catchup_starts_on && sub.catchup_starts_on > nextRun ? sub.catchup_starts_on : nextRun;
+      finishesOn = catchUpFinishesOn(from, total - sent);
+    }
+    return { kind: 'catching-up', sent, total, finishesOn };
+  }
+  if (!catchUpOpen(todayIso)) return { kind: 'none' };
+  const { backlog } = await catchUpBacklogFor(db, sub, todayIso);
+  return backlog.length > 0 ? { kind: 'offer', behind: backlog.length } : { kind: 'none' };
+}
+
+function catchUpSection(view: CatchUpView, field: string): string {
+  switch (view.kind) {
+    case 'none': return '';
+    case 'offer': {
+      const behind = view.behind === 1 ? 'One paper was' : `${numberWord(view.behind)[0].toUpperCase()}${numberWord(view.behind).slice(1)} papers were`;
+      return `<h2>Catch up</h2>
+<p>${behind} printed before you joined. Catch up, and ${view.behind === 1 ? 'it arrives' : 'they arrive'} one extra each morning, earliest first, until you are current.</p>
+<form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="catchup"><button>Catch up</button></form>`;
+    }
+    case 'catching-up':
+      return `<h2>Catching up</h2>
+<p>${view.sent} of ${view.total} sent.${view.finishesOn
+        ? ` The last arrives ${escapeHtml(weekdayDateLabel(view.finishesOn))}.`
+        : ' The catch-up waits while your subscription is paused.'}</p>
+<form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="catchup-stop"><button>End the catch-up</button></form>`;
+    case 'caught-up':
+      return `<p>Caught up on ${escapeHtml(weekdayDateLabel(view.on))}.</p>`;
+  }
+}
+
+function managePage(sub: Subscriber, token: string, catchUp: CatchUpView = { kind: 'none' }): string {
   const progress = sub.program === 'weekly'
     ? `${sub.progress_index} of ${sequence.length} in the debate — The Weekly Course, arriving ${DOW_NAMES[sub.send_dow]}s`
     : 'As It Happened — papers and essays arrive on their original dates';
@@ -240,7 +389,7 @@ function managePage(sub: Subscriber, token: string): string {
 <title>Manage subscription — The Federalist</title>
 ${PAGE_STYLE}</head><body>
 <h1>Your subscription</h1><p>${progress}</p>${status}
-${dayForm}
+${dayForm}${catchUpSection(catchUp, field)}
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="pause"><button>Pause</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="resume"><button>Resume</button></form>
 <form method="post" action="/api/manage">${field}<input type="hidden" name="action" value="switch"><button>Switch program</button></form>
@@ -254,7 +403,8 @@ async function handleManageGet(request: Request, env: Env, db: Db): Promise<Resp
   const token = new URL(request.url).searchParams.get('token');
   const sub = await requireSubscriber(token, 'manage', env, db);
   if (!sub || sub.status === 'unsubscribed') return page('<h1>That link is not valid.</h1>', 400, true);
-  return page(managePage(sub, token!), 200, true);
+  const today = new Date().toISOString().slice(0, 10);
+  return page(managePage(sub, token!, await catchUpView(db, sub, today)), 200, true);
 }
 
 async function handleManagePost(request: Request, env: Env, db: Db): Promise<Response> {
@@ -273,6 +423,15 @@ async function handleManagePost(request: Request, env: Env, db: Db): Promise<Res
     case 'switch':
       await db.setProgram(sub.id, sub.program === 'weekly' ? 'calendar' : 'weekly', 0); break;
     case 'restart': await db.setProgress(sub.id, 0); break;
+    case 'catchup': {
+      // Opting in from the manage page follows the signup rule: through the cut-off only.
+      const today = new Date().toISOString().slice(0, 10);
+      if (sub.program !== 'calendar' || sub.catchup_items || !catchUpOpen(today)) break;
+      const { backlog } = await catchUpBacklogFor(db, sub, today);
+      if (backlog.length > 0) await db.startCatchUp(sub.id, backlog, catchUpStartsOn(today));
+      break;
+    }
+    case 'catchup-stop': await db.stopCatchUp(sub.id); break;
     case 'setday': {
       const dow = Number(form.get('dow'));
       if (!Number.isInteger(dow) || dow < 0 || dow > 6) {

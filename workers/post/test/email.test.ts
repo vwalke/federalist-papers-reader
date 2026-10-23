@@ -144,7 +144,7 @@ describe('confirmation and welcome', () => {
     expect(mail.html).not.toMatch(/<img|<table/);
   });
   it('welcome states the first delivery expectation per program', () => {
-    const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);
+    const weekly = renderWelcome({ program: 'weekly', firstDelivery: 'July 21, 2026', sendDayName: 'Tuesday' }, CTX);
     expect(weekly.html).toContain('Brutus No. I');
     expect(weekly.html).toContain('Tuesday, July 21, 2026');
     expect(weekly.html).toContain('each Tuesday');
@@ -155,16 +155,16 @@ describe('confirmation and welcome', () => {
     expect(weekly.html).toContain(CTX.manageUrl);
     expect(weekly.html).toContain(CTX.unsubscribeUrl);
     expect(weekly.html).toContain(CTX.postalAddress);
-    const calendar = renderWelcome('calendar', 'October 18', 'Saturday', CTX);
+    const calendar = renderWelcome({ program: 'calendar', season: { state: 'before-season', opens: 'October 18', closes: 'April 26' } }, CTX);
     expect(calendar.html).toContain('October 18');
     expect(calendar.html).toContain('each paper and essay arrives on the anniversary');
     expect(calendar.html).not.toContain('Change your delivery day');
   });
   it('welcome text carries the delivery date, manage link, and no HTML residue', () => {
-    const weekly = renderWelcome('weekly', 'July 21, 2026', 'Tuesday', CTX);
+    const weekly = renderWelcome({ program: 'weekly', firstDelivery: 'July 21, 2026', sendDayName: 'Tuesday' }, CTX);
     expect(weekly.text).toContain('Tuesday, July 21, 2026');
     expect(weekly.text).toContain(CTX.manageUrl);
-    const calendar = renderWelcome('calendar', 'October 18', 'Saturday', CTX);
+    const calendar = renderWelcome({ program: 'calendar', season: { state: 'before-season', opens: 'October 18', closes: 'April 26' } }, CTX);
     expect(calendar.text).toContain('October 18');
     for (const text of [weekly.text, calendar.text]) {
       expect(text).not.toContain('&oelig;');
