@@ -110,18 +110,26 @@ test('runs chronologically with no sort control and announces the result count',
   await expect(page.locator('[data-index-count]')).toHaveAttribute('aria-live', 'polite');
 });
 
-test('the printer’s notice announces the opposition and stays dismissed', async ({ page }) => {
+test('the printer’s notice announces As It Happened and stays dismissed', async ({ page }) => {
+  // Inside the catch-up window, which the notice keeps to.
+  await page.clock.install({ time: new Date('2026-11-10T17:00:00Z') });
   await page.goto('/');
 
   const notice = page.locator('[data-site-notice]');
   await expect(notice).toBeVisible();
-  await expect(notice).toContainText('New to this edition');
-  await expect(notice.locator('a')).toHaveAttribute('href', '/antifederalist/');
+  await expect(notice).toContainText('As It Happened is underway');
+  await expect(notice.locator('a')).toHaveAttribute('href', '/subscribe/');
 
   await notice.locator('[data-site-notice-dismiss]').click();
   await expect(notice).toBeHidden();
 
   // The dismissal survives a reload, applied before first paint.
   await page.reload();
+  await expect(page.locator('[data-site-notice]')).toBeHidden();
+});
+
+test('the As It Happened notice is hidden after the catch-up cut-off', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-22T17:00:00Z') });
+  await page.goto('/');
   await expect(page.locator('[data-site-notice]')).toBeHidden();
 });

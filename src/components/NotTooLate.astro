@@ -1,0 +1,28 @@
+---
+import debate from '../../workers/post/content/debate.json';
+import { catchUpMonthDays } from '../lib/catch-up-window';
+import type { DatedItem } from '../../workers/post/src/season';
+
+/**
+ * "Missed October 18? It isn't too late." Rendered hidden, so readers without
+ * JavaScript and anyone after the catch-up cut-off never see it; the script
+ * reveals it, with the live count, only while catch-up is open.
+ */
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const days = catchUpMonthDays(debate.items as DatedItem[]);
+---
+
+<p class={className} data-catch-up-window data-days={JSON.stringify(days)} hidden>
+  Missed October 18? It isn&rsquo;t too late. Join As It Happened and we&rsquo;ll catch you up, one
+  extra paper each morning.
+</p>
+
+<script>
+  import { revealInCatchUpWindow } from '../lib/catch-up-window';
+
+  revealInCatchUpWindow(document);
+</script>

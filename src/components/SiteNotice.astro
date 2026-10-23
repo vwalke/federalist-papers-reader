@@ -6,13 +6,18 @@
  * item its own `id` and the dismissal persists per item, per browser.
  */
 interface Props {
-  /** Storage identity for this news item, e.g. 'antifederalist-2026'. */
+  /** Storage identity for this news item, e.g. 'aih-underway-2026'. */
   id: string;
-  /** The small-caps lead-in, e.g. 'New to this edition'. */
+  /** The small-caps lead-in, e.g. 'As It Happened is underway'. */
   label: string;
+  /**
+   * Render hidden and show only while As It Happened catch-up is open,
+   * judged in the browser on the Eastern calendar (see catch-up-window.ts).
+   */
+  whileCatchUpOpen?: boolean;
 }
 
-const { id, label } = Astro.props;
+const { id, label, whileCatchUpOpen = false } = Astro.props;
 const storageKey = `publius:notice-dismissed:${id}`;
 ---
 
@@ -26,7 +31,13 @@ const storageKey = `publius:notice-dismissed:${id}`;
   }
 </script>
 
-<aside class="site-notice" aria-labelledby="site-notice-title" data-site-notice>
+<aside
+  class="site-notice"
+  aria-labelledby="site-notice-title"
+  data-site-notice
+  data-catch-up-window={whileCatchUpOpen || undefined}
+  hidden={whileCatchUpOpen}
+>
   <p class="site-notice__body">
     <span class="site-notice__hand" aria-hidden="true">&#x261E;&#xFE0E;</span>
     <strong class="site-notice__label" id="site-notice-title">{label}</strong>.{' '}
@@ -42,6 +53,12 @@ const storageKey = `publius:notice-dismissed:${id}`;
     <span aria-hidden="true">×</span>
   </button>
 </aside>
+
+<script>
+  import { revealInCatchUpWindow } from '../lib/catch-up-window';
+
+  revealInCatchUpWindow(document);
+</script>
 
 <script define:vars={{ storageKey }}>
   const notice = document.querySelector('[data-site-notice]');

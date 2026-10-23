@@ -1071,6 +1071,10 @@ html[data-site-notice-dismissed] .site-notice {
   margin-block-start: var(--space-md);
 }
 
+.subscribe-programs__late {
+  margin-block-start: var(--space-sm);
+}
+
 .subscribe-programs__program + .subscribe-programs__program {
   margin-block-start: var(--space-xl);
   padding-block-start: var(--space-xl);
