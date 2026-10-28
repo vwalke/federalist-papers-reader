@@ -87,8 +87,10 @@ describe('email activity queries', () => {
       3
     );
 
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2);
     expect(calls[0].sql).toContain('ON CONFLICT(provider_message_id) DO UPDATE');
+    expect(calls[1].sql).toContain('FROM email_delivery_receipts');
+    expect(calls[1].bind).toEqual(['56761188-7520-42d8-8898-ff6fc54ce618']);
     expect(calls[0].bind).toEqual([
       '56761188-7520-42d8-8898-ff6fc54ce618',
       '2026-07-25T12:00:00.000Z',
@@ -145,6 +147,9 @@ describe('email activity queries', () => {
 
     expect(calls).toEqual([{
       sql: 'DELETE FROM email_sends WHERE sent_at < ?',
+      bind: ['2026-06-10T14:00:00.000Z']
+    }, {
+      sql: 'DELETE FROM email_delivery_receipts WHERE delivery_status_at < ?',
       bind: ['2026-06-10T14:00:00.000Z']
     }]);
   });

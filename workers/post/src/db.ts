@@ -51,7 +51,7 @@ export interface Db {
   getWeeklyDayStats(): Promise<WeeklyDayStats[]>;
   getSubscriptionActivity(now: Date): Promise<DailyActivity>;
   recordEmailSend(providerMessageId: string, sentAt: string, recipientCount: number): Promise<void>;
-  /** Records a Resend delivery event against an email we already track; a no-op for unknown ids. */
+  /** Records a Resend delivery event; applied to email_sends now, or when recordEmailSend saves the row. */
   recordEmailDelivery(providerMessageId: string, status: 'delivered' | 'delivery_delayed',
     occurredAt: string): Promise<void>;
   getEmailActivity(now: Date): Promise<EmailActivity>;
@@ -102,6 +102,18 @@ export interface Db {
   purgeStalePending(olderThanDays: number): Promise<void>;
   recordDailyRun(todayIso: string): Promise<void>;
 }
+
+// Copies a message's stored receipt onto its email_sends row, if both exist.
+// Both writers run it after their own write, so whichever lands second applies
+// it. Delivered is final here too.
+const APPLY_RECEIPT = `UPDATE email_sends SET
+  delivery_status = CASE WHEN email_sends.delivery_status = 'delivered'
+    THEN 'delivered' ELSE r.delivery_status END,
+  delivery_status_at = CASE WHEN email_sends.delivery_status = 'delivered'
+    THEN email_sends.delivery_status_at ELSE r.delivery_status_at END
+  FROM email_delivery_receipts AS r
+  WHERE r.provider_message_id = email_sends.provider_message_id
+    AND email_sends.provider_message_id = ?`;
 
 export function makeDb(d1: D1Database): Db {
   const one = async (stmt: D1PreparedStatement) => ((await stmt.first()) as Subscriber | null) ?? null;
@@ -158,15 +170,23 @@ export function makeDb(d1: D1Database): Db {
            sent_at = excluded.sent_at,
            recipient_count = excluded.recipient_count`
       ).bind(providerMessageId, sentAt, recipientCount).run();
+      // A delivery event may have beaten this row in (0008).
+      await d1.prepare(APPLY_RECEIPT).bind(providerMessageId).run();
     },
     async recordEmailDelivery(providerMessageId, status, occurredAt) {
       // Delivered is final: a late-arriving delay event never downgrades it.
+      // The receipt is kept even before the email_sends row exists;
+      // recordEmailSend applies it when the row lands.
       await d1.prepare(
-        `UPDATE email_sends SET
-           delivery_status = CASE WHEN delivery_status = 'delivered' THEN 'delivered' ELSE ? END,
-           delivery_status_at = CASE WHEN delivery_status = 'delivered' THEN delivery_status_at ELSE ? END
-         WHERE provider_message_id = ?`
-      ).bind(status, occurredAt, providerMessageId).run();
+        `INSERT INTO email_delivery_receipts (provider_message_id, delivery_status, delivery_status_at)
+         VALUES (?, ?, ?)
+         ON CONFLICT(provider_message_id) DO UPDATE SET
+           delivery_status = CASE WHEN email_delivery_receipts.delivery_status = 'delivered'
+             THEN 'delivered' ELSE excluded.delivery_status END,
+           delivery_status_at = CASE WHEN email_delivery_receipts.delivery_status = 'delivered'
+             THEN email_delivery_receipts.delivery_status_at ELSE excluded.delivery_status_at END`
+      ).bind(providerMessageId, status, occurredAt).run();
+      await d1.prepare(APPLY_RECEIPT).bind(providerMessageId).run();
     },
     async getEmailActivity(now) {
       const cutoff = new Date(now.getTime() - 31 * 86_400_000).toISOString();
@@ -181,6 +201,7 @@ export function makeDb(d1: D1Database): Db {
     async purgeEmailSends(olderThanDays) {
       const cutoff = new Date(Date.now() - olderThanDays * 86_400_000).toISOString();
       await d1.prepare('DELETE FROM email_sends WHERE sent_at < ?').bind(cutoff).run();
+      await d1.prepare('DELETE FROM email_delivery_receipts WHERE delivery_status_at < ?').bind(cutoff).run();
     },
     getSubscriberById: (id) => one(d1.prepare('SELECT * FROM subscribers WHERE id = ?').bind(id)),
     getSubscriberByEmail: (email) =>

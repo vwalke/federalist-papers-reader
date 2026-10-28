@@ -41,8 +41,8 @@ function d1(db: DatabaseSync): D1Database {
 const row = (db: DatabaseSync) => db.prepare('SELECT * FROM subscribers WHERE id = 1').get() as Record<string, unknown>;
 
 describe('0007 migration file', () => {
-  it('is the last in the chain and only adds columns', () => {
-    expect(MIGRATIONS.at(-1)).toBe('0007_calendar_catch_up.sql');
+  it('follows 0006 in the chain and only adds columns', () => {
+    expect(MIGRATIONS.indexOf('0007_calendar_catch_up.sql')).toBe(6);
     const sql = readFileSync(new URL('../migrations/0007_calendar_catch_up.sql', import.meta.url), 'utf8')
       .replace(/--.*$/gm, '');
     expect(sql).not.toMatch(/\b(DROP|DELETE|UPDATE)\b/i);
@@ -51,7 +51,7 @@ describe('0007 migration file', () => {
 
   it('leaves existing subscribers not catching up', () => {
     const sqlite = new DatabaseSync(':memory:');
-    for (const name of MIGRATIONS.slice(0, -1)) {
+    for (const name of MIGRATIONS.slice(0, MIGRATIONS.indexOf('0007_calendar_catch_up.sql'))) {
       sqlite.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8'));
     }
     sqlite.exec(`INSERT INTO subscribers (email, program, status, token_secret) VALUES ('a@example.com', 'calendar', 'active', 't')`);
