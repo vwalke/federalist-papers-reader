@@ -472,18 +472,22 @@ async function handleUnsubscribePost(request: Request, env: Env, db: Db): Promis
 
 const SVIX_TOLERANCE_SECONDS = 5 * 60;
 
-async function verifySvix(request: Request, secret: string, payload: string): Promise<boolean> {
+/** Null when the signature verifies; otherwise a short, non-secret reason for the log. */
+async function verifySvix(request: Request, secret: string, payload: string): Promise<string | null> {
   const id = request.headers.get('svix-id');
   const timestamp = request.headers.get('svix-timestamp');
   const signatures = request.headers.get('svix-signature');
-  if (!id || !timestamp || !signatures) return false;
+  if (!id || !timestamp || !signatures) return 'missing svix headers';
   const ts = Number(timestamp);
-  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > SVIX_TOLERANCE_SECONDS) return false;
+  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > SVIX_TOLERANCE_SECONDS) {
+    return 'timestamp outside tolerance';
+  }
   const keyBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, '')), (c) => c.charCodeAt(0));
   const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const signed = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${id}.${timestamp}.${payload}`));
   const expected = btoa(String.fromCharCode(...new Uint8Array(signed)));
-  return signatures.split(' ').some((part) => part.startsWith('v1,') && part.slice(3) === expected);
+  const matched = signatures.split(' ').some((part) => part.startsWith('v1,') && part.slice(3) === expected);
+  return matched ? null : 'no signature matched';
 }
 
 async function handleWebhook(request: Request, env: Env, db: Db): Promise<Response> {
@@ -491,7 +495,9 @@ async function handleWebhook(request: Request, env: Env, db: Db): Promise<Respon
   // caller, so never process the event.
   if (!env.RESEND_WEBHOOK_SECRET) return new Response('webhook secret not configured', { status: 401 });
   const payload = await request.text();
-  if (!(await verifySvix(request, env.RESEND_WEBHOOK_SECRET, payload))) {
+  const rejection = await verifySvix(request, env.RESEND_WEBHOOK_SECRET, payload);
+  if (rejection) {
+    console.warn('resend webhook rejected', { reason: rejection });
     return new Response('bad signature', { status: 401 });
   }
   let parsed: unknown;

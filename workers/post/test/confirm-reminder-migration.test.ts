@@ -17,7 +17,9 @@ const MIGRATIONS = [
   '0005_announcement_deliveries.sql',
   '0006_confirm_reminders_and_delivery_status.sql',
   // db.ts reads 0007's catch-up columns in upsertPending, so the chain runs through it.
-  '0007_calendar_catch_up.sql'
+  '0007_calendar_catch_up.sql',
+  // db.ts writes 0008's receipts table in recordEmailSend / recordEmailDelivery.
+  '0008_email_delivery_receipts.sql'
 ];
 
 function migratedDb(): DatabaseSync {

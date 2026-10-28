@@ -837,4 +837,45 @@ describe('resend webhook', () => {
     expect(res.status).toBe(401);
     expect(db.recordEmailDelivery).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['missing svix headers', (h: Record<string, string>) => { delete h['svix-id']; }],
+    ['timestamp outside tolerance', (h: Record<string, string>) => {
+      h['svix-timestamp'] = String(Math.floor(Date.now() / 1000) - 10 * 60);
+    }],
+    ['no signature matched', (h: Record<string, string>) => {
+      h['svix-signature'] = `v1,${btoa('forged-signature-bytes-here-1234')}`;
+    }]
+  ])('logs why a webhook was rejected: %s', async (reason, tamper) => {
+    const payload = JSON.stringify({ type: 'email.delivered', data: { email_id: 'em_1' } });
+    const headers = await svixHeaders(payload);
+    const genuine = headers['svix-signature'];
+    tamper(headers);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const res = await handleRequest(webhookRequest(payload, headers), WEBHOOK_ENV, makeStubDb(), sender);
+      expect(res.status).toBe(401);
+      expect(await res.text()).toBe('bad signature');
+      expect(warn).toHaveBeenCalledWith('resend webhook rejected', { reason });
+      const logged = JSON.stringify(warn.mock.calls);
+      expect(logged).not.toContain(WEBHOOK_SECRET.replace(/^whsec_/, ''));
+      expect(logged).not.toContain(genuine.slice(3));
+      expect(logged).not.toContain('em_1');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('does not warn when the signature verifies', async () => {
+    const payload = JSON.stringify({ type: 'email.delivered', data: { email_id: 'em_1' } });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const res = await handleRequest(
+        webhookRequest(payload, await svixHeaders(payload)), WEBHOOK_ENV, makeStubDb(), sender);
+      expect(res.status).toBe(200);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
 });
