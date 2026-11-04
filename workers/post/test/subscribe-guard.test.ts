@@ -283,6 +283,27 @@ describe('rate limits', () => {
     await posts.purgeRateLimits(2 * 86_400);
     expect(sqlite.prepare('SELECT key FROM rate_limits').all()).toEqual([{ key: 'new' }]);
   });
+
+  it('lets a verified signup through when the rate_limits table is missing', async () => {
+    sqlite.exec('DROP TABLE rate_limits');
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const blocked = await subscribe(signup({ email: 'bot@example.com', program: 'weekly' }, { headers: {} }));
+      expect(blocked.status).toBe(403);
+      expect(rows()).toEqual([]);
+      expect(sent).toHaveLength(0);
+
+      const res = await subscribe(signup({
+        email: 'reader@example.com', program: 'weekly', 'cf-turnstile-response': DUMMY_TOKEN
+      }));
+      expect(res.status).toBe(303);
+      expect(rows()).toEqual([{ email: 'reader@example.com', status: 'pending', program: 'weekly' }]);
+      expect(sent).toHaveLength(1);
+      expect(error.mock.calls.some((call) => String(call[0]).includes('rate_limits table missing'))).toBe(true);
+    } finally {
+      error.mockRestore();
+    }
+  });
 });
 
 describe('isSameOrigin', () => {
