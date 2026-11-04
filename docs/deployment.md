@@ -124,24 +124,40 @@ purges counters older than two days. The limits are constants in
 `workers/post/src/signup-guard.ts`. The per-IP limit is generous on purpose: a
 classroom signing up from one school network shares one IP.
 
-To enable it, in this order:
+To enable it, follow this order. Do not skip or reverse steps.
 
-1. In the Cloudflare dashboard, go to Turnstile and add a widget for the
-   hostname `federalistreader.org`. Widget mode Invisible (or Managed: the form
-   uses `data-appearance="interaction-only"`, so a Managed widget shows only
-   when Cloudflare needs a click).
-2. Set the **site key** as the Pages build variable `PUBLIC_TURNSTILE_SITE_KEY`
-   for Production, then let Pages build the site (the merge to `main` does
-   this). Site first is safe: a Worker without `TURNSTILE_SECRET` ignores the
-   token the form now sends.
-3. Set the **secret key** as a Worker secret: from `workers/post`, run
+1. **Create the widget.** In the Cloudflare dashboard, go to Turnstile and add a
+   widget for the hostname `federalistreader.org`. Widget mode Invisible (or
+   Managed: the form uses `data-appearance="interaction-only"`, so a Managed
+   widget shows only when Cloudflare needs a click).
+2. **Set the site key on Pages**, then let Pages build the site (the merge to
+   `main` does this). Settings → Environment variables → Production →
+   `PUBLIC_TURNSTILE_SITE_KEY=<site key>`.
+   The Worker running **today** (the one in production before this change
+   deploys) ignores the token when `TURNSTILE_SECRET` is unset, so shipping the
+   widget first is safe. After the new Worker ships, a missing
+   `TURNSTILE_SECRET` blocks every signup — do not unset it later thinking that
+   disables the check.
+3. **Set the secret** on the Worker: from `workers/post`, run
    `npx wrangler secret put TURNSTILE_SECRET`.
-4. Apply migration 0009 (`pnpm migrate:remote`, purely additive), then deploy
-   the Worker (`pnpm run deploy`). Migration before deploy: the new Worker's
+   Once this secret exists, the Worker running today already enforces Turnstile,
+   so this step stops the bot even before step 4.
+4. **Migrate, then deploy** the new Worker: from `workers/post`, run
+   `pnpm migrate:remote` (purely additive), then `pnpm run deploy`. The new
    signup path writes `rate_limits`.
 
-The reverse order breaks signups: a Worker that requires a token in front of a
-form built without the real site key refuses every real reader.
+> [!WARNING]
+> These mis-orders lock out real signups:
+>
+> | Mis-order | Effect |
+> |---|---|
+> | Merge to `main` without `PUBLIC_TURNSTILE_SITE_KEY` | Production Pages build fails (`CF_PAGES_BRANCH=main`). The current site stays up — not a reader lockout, but the widget never ships. |
+> | Set `TURNSTILE_SECRET` on the Worker running today before the site has a widget | **Lockout.** Today's Worker only fail-opens when the secret is unset. Once the secret exists it siteverifies the (missing) token and refuses everyone. |
+> | Deploy the new Worker without `TURNSTILE_SECRET` | **Lockout.** Every signup is 403. |
+> | Deploy the new Worker before migration 0009 | **Lockout** for anyone who passes Turnstile. `hitRateLimit` writes `rate_limits` with no try/catch; a missing table is an uncaught 500. |
+> | New Worker in front of a site still built with the test key | **Lockout.** The production secret rejects dummy tokens. |
+>
+> Also, never set a test secret in production: `1x…AA` accepts any token.
 
 For local development and tests use Cloudflare's published test keys
 (https://developers.cloudflare.com/turnstile/troubleshooting/testing/):
