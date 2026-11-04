@@ -1,5 +1,5 @@
 -- Fixed-window counters for POST /api/subscribe (db.hitRateLimit). One row per
--- key: 'ip:<hash>' per client address, 'email:<hash>' and 'email-day:<hash>'
+-- key: 'ip:<hash>' per client address, 'email:<hash>' and 'email:<hash>:day'
 -- per address mailed. Keys are HMAC-SHA-256 digests (keyed with TOKEN_SECRET),
 -- so neither raw IPs nor addresses are stored here. A hit in a new window
 -- resets the count; the daily run purges rows whose window has long passed.
