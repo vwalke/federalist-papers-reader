@@ -478,6 +478,12 @@ export async function runDaily(
   }
   await db.purgeStalePending(STALE_PENDING_DAYS);
   await db.purgeEmailSends(45);
+  // Signup counters (0009). Fenced off: housekeeping never costs the papers.
+  try {
+    await db.purgeRateLimits(2 * 86_400);
+  } catch (error) {
+    console.error('rate limit purge failed', { error: String(error) });
+  }
   const dueCalendarItems = itemsDueOnDate(items, todayIso);
   let sent = 0;
   let failed = 0;

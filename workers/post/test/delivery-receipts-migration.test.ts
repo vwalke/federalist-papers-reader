@@ -44,8 +44,8 @@ const statuses = (db: DatabaseSync) => db.prepare(
 ).all();
 
 describe('0008 migration file', () => {
-  it('is the last in the chain and only creates the receipts table', () => {
-    expect(MIGRATIONS.at(-1)).toBe('0008_email_delivery_receipts.sql');
+  it('is in the chain and only creates the receipts table', () => {
+    expect(MIGRATIONS).toContain('0008_email_delivery_receipts.sql');
     const sql = readFileSync(new URL('../migrations/0008_email_delivery_receipts.sql', import.meta.url), 'utf8')
       .replace(/--.*$/gm, '');
     expect(sql).not.toMatch(/\b(DROP|DELETE|UPDATE|ALTER)\b/i);
@@ -54,7 +54,7 @@ describe('0008 migration file', () => {
 
   it('leaves existing email_sends rows untouched and rejects unknown statuses', () => {
     const sqlite = new DatabaseSync(':memory:');
-    for (const name of MIGRATIONS.slice(0, -1)) {
+    for (const name of MIGRATIONS.slice(0, MIGRATIONS.indexOf('0008_email_delivery_receipts.sql'))) {
       sqlite.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8'));
     }
     sqlite.exec(`INSERT INTO email_sends (provider_message_id, sent_at, delivery_status, delivery_status_at)

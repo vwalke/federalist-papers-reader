@@ -37,6 +37,7 @@ function makeDb(subscribers: Subscriber[]) {
     getSubscriberStats: vi.fn(), getWeeklyDayStats: vi.fn(), getSubscriptionActivity: vi.fn(),
     recordEmailSend: vi.fn(async () => {}), recordEmailDelivery: vi.fn(async () => {}),
     getEmailActivity: vi.fn(), purgeEmailSends: vi.fn(async () => {}),
+    hitRateLimit: vi.fn(async () => 1), purgeRateLimits: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id: number) => subscribers.find((s) => s.id === id) ?? null),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(), activate: vi.fn(), setStatus: vi.fn(), setProgram: vi.fn(),

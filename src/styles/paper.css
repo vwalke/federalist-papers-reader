@@ -645,6 +645,12 @@
   left: -9999px;
 }
 
+.subscribe-coupon__check {
+  display: grid;
+  gap: var(--space-xs);
+  justify-items: center;
+}
+
 .subscribe-coupon__row {
   display: flex;
   flex-wrap: wrap;

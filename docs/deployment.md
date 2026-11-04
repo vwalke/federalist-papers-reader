@@ -26,11 +26,15 @@ The build accepts these environment variables:
 NODE_VERSION=22.22.2
 PUBLIC_SITE_URL=https://federalistreader.org
 PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<optional-public-beacon-token>
-PUBLIC_TURNSTILE_SITE_KEY=<optional-public-site-key>
+PUBLIC_TURNSTILE_SITE_KEY=<public-site-key>   # required for production
 ```
 
 The analytics token and Turnstile site key are public browser identifiers, not
-account credentials. The site builds without either optional value.
+account credentials. The analytics token is optional. The Turnstile site key is
+required on the production branch: a Pages build with `CF_PAGES_BRANCH=main`
+and no `PUBLIC_TURNSTILE_SITE_KEY` fails rather than ship a signup form the
+Worker would reject. Every other build (local, preview branches) falls back to
+Cloudflare's always-passes invisible test site key `1x00000000000000000000BB`.
 
 Verify a site change locally:
 
@@ -54,7 +58,7 @@ The Worker lives in `workers/post/`. It uses:
 - D1 for subscriber and delivery state;
 - Resend for transactional email;
 - a daily run at 7am Eastern for scheduled delivery (see below);
-- Turnstile as an optional subscription challenge; and
+- Turnstile, required on every signup (see "Signup protection" below); and
 - Cloudflare Access as the security boundary for `/post-office*`.
 
 The daily run goes out at 7am America/New_York all year. Cron triggers are
@@ -93,6 +97,65 @@ with `wrangler secret put CLOUDFLARE_ANALYTICS_TOKEN`. Configure that zone's ID
 as the plain Worker variable `CLOUDFLARE_ZONE_ID`. If either value is absent or
 invalid, only the visit chart is unavailable; the protected dashboard continues
 to show D1-backed subscriber and email figures.
+
+### Signup protection
+
+`POST /api/subscribe` checks, in order, before it writes to D1 or sends mail:
+
+1. **Same origin.** A form posted from another site (Origin, or Referer when
+   Origin is absent) is refused with 403.
+2. **Honeypot.** A filled `contact_time` field is acknowledged and dropped.
+3. **Turnstile.** The `cf-turnstile-response` token is verified with
+   siteverify using the `TURNSTILE_SECRET` Worker secret. It fails closed: a
+   missing token, a rejected or spent token, an unreachable siteverify, or an
+   unset `TURNSTILE_SECRET` all answer 403 and nothing is saved or sent.
+4. **Per-IP limit.** 20 verified signups per hour per `CF-Connecting-IP`, then
+   429 with `Retry-After`.
+5. **Per-address limit.** At most one email (confirmation or the
+   already-subscribed notice) per address per 10 minutes and three per day.
+   A repeat inside the limit looks the same to the visitor (the check-inbox
+   page) but writes and sends nothing, so a pending address is never re-mailed
+   within the window.
+
+The limits are fixed-window counters in the D1 table `rate_limits` (migration
+`0009_signup_rate_limits.sql`), keyed by HMAC-SHA-256 digests under
+`TOKEN_SECRET`, so raw IPs and addresses are not stored there. The daily run
+purges counters older than two days. The limits are constants in
+`workers/post/src/signup-guard.ts`. The per-IP limit is generous on purpose: a
+classroom signing up from one school network shares one IP.
+
+To enable it, in this order:
+
+1. In the Cloudflare dashboard, go to Turnstile and add a widget for the
+   hostname `federalistreader.org`. Widget mode Invisible (or Managed: the form
+   uses `data-appearance="interaction-only"`, so a Managed widget shows only
+   when Cloudflare needs a click).
+2. Set the **site key** as the Pages build variable `PUBLIC_TURNSTILE_SITE_KEY`
+   for Production, then let Pages build the site (the merge to `main` does
+   this). Site first is safe: a Worker without `TURNSTILE_SECRET` ignores the
+   token the form now sends.
+3. Set the **secret key** as a Worker secret: from `workers/post`, run
+   `npx wrangler secret put TURNSTILE_SECRET`.
+4. Apply migration 0009 (`pnpm migrate:remote`, purely additive), then deploy
+   the Worker (`pnpm run deploy`). Migration before deploy: the new Worker's
+   signup path writes `rate_limits`.
+
+The reverse order breaks signups: a Worker that requires a token in front of a
+form built without the real site key refuses every real reader.
+
+For local development and tests use Cloudflare's published test keys
+(https://developers.cloudflare.com/turnstile/troubleshooting/testing/):
+site key `1x00000000000000000000BB` (passes, invisible) with secret
+`1x0000000000000000000000000000000AA` (passes); secret
+`2x0000000000000000000000000000000AA` always fails and
+`3x0000000000000000000000000000000AA` reports a spent token. For
+`wrangler dev`, put `TURNSTILE_SECRET=1x0000000000000000000000000000000AA` in
+`workers/post/.dev.vars` (gitignored). Never set a test secret in production:
+it accepts any token.
+
+`workers/post/ops/list-junk-signups-2026-11-03.sql` is a read-only listing of
+the never-confirmed signups the 2026-11-03 bot created. Nothing runs it; see
+its header for how and when to run it by hand.
 
 Install dependencies and run the root Vitest suite, which includes the Worker
 tests, from the repository root:

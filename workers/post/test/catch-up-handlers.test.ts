@@ -16,7 +16,9 @@ const ENV = {
   FROM_ADDRESS: 'Publius <publius@federalistreader.org>',
   RESEND_API_KEY: 'test-key',
   TOKEN_SECRET: 'env-secret',
-  POSTAL_ADDRESS: '1 Test Lane'
+  POSTAL_ADDRESS: '1 Test Lane',
+  // Cloudflare's published always-passes test secret; siteverify is stubbed below.
+  TURNSTILE_SECRET: '1x0000000000000000000000000000000AA'
 } as Env;
 
 function reader(overrides: Partial<Subscriber> = {}): Subscriber {
@@ -36,7 +38,8 @@ function stubDb(sub: Subscriber, opts: { lastRun?: string | null; held?: Deliver
     upsertPending: vi.fn(async () => sub),
     activate: vi.fn(async () => true),
     getLastDailyRun: vi.fn(async () => opts.lastRun ?? null),
-    listDeliveredItems: vi.fn(async () => opts.held ?? [])
+    listDeliveredItems: vi.fn(async () => opts.held ?? []),
+    hitRateLimit: vi.fn(async () => 1)
   };
   return new Proxy(fns, {
     get(target, key: string) {
@@ -57,14 +60,20 @@ function at(iso: string) {
   vi.setSystemTime(new Date(iso));
 }
 
-beforeEach(() => { sent = []; });
-afterEach(() => { vi.useRealTimers(); });
+beforeEach(() => {
+  sent = [];
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ success: true })));
+});
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 function post(path: string, form: Record<string, string>): Request {
   return new Request(`https://federalistreader.org${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(form).toString()
+    body: new URLSearchParams({ 'cf-turnstile-response': 'XXXX.DUMMY.TOKEN.XXXX', ...form }).toString()
   });
 }
 

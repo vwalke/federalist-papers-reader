@@ -31,6 +31,7 @@ function makeStubDb(subscribers: Subscriber[]): Db & { claimed: string[] } {
     recordEmailDelivery: vi.fn(async () => {}),
     getEmailActivity: vi.fn(),
     purgeEmailSends: vi.fn(async () => {}),
+    hitRateLimit: vi.fn(async () => 1), purgeRateLimits: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id) => subscribers.find((s) => s.id === id) ?? null),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(), activate: vi.fn(), setStatus: vi.fn(), setProgram: vi.fn(),
@@ -87,6 +88,20 @@ describe('runDaily', () => {
     await runDaily(ENV, db, batchSender, '2026-07-18');
     expect(db.purgeStalePending).toHaveBeenCalledWith(7);
     expect(db.purgeEmailSends).toHaveBeenCalledWith(45);
+    expect(db.purgeRateLimits).toHaveBeenCalledWith(2 * 86_400);
+  });
+
+  it('still delivers when the signup rate-limit purge fails', async () => {
+    const db = makeStubDb([sub({ progress_index: 4 })]);
+    vi.mocked(db.purgeRateLimits).mockRejectedValueOnce(new Error('no such table: rate_limits'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await runDaily(ENV, db, batchSender, '2026-07-18');
+      expect(sent).toHaveLength(1);
+      expect(db.recordDailyRun).toHaveBeenCalledWith('2026-07-18');
+    } finally {
+      error.mockRestore();
+    }
   });
 
   it('opens a brand-new weekly subscriber with Brutus No. I', async () => {

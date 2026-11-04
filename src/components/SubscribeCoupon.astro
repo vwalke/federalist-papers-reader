@@ -3,6 +3,7 @@ import debate from '../../workers/post/content/debate.json';
 import { catchUpMonthDays } from '../lib/catch-up-window';
 import type { DatedItem } from '../../workers/post/src/season';
 import NotTooLate from './NotTooLate.astro';
+import { turnstileSiteKey } from '../lib/turnstile';
 
 interface Props {
   /** The fine print links to /subscribe/; pass false there so it doesn't link to itself. */
@@ -10,7 +11,9 @@ interface Props {
 }
 
 const { showLearnMore = true } = Astro.props;
-const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+// Every signup carries a Turnstile token; the Worker rejects any without one.
+// Unset outside production, this is Cloudflare's always-passes test key.
+const siteKey = turnstileSiteKey(import.meta.env.PUBLIC_TURNSTILE_SITE_KEY, process.env.CF_PAGES_BRANCH);
 // Anniversaries a late joiner could still catch up on: opening day through the
 // cut-off. The script below counts those already printed and shows the offer
 // only while the window is open, so the static page never goes stale.
@@ -23,7 +26,7 @@ const catchUpDays = catchUpMonthDays(debate.items as DatedItem[]);
     Have Publius call at your address&mdash;the next paper, and every one after it.
   </p>
   <NotTooLate class="subscribe-coupon__pitch" />
-  <form class="subscribe-coupon__form" method="post" action="/api/subscribe">
+  <form class="subscribe-coupon__form" method="post" action="/api/subscribe" data-turnstile>
     <fieldset class="subscribe-coupon__programs">
       <legend class="visually-hidden">Delivery program</legend>
       <label class="subscribe-coupon__program">
@@ -64,15 +67,18 @@ const catchUpDays = catchUpMonthDays(debate.items as DatedItem[]);
       />
       <button type="submit">Subscribe</button>
     </div>
-    {turnstileSiteKey && (
-      <>
-        {/* Invisible operation is a widget MODE chosen when the sitekey is created
-            in the Cloudflare dashboard — PUBLIC_TURNSTILE_SITE_KEY must belong to an
-            invisible-mode widget. data-size is only for sizing visible widgets. */}
-        <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>
-        <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-      </>
-    )}
+    {/* Use an Invisible or Managed widget. interaction-only keeps a Managed
+        widget hidden unless Cloudflare needs the visitor to click; an
+        Invisible widget never shows. Turnstile adds the hidden
+        cf-turnstile-response field inside this div. */}
+    <div class="subscribe-coupon__check">
+      <div class="cf-turnstile" data-sitekey={siteKey} data-action="subscribe" data-appearance="interaction-only"></div>
+      <p class="subscribe-coupon__fine" role="status" data-turnstile-status></p>
+    </div>
+    <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <noscript>
+      <p class="subscribe-coupon__fine">Subscribing needs JavaScript for a quick check that you are not a robot.</p>
+    </noscript>
     <p class="subscribe-coupon__fine">
       Confirmed by return post. Leave whenever you like&mdash;unsubscribing is one click.{showLearnMore && (
         <>
@@ -107,4 +113,38 @@ const catchUpDays = catchUpMonthDays(debate.items as DatedItem[]);
     form.addEventListener('change', sync);
     sync();
   }
+
+  // Turnstile fills cf-turnstile-response a moment after the page loads. A
+  // quick submitter waits for it here instead of being turned away by the Worker.
+  const TOKEN_WAIT_MS = 15_000;
+  for (const form of document.querySelectorAll<HTMLFormElement>('form[data-turnstile]')) {
+    const status = form.querySelector<HTMLElement>('[data-turnstile-status]');
+    const token = () => form.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]')?.value ?? '';
+    let waiting = false;
+    form.addEventListener('submit', (event) => {
+      if (token()) return;
+      event.preventDefault();
+      if (waiting) return;
+      waiting = true;
+      if (status) status.textContent = 'One moment\u2014checking this browser\u2026';
+      const started = Date.now();
+      const timer = window.setInterval(() => {
+        if (token()) {
+          window.clearInterval(timer);
+          waiting = false;
+          if (status) status.textContent = '';
+          form.requestSubmit();
+        } else if (Date.now() - started > TOKEN_WAIT_MS) {
+          window.clearInterval(timer);
+          waiting = false;
+          if (status) status.textContent = 'The check did not finish. Please reload the page and try again.';
+        }
+      }, 250);
+    });
+  }
+
+  // A token is single-use: coming Back to this page needs a fresh one.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) (window as { turnstile?: { reset(): void } }).turnstile?.reset();
+  });
 </script>
