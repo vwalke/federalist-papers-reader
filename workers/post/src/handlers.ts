@@ -40,6 +40,14 @@ import type { Sender } from './resend';
 import { renderDashboard, renderDashboardError } from './dashboard';
 import { sendAndRecord } from './send-tracking';
 import { getVisitActivity } from './cloudflare-analytics';
+import {
+  isSameOrigin,
+  rateLimitKey,
+  SIGNUP_EMAIL_DAILY_LIMIT,
+  SIGNUP_EMAIL_LIMIT,
+  SIGNUP_IP_LIMIT,
+  verifyTurnstile
+} from './signup-guard';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -135,34 +143,63 @@ async function deliver(
   });
 }
 
-async function verifyTurnstile(env: Env, token: string | null, ip: string | null): Promise<boolean> {
-  if (!env.TURNSTILE_SECRET) return true;
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token ?? '', remoteip: ip ?? '' })
-  });
-  const data = (await response.json()) as { success: boolean };
-  return data.success;
+/**
+ * Counts this address against its email limits. False means it was mailed too
+ * recently: the signup is acknowledged as usual but nothing is written or sent,
+ * so a repeat (or a bot) cannot re-mail a pending or subscribed address.
+ */
+async function mayMail(env: Env, db: Db, email: string): Promise<boolean> {
+  const key = await rateLimitKey('email', email, env.TOKEN_SECRET);
+  if (await db.hitRateLimit(key, SIGNUP_EMAIL_LIMIT.windowSeconds) > SIGNUP_EMAIL_LIMIT.limit) return false;
+  // Only mail actually allowed by the short window counts toward the day.
+  return await db.hitRateLimit(`${key}:day`, SIGNUP_EMAIL_DAILY_LIMIT.windowSeconds) <= SIGNUP_EMAIL_DAILY_LIMIT.limit;
 }
 
-async function handleSubscribe(request: Request, env: Env, db: Db, send: Sender): Promise<Response> {
-  const form = await request.formData();
-  if (form.get('contact_time')) return redirect(`${env.SITE_URL}/subscribe/check-inbox/`); // honeypot
+async function handleSubscribe(
+  request: Request, env: Env, db: Db, send: Sender, fetchImpl: typeof fetch
+): Promise<Response> {
+  // Order matters: nothing touches D1 or Resend until the request has passed
+  // the origin check, the honeypot, validation, and Turnstile.
+  const checkInbox = redirect(`${env.SITE_URL}/subscribe/check-inbox/`);
+  if (!isSameOrigin(request, env.SITE_URL)) {
+    return page(plainPage('Not accepted', '<h1>That form was not sent from this site.</h1>'), 403, true);
+  }
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return page('<h1>Something was off with that form.</h1><p>Please go back and try again.</p>', 400);
+  }
+  if (form.get('contact_time')) return checkInbox; // honeypot
   const email = String(form.get('email') ?? '').trim().toLowerCase();
   const program = String(form.get('program') ?? '') as Program;
   if (!EMAIL_RE.test(email) || !['weekly', 'calendar'].includes(program)) {
     return page('<h1>Something was off with that form.</h1><p>Please go back and try again.</p>', 400);
   }
-  if (!(await verifyTurnstile(env, form.get('cf-turnstile-response') as string | null,
-    request.headers.get('CF-Connecting-IP')))) {
-    return page('<h1>Verification failed.</h1><p>Please go back and try again.</p>', 400);
+  const ip = request.headers.get('CF-Connecting-IP');
+  const token = form.get('cf-turnstile-response');
+  if (!(await verifyTurnstile(env.TURNSTILE_SECRET, typeof token === 'string' ? token : null, ip, fetchImpl))) {
+    return page(plainPage('Please try again', `<h1>We could not confirm you are not a robot.</h1>
+<p><a href="/subscribe/">Go back to the form</a>, wait a moment for the check to finish, and subscribe again.</p>`), 403, true);
+  }
+  const ipKey = await rateLimitKey('ip', ip ?? 'unknown', env.TOKEN_SECRET);
+  if (await db.hitRateLimit(ipKey, SIGNUP_IP_LIMIT.windowSeconds) > SIGNUP_IP_LIMIT.limit) {
+    return new Response(plainPage('Too many signups', `<h1>Too many signups from this connection.</h1>
+<p>Please try again in an hour.</p>`), {
+      status: 429,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Retry-After': String(SIGNUP_IP_LIMIT.windowSeconds)
+      }
+    });
   }
 
   // Catch-up is As It Happened only, and only asked for through the cut-off.
   const today = easternToday();
   const catchupRequested = program === 'calendar' && form.get('catchup') === '1' && catchUpOpen(today);
 
+  if (!(await mayMail(env, db, email))) return checkInbox;
   const existing = await db.getSubscriberByEmail(email);
   if (existing && (existing.status === 'active' || existing.status === 'paused')) {
     const ctx = await emailContext(env, existing);
@@ -579,7 +616,7 @@ export async function handleRequest(
     : rawPathname;
   const method = request.method;
   if (pathname === '/post-office') return handleDashboard(request, env, db, fetchImpl);
-  if (method === 'POST' && pathname === '/api/subscribe') return handleSubscribe(request, env, db, send);
+  if (method === 'POST' && pathname === '/api/subscribe') return handleSubscribe(request, env, db, send, fetchImpl);
   if (method === 'GET' && pathname === '/api/confirm') return handleConfirmGet(request, env, db);
   if (method === 'POST' && pathname === '/api/confirm') return handleConfirmPost(request, env, db, send);
   if (method === 'GET' && pathname === '/manage') return handleManageGet(request, env, db);

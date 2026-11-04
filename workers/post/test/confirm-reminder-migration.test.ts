@@ -19,7 +19,9 @@ const MIGRATIONS = [
   // db.ts reads 0007's catch-up columns in upsertPending, so the chain runs through it.
   '0007_calendar_catch_up.sql',
   // db.ts writes 0008's receipts table in recordEmailSend / recordEmailDelivery.
-  '0008_email_delivery_receipts.sql'
+  '0008_email_delivery_receipts.sql',
+  // db.ts writes 0009's signup counters in hitRateLimit.
+  '0009_signup_rate_limits.sql'
 ];
 
 function migratedDb(): DatabaseSync {

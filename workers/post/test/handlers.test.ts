@@ -21,6 +21,7 @@ function makeStubDb(overrides: Partial<Db> = {}): Db {
     recordEmailDelivery: vi.fn(async () => {}),
     getEmailActivity: vi.fn(async () => ({ last24Hours: 0, days: [] })),
     purgeEmailSends: vi.fn(async () => {}),
+    hitRateLimit: vi.fn(async () => 1), purgeRateLimits: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async () => SUB),
     getSubscriberByEmail: vi.fn(async () => null),
     upsertPending: vi.fn(async () => SUB),
@@ -59,8 +60,19 @@ const ENV = {
   FROM_ADDRESS: 'Publius <publius@federalistreader.org>',
   RESEND_API_KEY: 'test-key',
   TOKEN_SECRET: 'env-secret',
-  POSTAL_ADDRESS: '1 Test Lane'
+  POSTAL_ADDRESS: '1 Test Lane',
+  // Cloudflare's published always-passes test secret.
+  TURNSTILE_SECRET: '1x0000000000000000000000000000000AA'
 } as Env;
+
+/** Stands in for siteverify: the always-passes test secret accepts any token. */
+const siteverify = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+  const body = new URLSearchParams(String(init?.body));
+  const success = body.get('secret') === '1x0000000000000000000000000000000AA' && !!body.get('response');
+  return Response.json({ success, 'error-codes': success ? [] : ['invalid-input-response'] });
+}) as unknown as typeof fetch;
+
+const TOKEN = { 'cf-turnstile-response': 'XXXX.DUMMY.TOKEN.XXXX' };
 
 let sent: Array<{ to: string; subject: string }>;
 const sender = async (_key: string, mail: { to: string; subject: string }) => {
@@ -405,7 +417,7 @@ describe('POST /api/subscribe', () => {
     try {
       const db = makeStubDb();
       const res = await handleRequest(
-        post('/api/subscribe', { email: 'reader@example.com', program: 'weekly' }), ENV, db, sender);
+        post('/api/subscribe', { email: 'reader@example.com', program: 'weekly', ...TOKEN }), ENV, db, sender, siteverify);
       expect(res.status).toBe(303);
       expect(res.headers.get('Location')).toBe('https://federalistreader.org/subscribe/check-inbox/');
       expect(db.upsertPending).toHaveBeenCalledWith('reader@example.com', 'weekly', expect.any(String), 2, false);
@@ -419,7 +431,7 @@ describe('POST /api/subscribe', () => {
   it('tolerates a trailing slash on the route (trailingSlash: always site)', async () => {
     const db = makeStubDb();
     const res = await handleRequest(
-      post('/api/subscribe/', { email: 'reader@example.com', program: 'weekly' }), ENV, db, sender);
+      post('/api/subscribe/', { email: 'reader@example.com', program: 'weekly', ...TOKEN }), ENV, db, sender, siteverify);
     expect(res.status).toBe(303);
     expect(db.upsertPending).toHaveBeenCalled();
   });
@@ -428,7 +440,7 @@ describe('POST /api/subscribe', () => {
     const db = makeStubDb();
     const res = await handleRequest(
       post('/api/subscribe', { email: 'bot@example.com', program: 'weekly', contact_time: 'gotcha' }),
-      ENV, db, sender);
+      ENV, db, sender, siteverify);
     expect(res.status).toBe(303);
     expect(db.upsertPending).not.toHaveBeenCalled();
     expect(sent).toHaveLength(0);
@@ -436,13 +448,13 @@ describe('POST /api/subscribe', () => {
 
   it('rejects an invalid program or email with 400', async () => {
     const res = await handleRequest(
-      post('/api/subscribe', { email: 'not-an-email', program: 'daily' }), ENV, makeStubDb(), sender);
+      post('/api/subscribe', { email: 'not-an-email', program: 'daily', ...TOKEN }), ENV, makeStubDb(), sender, siteverify);
     expect(res.status).toBe(400);
   });
 
   it('sends a manage link instead of re-confirming an active subscriber', async () => {
     const db = makeStubDb({ getSubscriberByEmail: vi.fn(async () => ({ ...SUB, status: 'active' as const })) });
-    await handleRequest(post('/api/subscribe', { email: SUB.email, program: 'weekly' }), ENV, db, sender);
+    await handleRequest(post('/api/subscribe', { email: SUB.email, program: 'weekly', ...TOKEN }), ENV, db, sender, siteverify);
     expect(db.upsertPending).not.toHaveBeenCalled();
     expect(sent[0].subject).toContain('already');
     expect(db.recordEmailSend).toHaveBeenCalledWith('msg_test', expect.any(String), 1);

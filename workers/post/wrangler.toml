@@ -25,6 +25,12 @@ binding = "DB"
 database_name = "publius-post"
 database_id = "3aaf5f2e-30d5-4a67-aa57-ad0dcd0a63b6"
 
+# Secrets (set with `wrangler secret put`, never committed): RESEND_API_KEY,
+# TOKEN_SECRET, POSTAL_ADDRESS, RESEND_WEBHOOK_SECRET, TURNSTILE_SECRET,
+# CLOUDFLARE_ANALYTICS_TOKEN. TURNSTILE_SECRET is required: without it every
+# signup is refused. Signup rate limits live in D1 (migration 0009), so no
+# extra binding is needed. See docs/deployment.md, "Signup protection".
+
 [vars]
 SITE_URL = "https://federalistreader.org"
 FROM_ADDRESS = "Publius — The Federalist <publius@federalistreader.org>"

@@ -48,6 +48,7 @@ function memoryDb(subscribers: Subscriber[]) {
   const db = {
     rows,
     recordEmailSend: vi.fn(async () => {}), purgeEmailSends: vi.fn(async () => {}),
+    hitRateLimit: vi.fn(async () => 1), purgeRateLimits: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id: number) => subscribers.find((s) => s.id === id) ?? null),
     setProgress: vi.fn(async () => {}), clearMakeupPending: vi.fn(async () => {}),
     listDeliverable: vi.fn(async () => subscribers.filter((s) => s.status === 'active')),

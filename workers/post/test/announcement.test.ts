@@ -39,6 +39,7 @@ function makeStubDb(subscribers: Subscriber[]) {
     recordEmailSend: vi.fn(async () => {}),
     recordEmailDelivery: vi.fn(async () => {}),
     purgeEmailSends: vi.fn(async () => {}),
+    hitRateLimit: vi.fn(async () => 1), purgeRateLimits: vi.fn(async () => {}),
     getSubscriberById: vi.fn(async (id: number) => subscribers.find((s) => s.id === id) ?? null),
     purgeUnsubscribed: vi.fn(async () => {}),
     listConfirmReminderDue: vi.fn(async () => []),

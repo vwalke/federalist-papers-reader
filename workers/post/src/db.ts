@@ -101,6 +101,13 @@ export interface Db {
   claimConfirmReminder(id: number): Promise<boolean>;
   purgeStalePending(olderThanDays: number): Promise<void>;
   recordDailyRun(todayIso: string): Promise<void>;
+  /**
+   * Counts one hit against `key` in the fixed window of `windowSeconds` that
+   * contains `now`, and returns the count including this hit (0009).
+   */
+  hitRateLimit(key: string, windowSeconds: number, now?: Date): Promise<number>;
+  /** Drops counters whose window started more than `olderThanSeconds` ago. */
+  purgeRateLimits(olderThanSeconds: number): Promise<void>;
 }
 
 // Copies a message's stored receipt onto its email_sends row, if both exist.
@@ -391,6 +398,24 @@ export function makeDb(d1: D1Database): Db {
         `INSERT INTO ops_meta (key, value, updated_at) VALUES ('last_daily_run', ?, datetime('now'))
          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`
       ).bind(todayIso).run();
+    },
+    async hitRateLimit(key, windowSeconds, now = new Date()) {
+      // One statement, so concurrent hits cannot both read the old count.
+      // Every SET reads the row's pre-update values.
+      const windowStart = Math.floor(now.getTime() / 1000 / windowSeconds) * windowSeconds;
+      const row = await d1.prepare(
+        `INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 1)
+         ON CONFLICT(key) DO UPDATE SET
+           count = CASE WHEN rate_limits.window_start = excluded.window_start
+             THEN rate_limits.count + 1 ELSE 1 END,
+           window_start = excluded.window_start
+         RETURNING count`
+      ).bind(key, windowStart).first<{ count: number }>();
+      return Number(row?.count ?? 1);
+    },
+    async purgeRateLimits(olderThanSeconds) {
+      const cutoff = Math.floor(Date.now() / 1000) - olderThanSeconds;
+      await d1.prepare('DELETE FROM rate_limits WHERE window_start < ?').bind(cutoff).run();
     }
   };
 }
