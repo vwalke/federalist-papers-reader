@@ -104,6 +104,7 @@ export interface Db {
   /**
    * Counts one hit against `key` in the fixed window of `windowSeconds` that
    * contains `now`, and returns the count including this hit (0009).
+   * If `rate_limits` is missing, logs and returns 1 so the signup can proceed.
    */
   hitRateLimit(key: string, windowSeconds: number, now?: Date): Promise<number>;
   /** Drops counters whose window started more than `olderThanSeconds` ago. */
@@ -403,15 +404,22 @@ export function makeDb(d1: D1Database): Db {
       // One statement, so concurrent hits cannot both read the old count.
       // Every SET reads the row's pre-update values.
       const windowStart = Math.floor(now.getTime() / 1000 / windowSeconds) * windowSeconds;
-      const row = await d1.prepare(
-        `INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 1)
-         ON CONFLICT(key) DO UPDATE SET
-           count = CASE WHEN rate_limits.window_start = excluded.window_start
-             THEN rate_limits.count + 1 ELSE 1 END,
-           window_start = excluded.window_start
-         RETURNING count`
-      ).bind(key, windowStart).first<{ count: number }>();
-      return Number(row?.count ?? 1);
+      try {
+        const row = await d1.prepare(
+          `INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 1)
+           ON CONFLICT(key) DO UPDATE SET
+             count = CASE WHEN rate_limits.window_start = excluded.window_start
+               THEN rate_limits.count + 1 ELSE 1 END,
+             window_start = excluded.window_start
+           RETURNING count`
+        ).bind(key, windowStart).first<{ count: number }>();
+        return Number(row?.count ?? 1);
+      } catch (error) {
+        // Deployed before 0009: do not 500 a reader who already passed Turnstile.
+        if (!/no such table/i.test(String(error))) throw error;
+        console.error('rate_limits table missing; allowing request through', { error: String(error) });
+        return 1;
+      }
     },
     async purgeRateLimits(olderThanSeconds) {
       const cutoff = Math.floor(Date.now() / 1000) - olderThanSeconds;

@@ -144,7 +144,8 @@ To enable it, follow this order. Do not skip or reverse steps.
    so this step stops the bot even before step 4.
 4. **Migrate, then deploy** the new Worker: from `workers/post`, run
    `pnpm migrate:remote` (purely additive), then `pnpm run deploy`. The new
-   signup path writes `rate_limits`.
+   signup path writes `rate_limits`. If that table is missing, `hitRateLimit`
+   logs and lets the request through; Turnstile still gates.
 
 > [!WARNING]
 > These mis-orders lock out real signups:
@@ -154,7 +155,7 @@ To enable it, follow this order. Do not skip or reverse steps.
 > | Merge to `main` without `PUBLIC_TURNSTILE_SITE_KEY` | Production Pages build fails (`CF_PAGES_BRANCH=main`). The current site stays up — not a reader lockout, but the widget never ships. |
 > | Set `TURNSTILE_SECRET` on the Worker running today before the site has a widget | **Lockout.** Today's Worker only fail-opens when the secret is unset. Once the secret exists it siteverifies the (missing) token and refuses everyone. |
 > | Deploy the new Worker without `TURNSTILE_SECRET` | **Lockout.** Every signup is 403. |
-> | Deploy the new Worker before migration 0009 | **Lockout** for anyone who passes Turnstile. `hitRateLimit` writes `rate_limits` with no try/catch; a missing table is an uncaught 500. |
+> | Deploy the new Worker before migration 0009 | Not a reader lockout: `hitRateLimit` logs `no such table` and lets the request through. Turnstile still gates. Migrate first anyway so the limits apply. |
 > | New Worker in front of a site still built with the test key | **Lockout.** The production secret rejects dummy tokens. |
 >
 > Also, never set a test secret in production: `1x…AA` accepts any token.
