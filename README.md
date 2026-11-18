@@ -70,5 +70,5 @@ Four layers, spelled out in [LICENSE](LICENSE):
 | Editorial notes, summaries, and guides (`src/content/`) | CC BY 4.0 |
 | Family photographs and the personal About narrative | All rights reserved |
 
-A production of [Walke Forward, LLC](https://walkeforward.com). Questions and
+A production of [The Period Press](https://periodpress.org/). Questions and
 corrections: publius@federalistreader.org.
